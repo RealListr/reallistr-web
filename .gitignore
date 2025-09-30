@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+web/node_modules/
+
+# builds
+.next/
+web/.next/
+out/
+
+# env
+.env*
+!.env.example
+
+# misc
+.DS_Store
