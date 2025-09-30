@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Dynamically import to avoid SSR issues on Vercel
+// avoid SSR: load react-map-gl only on the client
 const MapGL = dynamic(() => import('react-map-gl').then(m => m.default), { ssr: false });
 const Marker = dynamic(() => import('react-map-gl').then(m => m.Marker), { ssr: false });
 const NavigationControl = dynamic(() => import('react-map-gl').then(m => m.NavigationControl), { ssr: false });
