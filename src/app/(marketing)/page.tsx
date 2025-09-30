@@ -15,3 +15,5 @@ export default function HomePage() {
     </AppShell>
   );
 }
+
+export const dynamic = 'force-dynamic'

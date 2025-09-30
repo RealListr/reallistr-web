@@ -14,7 +14,7 @@ export default function PropertyFilters({ onChange }: { onChange: (f: FilterValu
   const [suburb, setSuburb] = useState('');
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <Select value={listingType} onValueChange={(v: any) => { setListingType(v); onChange({ listingType: v }); }}>
+      <Select value={listingType} onValueChange={(v: 'sale' | 'rental' | 'commercial' | 'any') => { setListingType(v); onChange({ listingType: v }); }}>
         <SelectTrigger><SelectValue placeholder="Type"/></SelectTrigger>
         <SelectContent>
           <SelectItem value="sale">For Sale</SelectItem>

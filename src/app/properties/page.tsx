@@ -1,3 +1,4 @@
+'use client';
 import AppShell from '@/components/shell/AppShell';
 import PropertyFilters from '@/components/filters/PropertyFilters';
 import { PropertyCard } from '@/components/cards/PropertyCard';
@@ -22,3 +23,4 @@ export default function PropertiesPage() {
     </AppShell>
   );
 }
+export const dynamic = 'force-dynamic'
