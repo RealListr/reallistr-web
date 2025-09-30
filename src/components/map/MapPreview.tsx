@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Load on client only to avoid SSR errors
 const MapGL = dynamic(() => import('react-map-gl').then(m => m.default), { ssr: false });
 const Marker = dynamic(() => import('react-map-gl').then(m => m.Marker), { ssr: false });
 const NavigationControl = dynamic(() => import('react-map-gl').then(m => m.NavigationControl), { ssr: false });
