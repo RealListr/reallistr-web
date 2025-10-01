@@ -15,7 +15,7 @@ export default function ShortsRail({ items, className }: Props) {
     <section className={className ? `${base} ${className}` : base} aria-label="ListrShorts">
       {items.map(s => (
         <Link
-          key={s.id}
+          key={s.id ?? i}
           href={s.href ?? '#'}
           className="group relative overflow-hidden rounded-xl border"
         >

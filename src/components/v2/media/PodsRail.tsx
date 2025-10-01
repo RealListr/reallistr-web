@@ -15,7 +15,7 @@ export default function PodsRail({ items, className }: Props) {
     <section className={className ? `${base} ${className}` : base} aria-label="ListrPods">
       {items.map(p => (
         <Link
-          key={p.id}
+          key={p.id ?? i}
           href={p.href ?? '#'}
           className="group flex items-center gap-3 rounded-xl border p-3 hover:bg-accent"
         >
