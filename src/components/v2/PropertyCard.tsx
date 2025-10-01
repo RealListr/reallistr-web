@@ -1,29 +1,41 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
+import type { Property } from '@/data/properties';
 
-type CardProps = {
-  id: string;
-  title: string;
-  price: string;
-  address: string;
-  imageUrl?: string;
-  meta?: string;
-};
+export default function PropertyCard({ p }: { p: Property }) {
+  const priceLabel =
+    p.type === 'rental' || p.type === 'commercial'
+      ? `$${p.price.toLocaleString()}/wk`
+      : `$${p.price.toLocaleString()}`;
 
-export default function PropertyCard({ id, title, price, address, imageUrl, meta }: CardProps) {
   return (
-    <Link href={`/v2/p/${id}`} className="group overflow-hidden rounded-2xl border shadow-sm transition hover:shadow-md">
-      <div className="aspect-[16/9] bg-neutral-100">
-        {imageUrl ? <img src={imageUrl} alt={title} className="h-full w-full object-cover" /> : null}
+    <Link
+      href={`/v2/p/${p.id}`}
+      className="block rounded-2xl border hover:shadow-md transition"
+    >
+      <div className="relative aspect-[16/10] overflow-hidden rounded-t-2xl bg-muted">
+        <Image
+          src={p.image}
+          alt={p.title}
+          fill
+          sizes="(min-width: 1024px) 320px, 100vw"
+          className="object-cover"
+          priority={false}
+        />
+        <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white">
+          {p.type.toUpperCase()}
+        </span>
       </div>
-      <div className="space-y-1 p-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="line-clamp-1 font-medium">{title}</h3>
-          <span className="whitespace-nowrap text-sm font-semibold">{price}</span>
+      <div className="p-4">
+        <div className="text-base font-semibold">{priceLabel}</div>
+        <div className="text-sm text-muted-foreground">{p.title}</div>
+        <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
+          <span>{p.beds} bd</span>
+          <span>{p.baths} ba</span>
+          <span>{p.area} m²</span>
         </div>
-        <p className="line-clamp-1 text-sm text-neutral-600">{address}</p>
-        {meta ? <p className="text-xs text-neutral-500">{meta}</p> : null}
+        <div className="mt-2 text-xs">{p.city}, {p.country}</div>
       </div>
     </Link>
   );
