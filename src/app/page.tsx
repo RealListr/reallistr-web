@@ -8,10 +8,10 @@ export default function HomePage() {
         Next-gen property search with conversational filters, dynamic cards, and a global-ready layout.
       </p>
       <div className="flex gap-4">
-        <Link href="/(v2)/properties" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800">
+        <Link href="/v2/properties" className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800">
           Browse Properties
         </Link>
-        <Link href="/(v2)/dashboard" className="px-6 py-3 border rounded-lg hover:bg-gray-100">
+        <Link href="/v2/dashboard" className="px-6 py-3 border rounded-lg hover:bg-gray-100">
           Go to Dashboard
         </Link>
       </div>
