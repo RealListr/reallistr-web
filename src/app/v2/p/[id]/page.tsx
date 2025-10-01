@@ -1,111 +1,93 @@
 // Server component (no "use client")
-import Image from 'next/image';
-import { PROPERTIES, type Property } from '@/data/properties';
+import Image from "next/image";
+import ListrShortsGrid from "@/components/v2/media/ListrShortsGrid";
+import ListrPodsList from "@/components/v2/media/ListrPodsList";
+import PropertyFacts from "@/components/v2/PropertyFacts";
+import { PROPERTIES, type Property } from "@/data/properties";
 
-export default async function PropertyDetail(
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const p: Property | undefined = PROPERTIES.find(x => x.id === id);
+export default async function PropertyDetail(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  const item = PROPERTIES.find((p) => p.id === id) as Property | undefined;
+  if (!item) return <main className="mx-auto max-w-6xl p-6">Not found.</main>;
 
-  if (!p) {
-    return <main className="mx-auto max-w-6xl p-6">Not found.</main>;
-  }
+  // Derive small facts block (edit as needed)
+  const facts = {
+    headline: item.title,
+    description: item.description,
+    facts: [
+      { label: "Type", value: item.type.toUpperCase() },
+      { label: "Bedrooms", value: item.beds },
+      { label: "Bathrooms", value: item.baths },
+      { label: "Parking", value: item.cars },
+      { label: "Suburb", value: item.suburb },
+      { label: "Price", value: item.type === "rental" ? `$${item.price.toLocaleString()}/wk` : `$${item.price.toLocaleString()}` },
+    ],
+  };
+
+  const images = item.images ?? [];
+  const hero = images[0] ?? "/placeholders/house-1.jpg";
+  const thumbs = images.slice(1, 3);
 
   return (
-    <main className="mx-auto max-w-6xl gap-8 p-6 lg:grid lg:grid-cols-12">
-      {/* gallery */}
-      <section className="lg:col-span-7">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border bg-gray-50">
-          <Image
-            src={p.hero}
-            alt={p.title}
-            fill
-            sizes="(max-width: 1024px) 100vw, 58vw"
-            className="object-cover"
-            priority
-          />
-        </div>
-        {p.images?.length > 1 && (
-          <div className="mt-3 grid grid-cols-3 gap-3">
-            {p.images.slice(1).map((src, i) => (
-              <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-gray-50">
-                <Image src={src} alt={`${p.title} ${i + 2}`} fill className="object-cover" />
-              </div>
-            ))}
+    <main className="mx-auto max-w-6xl p-6">
+      {/* Top grid: gallery + quick actions */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Gallery */}
+        <div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border bg-muted">
+            <Image
+              src={hero}
+              alt={item.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
           </div>
-        )}
-      </section>
-
-      {/* summary */}
-      <aside className="lg:col-span-5">
-        <h1 className="text-2xl font-semibold">{p.title}</h1>
-        <p className="mt-1 text-muted-foreground">{p.description}</p>
-        <div className="mt-4 flex gap-6 text-sm text-muted-foreground">
-          <span>{p.beds} beds</span>
-          <span>{p.baths} baths</span>
-          <span>{p.cars} cars</span>
-        </div>
-        <button className="mt-6 w-full rounded-full bg-black px-5 py-3 text-white">
-          Request Info
-        </button>
-
-        <div className="mt-4 rounded-2xl border p-8 text-center text-sm text-muted-foreground">
-          Map preview temporarily unavailable
-        </div>
-      </aside>
-
-      {/* ListrShorts */}
-      {p.shorts?.length ? (
-        <section className="lg:col-span-12">
-          <div className="mt-10">
-            <h2 className="mb-3 text-lg font-semibold">ListrShorts</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {p.shorts.map(s => (
-                <div key={s.id} className="overflow-hidden rounded-2xl border">
-                  <div className="relative aspect-[9/16] w-full bg-black">
-                    <iframe
-                      className="absolute left-0 top-0 h-full w-full"
-                      src={`https://www.youtube.com/embed/${s.id}?rel=0&modestbranding=1&playsinline=1`}
-                      title={s.title || 'ListrShort'}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-                  <div className="p-3">
-                    <p className="line-clamp-1 text-sm font-medium">{s.title || 'Short video'}</p>
-                    {s.creator && <p className="text-xs text-muted-foreground">by {s.creator}</p>}
-                  </div>
+          {!!thumbs.length && (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {thumbs.map((src, i) => (
+                <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-muted">
+                  <Image
+                    src={src}
+                    alt={`${item.title} ${i + 2}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width:1024px) 50vw, 25vw"
+                  />
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      ) : null}
+          )}
+        </div>
 
-      {/* ListrPods */}
-      {p.pods?.length ? (
-        <section className="lg:col-span-12">
-          <div className="mt-10">
-            <h2 className="mb-3 text-lg font-semibold">ListrPods</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {p.pods.map((pod, i) => (
-                <div key={i} className="rounded-2xl border p-4">
-                  <p className="line-clamp-1 text-sm font-medium">{pod.title || 'Podcast'}</p>
-                  <audio className="mt-2 w-full" controls preload="none" src={pod.url}>
-                    Your browser does not support audio.
-                  </audio>
-                  {pod.durationSec ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      ~{Math.round(pod.durationSec / 60)} min
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+        {/* Summary / CTA */}
+        <aside className="lg:pl-4">
+          <h1 className="text-2xl font-semibold">{item.title}</h1>
+          <div className="mt-1 text-sm text-muted-foreground">{item.suburb}</div>
+
+          <div className="mt-3 flex items-center gap-4 text-sm">
+            <span>{item.beds} beds</span>
+            <span>{item.baths} baths</span>
+            <span>{item.cars} cars</span>
           </div>
-        </section>
-      ) : null}
+
+          <button className="mt-6 w-full rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background hover:opacity-90">
+            Request Info
+          </button>
+
+          {/* Map placeholder stays for now */}
+          <div className="mt-4 rounded-xl border p-10 text-center text-sm text-muted-foreground">
+            Map preview temporarily unavailable
+          </div>
+        </aside>
+      </div>
+
+      {/* Key facts */}
+      <PropertyFacts data={facts} />
+
+      {/* Media sections */}
+      <ListrShortsGrid items={item.shorts ?? []} />
+      <ListrPodsList items={item.pods ?? []} />
     </main>
   );
 }
