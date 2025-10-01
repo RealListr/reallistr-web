@@ -1,26 +1,56 @@
-import { IcBed, IcBath, IcCar, IcSize } from '@/components/icons/rl-icons';
+'use client';
 
-type Fact = { label: string; value: string; icon?: 'bed'|'bath'|'car'|'size' };
-export default function PropertyFacts({ facts }: { facts: Fact[] }) {
-  const renderIcon = (k?: Fact['icon']) => {
-    const c = 'h-4 w-4';
-    switch(k){
-      case 'bed': return <IcBed className={c} />;
-      case 'bath': return <IcBath className={c} />;
-      case 'car': return <IcCar className={c} />;
-      case 'size': return <IcSize className={c} />;
-      default: return null;
-    }
-  };
+import { type ReactNode } from 'react';
+import { Bed, Bath, Ruler, Car } from 'lucide-react';
+
+type IconKey = 'size' | 'bed' | 'bath' | 'car';
+export type Fact = {
+  label: string;
+  value: string;
+  icon?: IconKey | ReactNode; // <- allow custom node too
+};
+
+type Props = {
+  facts: Fact[];
+  className?: string;
+};
+
+function renderIcon(icon?: IconKey | ReactNode) {
+  if (!icon) return null;
+  if (typeof icon !== 'string') return <span className="text-muted-foreground">{icon}</span>;
+  switch (icon) {
+    case 'bed':
+      return <Bed className="h-4 w-4 text-muted-foreground" aria-hidden />;
+    case 'bath':
+      return <Bath className="h-4 w-4 text-muted-foreground" aria-hidden />;
+    case 'size':
+      return <Ruler className="h-4 w-4 text-muted-foreground" aria-hidden />;
+    case 'car':
+      return <Car className="h-4 w-4 text-muted-foreground" aria-hidden />;
+    default:
+      return null;
+  }
+}
+
+export default function PropertyFacts({ facts, className }: Props) {
   return (
-    <div className="grid gap-3 md:grid-cols-2">
-      {facts.map((f,i)=>(
-        <div key={i} className="flex items-center gap-3 rounded-xl border p-3 text-sm">
-          <span className="text-gray-600">{renderIcon(f.icon)}</span>
-          <span className="font-medium">{f.value}</span>
-          <span className="ml-auto text-xs text-gray-500">{f.label}</span>
-        </div>
-      ))}
-    </div>
+    <section className={className ?? ''} aria-label="Property facts">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {facts.map((f, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-xl border p-3"
+          >
+            {renderIcon(f.icon)}
+            <div className="min-w-0">
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {f.label}
+              </div>
+              <div className="truncate text-sm font-medium">{f.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
