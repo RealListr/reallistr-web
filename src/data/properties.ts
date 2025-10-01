@@ -1,63 +1,75 @@
+export type MediaShort = {
+  id: string;          // YouTube video id (or future Listr CDN id)
+  title?: string;
+  creator?: string;
+};
+
+export type MediaPod = {
+  url: string;         // mp3 or a hosted audio file
+  title?: string;
+  durationSec?: number;
+};
+
 export type Property = {
   id: string;
   title: string;
-  type: 'sale' | 'rental' | 'commercial';
-  price: number;         // weekly for rental, total for sale
+  suburb: string;
+  type: "sale" | "rental";
+  price: number;       // for rentals: weekly price
   beds: number;
   baths: number;
-  area: number;          // m²
-  address: string;
-  image: string;         // public/ path
-  city: string;
+  cars: number;
+  hero: string;        // path under /public
+  images: string[];    // gallery (paths under /public)
+  shorts?: MediaShort[];
+  pods?: MediaPod[];
+  agentId?: string;
+  description?: string;
 };
 
 export const PROPERTIES: Property[] = [
   {
-    id: 'p-101',
-    title: 'Harbourside 2BR Apartment',
-    type: 'rental',
-    price: 950, // $/wk
-    beds: 2,
-    baths: 1,
-    area: 78,
-    address: '12 Wharf St, Sydney NSW',
-    image: '/placeholders/apt-1.svg',
-    city: 'Sydney',
+    id: "p1",
+    title: "23 Ocean Ave, Bondi",
+    suburb: "Bondi",
+    type: "sale",
+    price: 2450000,
+    beds: 4, baths: 3, cars: 2,
+    hero: "/placeholders/house-1.jpg",
+    images: [
+      "/placeholders/house-1.jpg",
+      "/placeholders/house-2.jpg",
+      "/placeholders/house-3.jpg"
+    ],
+    shorts: [
+      { id: "C0DPdy98e4c", title: "Sunlit tour", creator: "Ava Films" }
+    ],
+    pods: [
+      { url: "/audio/bondi-overview.mp3", title: "Agent intro", durationSec: 78 }
+    ],
+    description:
+      "Sunlit coastal home with open-plan living, minutes to the beach."
   },
   {
-    id: 'p-102',
-    title: 'Modern Family Home',
-    type: 'sale',
-    price: 1850000,
-    beds: 4,
-    baths: 2,
-    area: 210,
-    address: '45 Koala Ave, Brisbane QLD',
-    image: '/placeholders/house-1.svg',
-    city: 'Brisbane',
-  },
-  {
-    id: 'p-103',
-    title: 'CBD Office Suite',
-    type: 'commercial',
-    price: 3500000,
-    beds: 0,
-    baths: 2,
-    area: 760,
-    address: '101 Collins St, Melbourne VIC',
-    image: '/placeholders/office-1.svg',
-    city: 'Melbourne',
-  },
-  {
-    id: 'p-104',
-    title: 'Beachside 1BR',
-    type: 'rental',
-    price: 680,
-    beds: 1,
-    baths: 1,
-    area: 55,
-    address: '8 Ocean Rd, Gold Coast QLD',
-    image: '/placeholders/apt-2.svg',
-    city: 'Gold Coast',
-  },
+    id: "p2",
+    title: "12 Market St, Sydney",
+    suburb: "Sydney CBD",
+    type: "rental",
+    price: 1180,
+    beds: 2, baths: 2, cars: 1,
+    hero: "/placeholders/apt-1.jpg",
+    images: [
+      "/placeholders/apt-1.jpg",
+      "/placeholders/apt-2.jpg",
+      "/placeholders/apt-3.jpg"
+    ],
+    shorts: [
+      { id: "aqz-KE-bpKQ", title: "City views walk-through" }
+    ],
+    pods: [
+      { url: "/audio/cbd-fastfacts.mp3", title: "Fast facts", durationSec: 52 }
+    ],
+    description:
+      "High-floor apartment with skyline outlook and hotel-style amenities."
+  }
 ];
