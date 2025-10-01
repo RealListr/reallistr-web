@@ -5,6 +5,11 @@ import { PROPERTIES, type Property } from '@/data/properties';
 
 type PageProps = { params: { id: string } };
 
+// Helpers to read alternative keys without 'any'
+type MaybeBeds = Property & { bedrooms?: number; beds?: number };
+type MaybeBaths = Property & { bathrooms?: number; baths?: number };
+type MaybeCars = Property & { cars?: number; parking?: number };
+
 export default async function Page({ params }: PageProps) {
   const item = PROPERTIES.find(p => String(p.id) === params.id) as Property | undefined;
   if (!item) notFound();
@@ -14,12 +19,16 @@ export default async function Page({ params }: PageProps) {
       ? `$${(item.price ?? 0).toLocaleString()}/wk`
       : `$${(item.price ?? 0).toLocaleString()}`;
 
+  const beds = (item as MaybeBeds).bedrooms ?? (item as MaybeBeds).beds;
+  const baths = (item as MaybeBaths).bathrooms ?? (item as MaybeBaths).baths;
+  const cars = (item as MaybeCars).cars ?? (item as MaybeCars).parking;
+
   const facts = [
     { label: 'Type', value: item.type === 'rental' ? 'RENTAL' : 'SALE' },
-    { label: 'Bedrooms', value: String((item as any).bedrooms ?? item.beds ?? '-') },
-    { label: 'Bathrooms', value: String((item as any).bathrooms ?? item.baths ?? '-') },
-    { label: 'Parking', value: String(item.cars ?? (item as any).parking ?? '-') },
-    { label: 'Suburb', value: item.suburb ?? '' },
+    { label: 'Bedrooms', value: beds != null ? String(beds) : '-' },
+    { label: 'Bathrooms', value: baths != null ? String(baths) : '-' },
+    { label: 'Parking', value: cars != null ? String(cars) : '-' },
+    { label: 'Suburb', value: item.suburb ?? '-' },
     { label: 'Price', value: priceLabel },
   ];
 
