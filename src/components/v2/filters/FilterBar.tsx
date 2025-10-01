@@ -11,13 +11,18 @@ type FilterBarProps = {
   onFilter: (rows: Property[]) => void;
 };
 
+// Locally widen Property to include optional location fields (no `any`)
+type PropertyWithLocation = Property & {
+  suburb?: string;
+  city?: string;
+};
+
 export default function FilterBar({ data, onFilter }: FilterBarProps) {
   const [query, setQuery] = useState<string>('');
   const [listingType, setListingType] = useState<ListingType>('any');
   const [minBeds, setMinBeds] = useState<number | undefined>(undefined);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
 
-  // Handlers (no 'any')
   const onQueryChange = (e: ChangeEvent<HTMLInputElement>) => {
     setQuery(e.currentTarget.value);
   };
@@ -32,10 +37,7 @@ export default function FilterBar({ data, onFilter }: FilterBarProps) {
     setMaxPrice(v === '' ? undefined : Math.max(0, Number(v)));
   };
 
-  // If you're using a Radix Select here, onValueChange gives a string.
-  // Typing it to our union satisfies ESLint + TS.
   const onListingTypeChange = (v: ListingType | string) => {
-    // hard-narrow strings not in the union to 'any'
     const next: ListingType =
       v === 'sale' || v === 'rental' || v === 'commercial' || v === 'any'
         ? v
@@ -43,15 +45,15 @@ export default function FilterBar({ data, onFilter }: FilterBarProps) {
     setListingType(next);
   };
 
+  const getHaystack = (p: Property): string => {
+    const pl = p as PropertyWithLocation; // typed, not `any`
+    return [p.title, pl.suburb, pl.city].filter(Boolean).join(' ').toLowerCase();
+  };
+
   const rows = useMemo(() => {
     const q = query.toLowerCase();
     return data.filter((p) => {
-      // text match (title/suburb/city if present)
-      const hay =
-        [p.title, (p as any).suburb, (p as any).city] // safe optional access if fields exist
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
+      const hay = getHaystack(p);
 
       const matchesText = q === '' || hay.includes(q);
       const matchesType = listingType === 'any' || p.type === listingType;
