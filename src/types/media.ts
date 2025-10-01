@@ -1,22 +1,22 @@
 export type Short = {
-  id: string | number;
+  id?: string | number;     // optional
   title?: string;
-  thumb?: string;   // thumbnail image
-  href?: string;    // link to open (e.g., /v2/p/[id] or external)
-  videoUrl?: string; // optional (YT/Vimeo/file); not all shorts have this yet
+  thumb?: string;           // thumbnail image
+  href?: string;            // link to open (internal/external)
+  videoUrl?: string;        // optional player source
   duration?: number;
 };
 
 export type Pod = {
-  id: string | number;
+  id?: string | number;     // optional
   title?: string;
-  href?: string;    // page/deeplink to play
-  src?: string;     // optional audio file/stream url
+  href?: string;            // deeplink to play / detail
+  src?: string;             // optional audio stream/file
   duration?: number;
 };
 
 export type AgentLite = {
-  id: string | number;
+  id?: string | number;     // optional (seed may not have it)
   name: string;
   avatar?: string;
   role?: string;
