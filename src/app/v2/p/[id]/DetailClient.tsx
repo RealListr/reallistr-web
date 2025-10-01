@@ -48,7 +48,7 @@ export default function DetailClient(props: {
 
       <SlideDrawer open={openInfo} onOpenChange={setOpenInfo} title="Property Information">
         <div className="space-y-6">
-          <PropertyFacts items={props.facts} />
+          <PropertyFacts facts={props.facts} />
           <div>
             <h3 className="text-sm font-medium mb-2">Description</h3>
             <p className="text-sm text-muted-foreground leading-6">{props.description}</p>
