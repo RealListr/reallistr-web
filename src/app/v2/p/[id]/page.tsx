@@ -3,15 +3,15 @@ import { notFound } from 'next/navigation';
 import DetailClient from './DetailClient';
 import { PROPERTIES, type Property } from '@/data/properties';
 
-type PageProps = { params: { id: string } };
-
 // Helpers to read alternative keys without 'any'
 type MaybeBeds = Property & { bedrooms?: number; beds?: number };
 type MaybeBaths = Property & { bathrooms?: number; baths?: number };
 type MaybeCars = Property & { cars?: number; parking?: number };
 
-export default async function Page({ params }: PageProps) {
-  const item = PROPERTIES.find(p => String(p.id) === params.id) as Property | undefined;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const item = PROPERTIES.find(p => String(p.id) === id) as Property | undefined;
   if (!item) notFound();
 
   const priceLabel =
