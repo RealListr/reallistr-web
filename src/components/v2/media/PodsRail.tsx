@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Mic } from 'lucide-react';
 import type { Pod } from '@/types/media';
 
 type Props = {
@@ -10,25 +9,25 @@ type Props = {
 };
 
 export default function PodsRail({ items, className }: Props) {
-  const base = "grid gap-3 sm:grid-cols-2";
+  const base = 'space-y-3';
   return (
     <section className={className ? `${base} ${className}` : base} aria-label="ListrPods">
-      {items.map(p => (
+      {items.map((p, i) => (
         <Link
-          key={p.id ?? i}
+          key={String(p.id ?? i)}
           href={p.href ?? '#'}
           className="group flex items-center gap-3 rounded-xl border p-3 hover:bg-accent"
         >
-          <div className="flex size-10 items-center justify-center rounded-full border">
-            <Mic className="size-5" />
+          <div className="h-10 w-10 shrink-0 rounded-full bg-muted/70 ring-1 ring-border grid place-items-center">
+            <span className="text-[10px] font-semibold uppercase tracking-wide">Pod</span>
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium">
-              {p.title ?? 'Podcast'}
-            </div>
-            <div className="truncate text-xs text-muted-foreground">
-              {p.length ?? '2:00'} • {p.host ?? 'Agent'}
-            </div>
+            <div className="truncate text-sm font-medium">{p.title ?? 'Untitled Pod'}</div>
+            {typeof p.duration === 'number' && (
+              <div className="text-xs text-muted-foreground">
+                {Math.max(1, Math.round(p.duration / 60))} min
+              </div>
+            )}
           </div>
         </Link>
       ))}

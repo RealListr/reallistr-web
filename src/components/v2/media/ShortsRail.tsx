@@ -13,7 +13,7 @@ export default function ShortsRail({ items, className }: Props) {
   const base = "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4";
   return (
     <section className={className ? `${base} ${className}` : base} aria-label="ListrShorts">
-      {items.map(s => (
+      {items.map((s, i) => (
         <Link
           key={s.id ?? i}
           href={s.href ?? '#'}
