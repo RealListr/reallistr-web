@@ -1,25 +1,24 @@
 export type Short = {
-  id: string;
+  id: string | number;
   title?: string;
-  thumb?: string;      // image URL for tile
-  videoUrl: string;    // youtube/embed or mp4
-  creator?: string;
-  durationSec?: number;
+  thumb?: string;   // thumbnail image
+  href?: string;    // link to open (e.g., /v2/p/[id] or external)
+  videoUrl?: string; // optional (YT/Vimeo/file); not all shorts have this yet
+  duration?: number;
 };
 
 export type Pod = {
-  id: string;
-  title: string;
-  src: string;         // audio URL
-  author?: string;
-  durationSec?: number;
+  id: string | number;
+  title?: string;
+  href?: string;    // page/deeplink to play
+  src?: string;     // optional audio file/stream url
+  duration?: number;
 };
 
 export type AgentLite = {
-  id: string;
+  id: string | number;
   name: string;
   avatar?: string;
   role?: string;
-  phone?: string;
-  email?: string;
+  href?: string;
 };
