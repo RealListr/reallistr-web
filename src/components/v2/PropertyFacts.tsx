@@ -1,32 +1,26 @@
-type Facts = {
-  headline?: string;
-  description?: string;
-  facts?: Array<{ label: string; value: string | number }>;
-};
+import { IcBed, IcBath, IcCar, IcSize } from '@/components/icons/rl-icons';
 
-export default function PropertyFacts({ data }: { data: Facts }) {
-  if (!data) return null;
-  const { headline, description, facts = [] } = data;
-
+type Fact = { label: string; value: string; icon?: 'bed'|'bath'|'car'|'size' };
+export default function PropertyFacts({ facts }: { facts: Fact[] }) {
+  const renderIcon = (k?: Fact['icon']) => {
+    const c = 'h-4 w-4';
+    switch(k){
+      case 'bed': return <IcBed className={c} />;
+      case 'bath': return <IcBath className={c} />;
+      case 'car': return <IcCar className={c} />;
+      case 'size': return <IcSize className={c} />;
+      default: return null;
+    }
+  };
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 text-lg font-semibold">Property Information</h2>
-      {headline && <p className="text-base font-medium">{headline}</p>}
-      {description && <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>}
-
-      {!!facts.length && (
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {facts.map((f, i) => (
-            <div
-              key={`${f.label}-${i}`}
-              className="rounded-lg border bg-card p-3 text-sm"
-            >
-              <p className="text-muted-foreground">{f.label}</p>
-              <p className="font-medium">{f.value}</p>
-            </div>
-          ))}
+    <div className="grid gap-3 md:grid-cols-2">
+      {facts.map((f,i)=>(
+        <div key={i} className="flex items-center gap-3 rounded-xl border p-3 text-sm">
+          <span className="text-gray-600">{renderIcon(f.icon)}</span>
+          <span className="font-medium">{f.value}</span>
+          <span className="ml-auto text-xs text-gray-500">{f.label}</span>
         </div>
-      )}
-    </section>
+      ))}
+    </div>
   );
 }
