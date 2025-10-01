@@ -4,11 +4,37 @@ import DetailClient from './DetailClient';
 import { PROPERTIES, type Property } from '@/data/properties';
 import type { AgentLite } from '@/types/media';
 
-// Helpers to read alternative keys without `any`
-type MaybeBeds = Property & { bedrooms?: number; beds?: number };
-type MaybeBaths = Property & { bathrooms?: number; baths?: number };
-type MaybeCars = Property & { cars?: number; parking?: number };
+// Optional extensions for heterogeneous seed data
+type MaybeBeds   = Property & { bedrooms?: number; beds?: number };
+type MaybeBaths  = Property & { bathrooms?: number; baths?: number };
+type MaybeCars   = Property & { cars?: number; parking?: number };
+
+// Address variants we've seen in seeds
+type MaybeAddress = Property & {
+  address?: string;
+  streetAddress?: string;
+  line1?: string;
+};
+// Suburb/City variants
+type MaybeSuburb = Property & {
+  suburb?: string;
+  neighborhood?: string;
+  city?: string;
+  town?: string;
+  region?: string;
+};
+// Agents (optional in seeds)
 type MaybeAgents = Property & { agents?: AgentLite[] };
+
+// Best-effort helpers
+function pickAddress(p: Property): string {
+  const m = p as MaybeAddress;
+  return m.address ?? m.streetAddress ?? m.line1 ?? '—';
+}
+function pickSuburb(p: Property): string {
+  const m = p as MaybeSuburb;
+  return m.suburb ?? m.neighborhood ?? m.city ?? m.town ?? m.region ?? '';
+}
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,8 +59,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <DetailClient
       hero={item.images?.[0] ?? '/placeholder/hero.jpg'}
-      address={item.address ?? '—'}
-      suburb={item.suburb ?? item.city ?? ''}
+      address={pickAddress(item)}
+      suburb={pickSuburb(item)}
       priceLabel={priceLabel}
       status={item.type === 'rental' ? 'RENTAL' : 'SALE'}
       shorts={item.shorts ?? []}
