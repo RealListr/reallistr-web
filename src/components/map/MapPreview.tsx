@@ -3,7 +3,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 type MapPreviewProps = { lat: number; lng: number; height?: number | string };
 
-export default function MapPreview({ lat: _lat, lng: _lng, height = '300px' }: MapPreviewProps) {
+export default function MapPreview({ height = '300px' }: MapPreviewProps) {
   // TODO: wire up react-map-gl after prod is stable
   return (
     <div
