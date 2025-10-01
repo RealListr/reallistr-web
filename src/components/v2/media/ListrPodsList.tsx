@@ -1,8 +1,8 @@
 type Pod = {
-  title: string;
-  src: string;       // mp3/ogg url
-  duration?: string; // e.g. "~1 min"
-  by?: string;       // optional host/agent
+  title?: string;        // <- optional to match your data
+  src: string;
+  duration?: string;
+  by?: string;
 };
 
 export default function ListrPodsList({ items = [] as Pod[] }: { items?: Pod[] }) {
@@ -15,23 +15,22 @@ export default function ListrPodsList({ items = [] as Pod[] }: { items?: Pod[] }
       </div>
 
       <div className="space-y-3">
-        {items.map((p, i) => (
-          <div
-            key={`${p.title}-${i}`}
-            className="rounded-xl border bg-card p-4 shadow-sm"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{p.title}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {p.by ?? "Agent"} {p.duration ? ` • ${p.duration}` : ""}
-                </p>
+        {items.map((p, i) => {
+          const title = p.title?.trim() || "Property podcast";
+          return (
+            <div key={`${title}-${i}`} className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{title}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {p.by ?? "Agent"} {p.duration ? ` • ${p.duration}` : ""}
+                  </p>
+                </div>
+                <audio className="w-40 sm:w-56" controls preload="none" src={p.src} />
               </div>
-              {/* native audio for now; we can swap to a custom mini player later */}
-              <audio className="w-40 sm:w-56" controls preload="none" src={p.src} />
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
