@@ -1,57 +1,63 @@
-export type ListingType = 'sale' | 'rental' | 'commercial';
 export type Property = {
   id: string;
   title: string;
-  price: number;          // AUD (mock)
+  type: 'sale' | 'rental' | 'commercial';
+  price: number;         // weekly for rental, total for sale
   beds: number;
   baths: number;
-  area: number;           // m²
-  type: ListingType;
+  area: number;          // m²
+  address: string;
+  image: string;         // public/ path
   city: string;
-  country: string;
-  image: string;
-  agent: { name: string; id: string; };
 };
 
 export const PROPERTIES: Property[] = [
   {
-    id: 'p-1001',
-    title: 'Harbour-view Apartment',
-    price: 1250000,
-    beds: 2, baths: 2, area: 98,
-    type: 'sale',
-    city: 'Sydney', country: 'AU',
-    image: '/placeholders/apt-1.svg',
-    agent: { name: 'Westley Buhagiar', id: 'a-westley' },
-  },
-  {
-    id: 'p-1002',
-    title: 'Modern Family Home',
-    price: 850000,
-    beds: 4, baths: 3, area: 220,
-    type: 'sale',
-    city: 'Melbourne', country: 'AU',
-    image: '/placeholders/house-1.svg',
-    agent: { name: 'Westley Buhagiar', id: 'a-westley' },
-  },
-  {
-    id: 'p-1003',
-    title: 'CBD Office – Level 12',
-    price: 950,        // per week (mock)
-    beds: 0, baths: 2, area: 480,
-    type: 'commercial',
-    city: 'Brisbane', country: 'AU',
-    image: '/placeholders/office-1.svg',
-    agent: { name: 'Westley Buhagiar', id: 'a-westley' },
-  },
-  {
-    id: 'p-1004',
-    title: 'Beachfront Rental',
-    price: 1200,       // per week (mock)
-    beds: 3, baths: 2, area: 140,
+    id: 'p-101',
+    title: 'Harbourside 2BR Apartment',
     type: 'rental',
-    city: 'Gold Coast', country: 'AU',
+    price: 950, // $/wk
+    beds: 2,
+    baths: 1,
+    area: 78,
+    address: '12 Wharf St, Sydney NSW',
+    image: '/placeholders/apt-1.svg',
+    city: 'Sydney',
+  },
+  {
+    id: 'p-102',
+    title: 'Modern Family Home',
+    type: 'sale',
+    price: 1850000,
+    beds: 4,
+    baths: 2,
+    area: 210,
+    address: '45 Koala Ave, Brisbane QLD',
+    image: '/placeholders/house-1.svg',
+    city: 'Brisbane',
+  },
+  {
+    id: 'p-103',
+    title: 'CBD Office Suite',
+    type: 'commercial',
+    price: 3500000,
+    beds: 0,
+    baths: 2,
+    area: 760,
+    address: '101 Collins St, Melbourne VIC',
+    image: '/placeholders/office-1.svg',
+    city: 'Melbourne',
+  },
+  {
+    id: 'p-104',
+    title: 'Beachside 1BR',
+    type: 'rental',
+    price: 680,
+    beds: 1,
+    baths: 1,
+    area: 55,
+    address: '8 Ocean Rd, Gold Coast QLD',
     image: '/placeholders/apt-2.svg',
-    agent: { name: 'Westley Buhagiar', id: 'a-westley' },
-  }
+    city: 'Gold Coast',
+  },
 ];

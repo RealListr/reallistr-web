@@ -1,39 +1,52 @@
 'use client';
-import { useState, useMemo } from 'react';
-import type { ListingType, Property } from '@/data/properties';
+import { useMemo, useState } from 'react';
+import type { Property } from '@/data/properties';
 
-export type Filters = {
-  type: ListingType | 'any';
-  minBeds: number;
-  maxPrice: number | null;
+type Props = {
+  data: Property[];
+  onFilter: (rows: Property[]) => void;
 };
 
-export default function FilterBar({
-  data,
-  onFilter,
-}: {
-  data: Property[];
-  onFilter: (out: Property[]) => void;
-}) {
-  const [f, setF] = useState<Filters>({ type: 'any', minBeds: 0, maxPrice: null });
+export default function FilterBar({ data, onFilter }: Props) {
+  const [q, setQ] = useState('');
+  const [type, setType] = useState<'any' | Property['type']>('any');
+  const [beds, setBeds] = useState<'any' | 1 | 2 | 3 | 4>('any');
+  const [price, setPrice] = useState<[number, number]>([0, 5_000_000]); // $ or $/wk
 
   const filtered = useMemo(() => {
-    return data.filter(p => {
-      if (f.type !== 'any' && p.type !== f.type) return false;
-      if (p.beds < f.minBeds) return false;
-      if (f.maxPrice != null && p.price > f.maxPrice) return false;
+    const qlc = q.trim().toLowerCase();
+    return data.filter((p) => {
+      if (type !== 'any' && p.type !== type) return false;
+      if (beds !== 'any' && p.beds < beds) return false;
+      if (p.price < price[0] || p.price > price[1]) return false;
+      if (qlc) {
+        const hay =
+          (p.title + ' ' + p.address + ' ' + p.city).toLowerCase();
+        if (!hay.includes(qlc)) return false;
+      }
       return true;
     });
-  }, [data, f]);
+  }, [q, type, beds, price, data]);
 
-  useMemo(() => onFilter(filtered), [filtered, onFilter]);
+  // Push results up whenever filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useMemo(() => onFilter(filtered), [filtered]);
 
   return (
-    <div className="flex flex-wrap gap-3 rounded-2xl border p-3">
+    <section className="grid grid-cols-1 gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Search */}
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search address, city, title"
+        className="h-10 rounded-lg border px-3 outline-none"
+      />
+
+      {/* Type */}
       <select
-        className="rounded-lg border px-3 py-2 text-sm"
-        value={f.type}
-        onChange={e => setF(v => ({ ...v, type: e.target.value as Filters['type'] }))}
+        value={type}
+        onChange={(e) => setType(e.target.value as any)}
+        className="h-10 rounded-lg border px-3"
       >
         <option value="any">Any type</option>
         <option value="sale">For Sale</option>
@@ -41,30 +54,40 @@ export default function FilterBar({
         <option value="commercial">Commercial</option>
       </select>
 
+      {/* Beds */}
       <select
-        className="rounded-lg border px-3 py-2 text-sm"
-        value={f.minBeds}
-        onChange={e => setF(v => ({ ...v, minBeds: Number(e.target.value) }))}
+        value={beds as any}
+        onChange={(e) =>
+          setBeds(e.target.value === 'any' ? 'any' : (parseInt(e.target.value, 10) as any))
+        }
+        className="h-10 rounded-lg border px-3"
       >
-        <option value="0">Any beds</option>
-        <option value="1">1+ beds</option>
+        <option value="any">Any beds</option>
+        <option value="1">1+ bed</option>
         <option value="2">2+ beds</option>
         <option value="3">3+ beds</option>
         <option value="4">4+ beds</option>
       </select>
 
+      {/* Price quick range */}
       <select
-        className="rounded-lg border px-3 py-2 text-sm"
-        value={String(f.maxPrice ?? '')}
-        onChange={e =>
-          setF(v => ({ ...v, maxPrice: e.target.value ? Number(e.target.value) : null }))
-        }
+        className="h-10 rounded-lg border px-3"
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === 'any') setPrice([0, 5_000_000]);
+          else if (v === 'low') setPrice([0, 1000]);          // for rentals
+          else if (v === 'mid') setPrice([1000, 3000]);       // for rentals
+          else if (v === 'sale1') setPrice([0, 1_000_000]);   // for sale
+          else if (v === 'sale2') setPrice([1_000_000, 5_000_000]);
+        }}
+        defaultValue="any"
       >
-        <option value="">No price cap</option>
-        <option value="750000">$750k</option>
-        <option value="1000000">$1.0m</option>
-        <option value="1500000">$1.5m</option>
+        <option value="any">Any price</option>
+        <option value="low">Rent ≤ $1k/wk</option>
+        <option value="mid">Rent $1k–3k/wk</option>
+        <option value="sale1">Sale ≤ $1m</option>
+        <option value="sale2">Sale $1m–$5m</option>
       </select>
-    </div>
+    </section>
   );
 }

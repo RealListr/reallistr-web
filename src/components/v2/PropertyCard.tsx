@@ -1,42 +1,32 @@
 'use client';
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Property } from '@/data/properties';
 
 export default function PropertyCard({ p }: { p: Property }) {
   const priceLabel =
-    p.type === 'rental' || p.type === 'commercial'
-      ? `$${p.price.toLocaleString()}/wk`
-      : `$${p.price.toLocaleString()}`;
+    p.type === 'rental' ? `$${p.price.toLocaleString()}/wk` : `$${p.price.toLocaleString()}`;
 
   return (
-    <Link
-      href={`/v2/p/${p.id}`}
-      className="block rounded-2xl border hover:shadow-md transition"
-    >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-t-2xl bg-muted">
+    <article className="rounded-2xl border p-3 hover:shadow-sm transition">
+      <Link href={`/v2/p/${p.id}`} className="block overflow-hidden rounded-xl">
         <Image
           src={p.image}
           alt={p.title}
-          fill
-          sizes="(min-width: 1024px) 320px, 100vw"
-          className="object-cover"
-          priority={false}
+          width={800}
+          height={500}
+          className="h-48 w-full object-cover"
+          priority
         />
-        <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white">
-          {p.type.toUpperCase()}
-        </span>
-      </div>
-      <div className="p-4">
-        <div className="text-base font-semibold">{priceLabel}</div>
-        <div className="text-sm text-muted-foreground">{p.title}</div>
-        <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
-          <span>{p.beds} bd</span>
-          <span>{p.baths} ba</span>
-          <span>{p.area} m²</span>
+      </Link>
+      <div className="mt-3 space-y-1">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">{p.title}</h3>
+          <span className="text-sm font-medium text-foreground/80">{priceLabel}</span>
         </div>
-        <div className="mt-2 text-xs">{p.city}, {p.country}</div>
+        <p className="text-sm text-muted-foreground">{p.address}</p>
+        <div className="text-xs text-muted-foreground">{p.beds} bd · {p.baths} ba · {p.area} m²</div>
       </div>
-    </Link>
+    </article>
   );
 }
