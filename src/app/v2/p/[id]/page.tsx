@@ -2,7 +2,7 @@
 import { notFound } from 'next/navigation';
 import DetailClient from './DetailClient';
 import { PROPERTIES, type Property } from '@/data/properties';
-import type { AgentLite } from '@/types/media';
+import type { AgentLite, Pod, Short } from '@/types/media';
 
 type MaybeBeds   = Property & { bedrooms?: number; beds?: number };
 type MaybeBaths  = Property & { bathrooms?: number; baths?: number };
@@ -10,6 +10,8 @@ type MaybeCars   = Property & { cars?: number; parking?: number };
 type MaybeAddress = Property & { address?: string; streetAddress?: string; line1?: string };
 type MaybeSuburb  = Property & { suburb?: string; city?: string; locality?: string };
 type MaybeLatLng  = Property & { lat?: number; lng?: number; latitude?: number; longitude?: number };
+// Typed media/agents on heterogeneous seed objects
+type MaybeMedia   = Property & { shorts?: Short[]; pods?: Pod[]; agents?: AgentLite[] };
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,6 +45,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const lat = (item as MaybeLatLng).lat ?? (item as MaybeLatLng).latitude;
   const lng = (item as MaybeLatLng).lng ?? (item as MaybeLatLng).longitude;
 
+  // Typed reads (no any)
+  const shorts: Short[] = (item as MaybeMedia).shorts ?? [];
+  const pods: Pod[] = (item as MaybeMedia).pods ?? [];
+  const agents: AgentLite[] = (item as MaybeMedia).agents ?? [];
+
   return (
     <DetailClient
       hero={item.images?.[0] ?? '/images/hero-fallback.jpg'}
@@ -51,10 +58,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       priceLabel={priceLabel}
       status={item.type === 'rental' ? 'RENTAL' : 'SALE'}
       description={item.description ?? '—'}
-      facts={facts as any}
-      shorts={(item as any).shorts ?? []}
-      pods={(item as any).pods ?? []}
-      agents={((item as any).agents ?? []) as AgentLite[]}
+      facts={facts}
+      shorts={shorts}
+      pods={pods}
+      agents={agents}
       lat={typeof lat === 'number' ? lat : undefined}
       lng={typeof lng === 'number' ? lng : undefined}
     />
