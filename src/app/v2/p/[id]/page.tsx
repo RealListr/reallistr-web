@@ -1,15 +1,13 @@
-'use client';
-
-import { useMemo } from 'react';
+// Server component (no "use client")
 import Image from 'next/image';
-import type { Property } from '@/data/properties';
-import { PROPERTIES } from '@/data/properties';
+import type { PageProps } from 'next';
+import { PROPERTIES, type Property } from '@/data/properties';
 
-export default function PropertyDetail({ params }: { params: { id: string } }) {
-  const p: Property | undefined = useMemo(
-    () => PROPERTIES.find(x => x.id === params.id),
-    [params.id]
-  );
+export default async function PropertyDetail(
+  { params }: PageProps<{ id: string }>
+) {
+  const { id } = await params;
+  const p: Property | undefined = PROPERTIES.find(x => x.id === id);
 
   if (!p) {
     return <main className="mx-auto max-w-6xl p-6">Not found.</main>;
@@ -33,7 +31,7 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
           <div className="mt-3 grid grid-cols-3 gap-3">
             {p.images.slice(1).map((src, i) => (
               <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-xl border bg-gray-50">
-                <Image src={src} alt={`${p.title} ${i+2}`} fill className="object-cover" />
+                <Image src={src} alt={`${p.title} ${i + 2}`} fill className="object-cover" />
               </div>
             ))}
           </div>
@@ -53,21 +51,20 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
           Request Info
         </button>
 
-        {/* map placeholder (replace with Mapbox later) */}
+        {/* map placeholder */}
         <div className="mt-4 rounded-2xl border p-8 text-center text-sm text-muted-foreground">
           Map preview temporarily unavailable
         </div>
       </aside>
 
       {/* ListrShorts */}
-      <section className="lg:col-span-12">
-        {p.shorts && p.shorts.length > 0 && (
+      {p.shorts?.length ? (
+        <section className="lg:col-span-12">
           <div className="mt-10">
             <h2 className="mb-3 text-lg font-semibold">ListrShorts</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {p.shorts.map(s => (
                 <div key={s.id} className="overflow-hidden rounded-2xl border">
-                  {/* YouTube shorts embed (works with any YT id) */}
                   <div className="relative aspect-[9/16] w-full bg-black">
                     <iframe
                       className="absolute left-0 top-0 h-full w-full"
@@ -85,12 +82,12 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
               ))}
             </div>
           </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       {/* ListrPods */}
-      <section className="lg:col-span-12">
-        {p.pods && p.pods.length > 0 && (
+      {p.pods?.length ? (
+        <section className="lg:col-span-12">
           <div className="mt-10">
             <h2 className="mb-3 text-lg font-semibold">ListrPods</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,8 +106,8 @@ export default function PropertyDetail({ params }: { params: { id: string } }) {
               ))}
             </div>
           </div>
-        )}
-      </section>
+        </section>
+      ) : null}
     </main>
   );
 }
