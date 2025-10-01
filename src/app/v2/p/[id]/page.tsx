@@ -4,43 +4,29 @@ import DetailClient from './DetailClient';
 import { PROPERTIES, type Property } from '@/data/properties';
 import type { AgentLite } from '@/types/media';
 
-// Optional extensions for heterogeneous seed data
 type MaybeBeds   = Property & { bedrooms?: number; beds?: number };
 type MaybeBaths  = Property & { bathrooms?: number; baths?: number };
 type MaybeCars   = Property & { cars?: number; parking?: number };
-
-// Address variants we've seen in seeds
-type MaybeAddress = Property & {
-  address?: string;
-  streetAddress?: string;
-  line1?: string;
-};
-// Suburb/City variants
-type MaybeSuburb = Property & {
-  suburb?: string;
-  neighborhood?: string;
-  city?: string;
-  town?: string;
-  region?: string;
-};
-// Agents (optional in seeds)
-type MaybeAgents = Property & { agents?: AgentLite[] };
-
-// Best-effort helpers
-function pickAddress(p: Property): string {
-  const m = p as MaybeAddress;
-  return m.address ?? m.streetAddress ?? m.line1 ?? '—';
-}
-function pickSuburb(p: Property): string {
-  const m = p as MaybeSuburb;
-  return m.suburb ?? m.neighborhood ?? m.city ?? m.town ?? m.region ?? '';
-}
+type MaybeAddress = Property & { address?: string; streetAddress?: string; line1?: string };
+type MaybeSuburb  = Property & { suburb?: string; city?: string; locality?: string };
+type MaybeLatLng  = Property & { lat?: number; lng?: number; latitude?: number; longitude?: number };
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-
   const item = PROPERTIES.find(p => String(p.id) === id) as Property | undefined;
   if (!item) notFound();
+
+  const address =
+    (item as MaybeAddress).address ??
+    (item as MaybeAddress).streetAddress ??
+    (item as MaybeAddress).line1 ??
+    '—';
+
+  const suburb =
+    (item as MaybeSuburb).suburb ??
+    (item as MaybeSuburb).city ??
+    (item as MaybeSuburb).locality ??
+    '';
 
   const priceLabel =
     item.type === 'rental'
@@ -48,26 +34,29 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       : `$${(item.price ?? 0).toLocaleString()}`;
 
   const facts = [
-    { label: 'Type', value: item.type === 'rental' ? 'RENTAL' : 'SALE', icon: 'size' as const },
+    { label: 'Type', value: item.type === 'rental' ? 'RENTAL' : 'SALE' as const },
     { label: 'Bedrooms', value: String((item as MaybeBeds).bedrooms ?? (item as MaybeBeds).beds ?? '-') , icon: 'bed' as const },
     { label: 'Bathrooms', value: String((item as MaybeBaths).bathrooms ?? (item as MaybeBaths).baths ?? '-') , icon: 'bath' as const },
     { label: 'Parking', value: String((item as MaybeCars).cars ?? (item as MaybeCars).parking ?? '-') , icon: 'car' as const },
   ];
 
-  const agents = (item as MaybeAgents).agents ?? [];
+  const lat = (item as MaybeLatLng).lat ?? (item as MaybeLatLng).latitude;
+  const lng = (item as MaybeLatLng).lng ?? (item as MaybeLatLng).longitude;
 
   return (
     <DetailClient
-      hero={item.images?.[0] ?? '/placeholder/hero.jpg'}
-      address={pickAddress(item)}
-      suburb={pickSuburb(item)}
+      hero={item.images?.[0] ?? '/images/hero-fallback.jpg'}
+      address={address}
+      suburb={suburb}
       priceLabel={priceLabel}
       status={item.type === 'rental' ? 'RENTAL' : 'SALE'}
-      shorts={item.shorts ?? []}
-      pods={item.pods ?? []}
       description={item.description ?? '—'}
-      facts={facts}
-      agents={agents}
+      facts={facts as any}
+      shorts={(item as any).shorts ?? []}
+      pods={(item as any).pods ?? []}
+      agents={((item as any).agents ?? []) as AgentLite[]}
+      lat={typeof lat === 'number' ? lat : undefined}
+      lng={typeof lng === 'number' ? lng : undefined}
     />
   );
 }
