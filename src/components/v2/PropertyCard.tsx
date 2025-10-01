@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Property } from '@/data/properties';
-import { cn } from '@/lib/utils'; // if you don't have cn, replace cn(...) with the joined classes
 
 function PriceBadge({ p }: { p: Property }) {
   const label = p.type === 'rental'

@@ -1,10 +1,9 @@
 // Server component (no "use client")
 import Image from 'next/image';
-import type { PageProps } from 'next';
 import { PROPERTIES, type Property } from '@/data/properties';
 
 export default async function PropertyDetail(
-  { params }: PageProps<{ id: string }>
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const p: Property | undefined = PROPERTIES.find(x => x.id === id);
@@ -51,7 +50,6 @@ export default async function PropertyDetail(
           Request Info
         </button>
 
-        {/* map placeholder */}
         <div className="mt-4 rounded-2xl border p-8 text-center text-sm text-muted-foreground">
           Map preview temporarily unavailable
         </div>
