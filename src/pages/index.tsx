@@ -1,9 +1,11 @@
+import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 
 /** Property icons */
 type IconName =
   | "bed" | "car" | "bath" | "solar" | "plug" | "ruler" | "home" | "bolt" | "map-pin" | "info" | "bar-chart";
+
 const ORDER: IconName[] = ["bed","car","bath","solar","plug","ruler","home","bolt","map-pin","info","bar-chart"];
 const STRONG: Record<IconName, boolean> = {
   bed:true, car:true, bath:true, solar:false, plug:false, ruler:false, home:false, bolt:false,
@@ -24,12 +26,51 @@ const AGENTS: Agent[] = [
   { id: "3", name: "Sam Lee",           role: "Buyer Specialist", phone: "+61123451111", messageHref: "sms:+61123451111" },
 ];
 
+/** Single source of truth for the current property (no duplicates) */
 const PROPERTY = {
   price: "$2,450,000",
   addressLine: "12 Example Street, Bondi NSW",
   open1: "Sat 11:15–11:45am",
   open2: "Wed 5:30–6:00pm",
 };
+
+/** Right-rail click router */
+function handleIconClick(name: IconName) {
+  switch (name) {
+    case "map-pin":
+      window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
+      return;
+    case "bar-chart":
+      window.location.href = "/dash";
+      return;
+    case "info":
+      window.location.href = "/p/info";
+      return;
+    case "bolt":
+      window.location.href = "/value";
+      return;
+    case "ruler":
+      window.location.href = "/specs";
+      return;
+    case "plug":
+      window.location.href = "/utilities";
+      return;
+    case "home":
+      window.location.href = "/";
+      return;
+    case "bed":
+      window.location.href = "/details/bedrooms";
+      return;
+    case "bath":
+      window.location.href = "/details/bathrooms";
+      return;
+    case "car":
+      window.location.href = "/details/parking";
+      return;
+    default:
+      alert(`"${name}" tapped – wire specific action next.`);
+  }
+}
 
 export default function Home() {
   const page: React.CSSProperties = {
@@ -78,9 +119,7 @@ export default function Home() {
   const dockWrap: React.CSSProperties = {
     width: DOCK_W, height: PANEL_H, padding: 12, display: "flex",
   };
-  const divider: React.CSSProperties = {
-    width: 1, background: "rgba(148,163,184,.35)",
-  };
+  const divider: React.CSSProperties = { width: 1, background: "rgba(148,163,184,.35)" };
   const hud: React.CSSProperties = {
     width: HUD_W, height: PANEL_H, padding: 14,
     display: "flex", flexDirection: "column", justifyContent: "space-between",
@@ -108,27 +147,6 @@ export default function Home() {
     }
   `;
 
-  function handleIconClick(name: IconName) {
-    switch (name) {
-      case "map-pin": {
-        window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
-        break;
-      }
-      case "info": {
-        alert("Info sheet coming next.");
-        break;
-      }
-      case "bar-chart": {
-        window.location.href = "/dash";
-        break;
-      }
-      default: {
-        // Temporary feedback; replace with real data/side-panels later
-        alert(`"${name}" tapped. We’ll wire data next.`);
-      }
-    }
-  }
-
   return (
     <main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
@@ -153,19 +171,29 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Right-side icon stack */}
+      {/* Right-side icon stack (interactive) */}
       <div style={stack}>
         {ORDER.map((name) => {
-          const s = STRONG[name] ? { ...chipStrong } : { ...chipBase };
+          const base = STRONG[name] ? { ...chipStrong } : { ...chipBase };
+          const style: React.CSSProperties = {
+            ...base,
+            transition: "transform .12s ease, background-color .12s ease, box-shadow .12s ease",
+            outline: "none",
+          };
           return (
             <button
               key={name}
               type="button"
               className="chip"
-              style={s}
+              style={style}
               title={name}
               aria-label={name}
               onClick={() => handleIconClick(name)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name)}
+              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 6px 18px rgba(15,23,42,.10)")}
+              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+              onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
+              onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
             >
               <Icon
                 name={name as any}
