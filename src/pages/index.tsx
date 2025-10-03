@@ -5,7 +5,10 @@ import AgentDock, { type Agent } from "@/app/components/AgentDock";
 type IconName =
   | "bed" | "car" | "bath" | "solar" | "plug" | "ruler" | "home" | "bolt" | "map-pin" | "info" | "bar-chart";
 const ORDER: IconName[] = ["bed","car","bath","solar","plug","ruler","home","bolt","map-pin","info","bar-chart"];
-const STRONG: Record<IconName, boolean> = { bed:true, car:true, bath:true, solar:false, plug:false, ruler:false, home:false, bolt:false, "map-pin":false, info:false, "bar-chart":false };
+const STRONG: Record<IconName, boolean> = {
+  bed:true, car:true, bath:true, solar:false, plug:false, ruler:false, home:false, bolt:false,
+  "map-pin":false, info:false, "bar-chart":false
+};
 
 /** Tokens */
 const EDGE = 24;
@@ -20,6 +23,13 @@ const AGENTS: Agent[] = [
   { id: "2", name: "Alex Morton",       role: "Sales Agent", phone: "+61123450000", messageHref: "sms:+61123450000" },
   { id: "3", name: "Sam Lee",           role: "Buyer Specialist", phone: "+61123451111", messageHref: "sms:+61123451111" },
 ];
+
+const PROPERTY = {
+  price: "$2,450,000",
+  addressLine: "12 Example Street, Bondi NSW",
+  open1: "Sat 11:15–11:45am",
+  open2: "Wed 5:30–6:00pm",
+};
 
 export default function Home() {
   const page: React.CSSProperties = {
@@ -39,6 +49,7 @@ export default function Home() {
     background: "rgba(255,255,255,.35)",
     backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
     display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer",
   };
   const chipStrong: React.CSSProperties = {
     ...chipBase,
@@ -85,6 +96,8 @@ export default function Home() {
   };
 
   const css = `
+    .chip:focus-visible { outline: 2px solid rgba(31,41,55,.6); outline-offset: 2px; }
+    .chip:hover { background: rgba(255,255,255,.75); }
     @media (max-width: 1024px) {
       .shared { right: ${EDGE}px; left: ${EDGE}px; flex-direction: column; }
       .shared .divider { height: 1px; width: 100%; }
@@ -94,6 +107,27 @@ export default function Home() {
       .dock .list { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; gap: 10px; }
     }
   `;
+
+  function handleIconClick(name: IconName) {
+    switch (name) {
+      case "map-pin": {
+        window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
+        break;
+      }
+      case "info": {
+        alert("Info sheet coming next.");
+        break;
+      }
+      case "bar-chart": {
+        window.location.href = "/dash";
+        break;
+      }
+      default: {
+        // Temporary feedback; replace with real data/side-panels later
+        alert(`"${name}" tapped. We’ll wire data next.`);
+      }
+    }
+  }
 
   return (
     <main style={page}>
@@ -109,23 +143,38 @@ export default function Home() {
 
         <section className="hud" style={hud} aria-label="Property summary">
           <div>
-            <div style={price}>$2,450,000</div>
-            <div style={address}>12 Example Street, Bondi NSW</div>
+            <div style={price}>{PROPERTY.price}</div>
+            <div style={address}>{PROPERTY.addressLine}</div>
           </div>
           <div style={opens}>
-            <span style={pill}>Sat 11:15–11:45am</span>
-            <span style={pill}>Wed 5:30–6:00pm</span>
+            <span style={pill}>{PROPERTY.open1}</span>
+            <span style={pill}>{PROPERTY.open2}</span>
           </div>
         </section>
       </div>
 
       {/* Right-side icon stack */}
       <div style={stack}>
-        {ORDER.map((name) => (
-          <div key={name} style={STRONG[name] ? chipStrong : chipBase} title={name}>
-            <Icon name={name as any} size={22} style={{ color: STRONG[name] ? "rgba(17,24,39,.85)" : "rgba(17,24,39,.70)" }} />
-          </div>
-        ))}
+        {ORDER.map((name) => {
+          const s = STRONG[name] ? { ...chipStrong } : { ...chipBase };
+          return (
+            <button
+              key={name}
+              type="button"
+              className="chip"
+              style={s}
+              title={name}
+              aria-label={name}
+              onClick={() => handleIconClick(name)}
+            >
+              <Icon
+                name={name as any}
+                size={22}
+                style={{ color: STRONG[name] ? "rgba(17,24,39,.85)" : "rgba(17,24,39,.70)" }}
+              />
+            </button>
+          );
+        })}
       </div>
     </main>
   );
