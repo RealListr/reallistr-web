@@ -1,3 +1,4 @@
+// src/pages/index.tsx
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
@@ -21,12 +22,12 @@ const HUD_W   = 380;
 const DOCK_W  = 320;
 
 const AGENTS: Agent[] = [
-  { id: "1", name: "Westley Buhagiar", role: "Principal", phone: "+61123456789", messageHref: "sms:+61123456789" },
+  { id: "1", name: "Westley Buhagiar", role: "Principal",   phone: "+61123456789", messageHref: "sms:+61123456789" },
   { id: "2", name: "Alex Morton",       role: "Sales Agent", phone: "+61123450000", messageHref: "sms:+61123450000" },
   { id: "3", name: "Sam Lee",           role: "Buyer Specialist", phone: "+61123451111", messageHref: "sms:+61123451111" },
 ];
 
-/** Single source of truth for the current property (no duplicates) */
+/** Single source of truth for the current property */
 const PROPERTY = {
   price: "$2,450,000",
   addressLine: "12 Example Street, Bondi NSW",
@@ -34,8 +35,27 @@ const PROPERTY = {
   open2: "Wed 5:30–6:00pm",
 };
 
-/** Right-rail click router */
-function handleIconClick(name: IconName) {
+/** Quick-facts (shown on hover/tap; no navigation) */
+const QUICK_FACTS = {
+  bed: 4,
+  bath: 3,
+  car: 2,
+  solar: true, // has solar?
+  plug: true,  // has EV charger?
+} as const;
+
+type QuickName = "bed" | "bath" | "car" | "solar" | "plug";
+
+function formatFact(name: QuickName) {
+  if (name === "bed")  return { label: "Bedrooms",  value: `${QUICK_FACTS.bed}` };
+  if (name === "bath") return { label: "Bathrooms", value: `${QUICK_FACTS.bath}` };
+  if (name === "car")  return { label: "Parking",   value: `${QUICK_FACTS.car}` };
+  if (name === "solar")return { label: "Solar",     value: QUICK_FACTS.solar ? "Installed" : "None" };
+  return { label: "EV Charger", value: QUICK_FACTS.plug ? "Installed" : "None" };
+}
+
+/** Right-rail click router (non-quick icons only) */
+function routeFor(name: Exclude<IconName, QuickName>) {
   switch (name) {
     case "map-pin":
       window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
@@ -52,20 +72,8 @@ function handleIconClick(name: IconName) {
     case "ruler":
       window.location.href = "/specs";
       return;
-    case "plug":
-      window.location.href = "/utilities";
-      return;
     case "home":
       window.location.href = "/";
-      return;
-    case "bed":
-      window.location.href = "/details/bedrooms";
-      return;
-    case "bath":
-      window.location.href = "/details/bathrooms";
-      return;
-    case "car":
-      window.location.href = "/details/parking";
       return;
     default:
       alert(`"${name}" tapped – wire specific action next.`);
@@ -147,9 +155,79 @@ export default function Home() {
     }
   `;
 
+  /** Quick-fact toast state + positioned next to hovered/tapped icon */
+  const [fact, setFact] = React.useState<null | { label: string; value: string }>(null);
+  const [factTop, setFactTop] = React.useState<number | null>(null);
+  const factTimer = React.useRef<number | null>(null);
+
+  // toast visual
+  const factStyle: React.CSSProperties = {
+    position: "fixed",
+    right: EDGE + STACK + 12, // to the LEFT of the icon rail
+    top: factTop ?? 0,
+    transform: "translateY(-50%)",
+    zIndex: 60,
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "rgba(255,255,255,.90)",
+    backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+    boxShadow: "0 6px 24px rgba(15,23,42,.10)",
+    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial",
+    fontSize: 13,
+    color: "#111827",
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+    pointerEvents: "none",
+  };
+  const factDot: React.CSSProperties = { width: 6, height: 6, borderRadius: 999, background: "#111827" };
+
+  /** Utility: compute top from a button’s rect (center vertically) */
+  const centerTop = (btn: HTMLElement) => {
+    const r = btn.getBoundingClientRect();
+    return r.top + r.height / 2;
+  };
+
+  /** Utility to show/hide toast with optional auto-hide after tap */
+  const showFact = (name: QuickName, btn?: HTMLElement, autoHideMs?: number) => {
+    setFact(formatFact(name));
+    if (btn) setFactTop(centerTop(btn));
+    if (factTimer.current) window.clearTimeout(factTimer.current);
+    if (autoHideMs) {
+      factTimer.current = window.setTimeout(() => setFact(null), autoHideMs);
+    }
+  };
+  const hideFact = () => {
+    if (factTimer.current) window.clearTimeout(factTimer.current);
+    setFact(null);
+  };
+
+  /** Is a given icon one of the quick facts? */
+  const isQuick = (n: IconName): n is QuickName =>
+    (["bed","bath","car","solar","plug"] as const).includes(n as any);
+
+  /** Handle click across the rail */
+  const handleIconClick = (name: IconName, btn?: HTMLElement) => {
+    if (isQuick(name)) {
+      showFact(name, btn, 1600); // auto hide after 1.6s
+      return;
+    }
+    routeFor(name as Exclude<IconName, QuickName>);
+  };
+
   return (
     <main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
+
+      {/* Quick-fact toast */}
+      {fact && factTop !== null && (
+        <div style={factStyle} role="status" aria-live="polite">
+          <span style={factDot} />
+          <strong style={{fontWeight:600}}>{fact.label}</strong>
+          <span>• {fact.value}</span>
+        </div>
+      )}
 
       {/* ONE long card containing Dock (bare) + divider + HUD (bare) */}
       <div className="shared" style={sharedCard}>
@@ -180,6 +258,7 @@ export default function Home() {
             transition: "transform .12s ease, background-color .12s ease, box-shadow .12s ease",
             outline: "none",
           };
+
           return (
             <button
               key={name}
@@ -188,12 +267,16 @@ export default function Home() {
               style={style}
               title={name}
               aria-label={name}
-              onClick={() => handleIconClick(name)}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name)}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 6px 18px rgba(15,23,42,.10)")}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
+              onMouseEnter={(e) => isQuick(name) && showFact(name, e.currentTarget)}
+              onMouseLeave={hideFact}
+              onFocus={(e) => isQuick(name) && showFact(name, e.currentTarget)}
+              onBlur={hideFact}
+              onClick={(e) => handleIconClick(name, e.currentTarget)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name, e.currentTarget)}
               onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
               onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+              onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 6px 18px rgba(15,23,42,.10)")}
+              onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
             >
               <Icon
                 name={name as any}
