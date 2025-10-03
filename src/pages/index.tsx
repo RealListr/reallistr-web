@@ -1,103 +1,183 @@
-// src/pages/index.tsx
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 
-/** Property icons */
+/** ===== Naming & glyphs ================================================== */
+/** Public names we’ll use in the rail. */
 type IconName =
-  | "bed" | "car" | "bath" | "solar" | "plug" | "ruler" | "home" | "bolt" | "map-pin" | "info" | "bar-chart";
+  | "bed"
+  | "car"
+  | "bath"
+  | "solar"
+  | "plug"
+  | "floor"     // was "ruler"
+  | "media"     // was "home"
+  | "like"      // was "bolt"
+  | "map"       // was "map-pin"
+  | "info"
+  | "data";     // was "bar-chart"
 
-const ORDER: IconName[] = ["bed","car","bath","solar","plug","ruler","home","bolt","map-pin","info","bar-chart"];
-const STRONG: Record<IconName, boolean> = {
-  bed:true, car:true, bath:true, solar:false, plug:false, ruler:false, home:false, bolt:false,
-  "map-pin":false, info:false, "bar-chart":false
-};
-
-/** Tokens */
-const EDGE = 24;
-const STACK = 44;
-const GAP  = 16;
-const PANEL_H = 140;
-const HUD_W   = 380;
-const DOCK_W  = 320;
-
-const AGENTS: Agent[] = [
-  { id: "1", name: "Westley Buhagiar", role: "Principal",   phone: "+61123456789", messageHref: "sms:+61123456789" },
-  { id: "2", name: "Alex Morton",       role: "Sales Agent", phone: "+61123450000", messageHref: "sms:+61123450000" },
-  { id: "3", name: "Sam Lee",           role: "Buyer Specialist", phone: "+61123451111", messageHref: "sms:+61123451111" },
+/** Order on the rail (top→bottom). */
+const ORDER: IconName[] = [
+  "bed", "car", "bath", "solar", "plug", "floor", "media", "map", "info", "like", "data",
 ];
 
-/** Single source of truth for the current property */
+/** Which chips get the “strong” tone (darker icon). */
+const STRONG: Record<IconName, boolean> = {
+  bed: true, car: true, bath: true,
+  solar: false, plug: false, floor: false, media: false, map: false, info: false, like: false, data: false,
+};
+
+/** Map friendly labels for tooltips/popovers. */
+const LABEL: Record<IconName, string> = {
+  bed: "Bedrooms",
+  car: "Parking",
+  bath: "Bathrooms",
+  solar: "Solar",
+  plug: "EV Charger",
+  floor: "Floor Plan",
+  media: "Media",
+  map: "Map",
+  info: "Property Info",
+  like: "Like",
+  data: "Data Facts",
+};
+
+/** Our sprite may not have “like” or “map” names; alias them to existing glyphs. */
+const GLYPH: Record<IconName, string> = {
+  bed: "bed",
+  car: "car",
+  bath: "bath",
+  solar: "sun",           // use your solar glyph id if it’s different
+  plug: "plug",
+  floor: "ruler",         // ruler glyph used for “Floor Plan”
+  media: "home",          // home glyph represents Media hub for now
+  map: "map-pin",         // existing map-pin glyph
+  info: "info",
+  like: "heart",          // heart glyph as “Like”
+  data: "bar-chart",      // bar-chart glyph
+};
+
+/** ===== Property Data (single source of truth) =========================== */
 const PROPERTY = {
   price: "$2,450,000",
   addressLine: "12 Example Street, Bondi NSW",
   open1: "Sat 11:15–11:45am",
   open2: "Wed 5:30–6:00pm",
+  facts: {
+    bed: 4,
+    bath: 2,
+    car: 2,
+    solar: true,
+    plug: true,
+  },
 };
 
-/** Quick-facts (shown on hover/tap; no navigation) */
-const QUICK_FACTS = {
-  bed: 4,
-  bath: 3,
-  car: 2,
-  solar: true, // has solar?
-  plug: true,  // has EV charger?
-} as const;
+const AGENTS: Agent[] = [
+  { id: "1", name: "Westley Buhagiar", role: "Principal", phone: "+61123456789", messageHref: "sms:+61123456789" },
+  { id: "2", name: "Alex Morton", role: "Sales Agent", phone: "+61123450000", messageHref: "sms:+61123450000" },
+  { id: "3", name: "Sam Lee", role: "Buyer Specialist", phone: "+61123451111", messageHref: "sms:+61123451111" },
+];
 
-type QuickName = "bed" | "bath" | "car" | "solar" | "plug";
+/** ===== Layout tokens ==================================================== */
+const EDGE = 24;
+const STACK = 44;
+const GAP = 16;
+const PANEL_H = 140;
+const HUD_W = 380;
+const DOCK_W = 320;
 
-function formatFact(name: QuickName) {
-  if (name === "bed")  return { label: "Bedrooms",  value: `${QUICK_FACTS.bed}` };
-  if (name === "bath") return { label: "Bathrooms", value: `${QUICK_FACTS.bath}` };
-  if (name === "car")  return { label: "Parking",   value: `${QUICK_FACTS.car}` };
-  if (name === "solar")return { label: "Solar",     value: QUICK_FACTS.solar ? "Installed" : "None" };
-  return { label: "EV Charger", value: QUICK_FACTS.plug ? "Installed" : "None" };
-}
-
-/** Right-rail click router (non-quick icons only) */
-function routeFor(name: Exclude<IconName, QuickName>) {
+/** ===== Click routing ==================================================== */
+function handleIconClick(name: IconName) {
   switch (name) {
-    case "map-pin":
+    case "map":
       window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
       return;
-    case "bar-chart":
+    case "data":
       window.location.href = "/dash";
       return;
     case "info":
       window.location.href = "/p/info";
       return;
-    case "bolt":
-      window.location.href = "/value";
-      return;
-    case "ruler":
+    case "floor":
       window.location.href = "/specs";
       return;
-    case "home":
-      window.location.href = "/";
+    case "media":
+      window.location.href = "/media"; // stub route to a media hub page
       return;
-    default:
-      alert(`"${name}" tapped – wire specific action next.`);
+    case "like":
+      alert("Saved to favourites (placeholder)."); // TODO: hook to user list
+      return;
+    // These show popovers on hover/tap; click can stay noop for now.
+    case "bed":
+    case "bath":
+    case "car":
+    case "solar":
+    case "plug":
+      return;
   }
 }
 
+/** ===== Small popover positioned next to an icon ======================== */
+type PopoverState =
+  | { open: false }
+  | {
+      open: true;
+      name: IconName;
+      left: number;
+      top: number;
+      text: string;
+    };
+
+function getQuickText(name: IconName): string | null {
+  switch (name) {
+    case "bed":
+      return `${PROPERTY.facts.bed}`;
+    case "bath":
+      return `${PROPERTY.facts.bath}`;
+    case "car":
+      return `${PROPERTY.facts.car}`;
+    case "solar":
+      return PROPERTY.facts.solar ? "Installed" : "Not installed";
+    case "plug":
+      return PROPERTY.facts.plug ? "Installed" : "Not installed";
+    default:
+      return null;
+  }
+}
+
+/** ===== Page ============================================================ */
 export default function Home() {
   const page: React.CSSProperties = {
-    position: "relative", width: "100vw", height: "100vh",
+    position: "relative",
+    width: "100vw",
+    height: "100vh",
     overflow: "hidden",
     background: "linear-gradient(135deg,#f3f4f6,#e5e7eb)",
   };
 
-  /* Right icon stack */
+  // right rail styles
   const stack: React.CSSProperties = {
-    position: "absolute", right: EDGE, bottom: EDGE,
-    display: "flex", flexDirection: "column", gap: 12, alignItems: "center", zIndex: 50,
+    position: "absolute",
+    right: EDGE,
+    bottom: EDGE,
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    alignItems: "center",
+    zIndex: 50,
   };
   const chipBase: React.CSSProperties = {
-    width: STACK, height: STACK, borderRadius: 12,
+    width: STACK,
+    height: STACK,
+    borderRadius: 12,
     border: "1px solid rgba(148,163,184,.35)",
     background: "rgba(255,255,255,.35)",
-    backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-    display: "flex", alignItems: "center", justifyContent: "center",
+    backdropFilter: "blur(6px)",
+    WebkitBackdropFilter: "blur(6px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     cursor: "pointer",
   };
   const chipStrong: React.CSSProperties = {
@@ -106,7 +186,7 @@ export default function Home() {
     background: "rgba(255,255,255,.55)",
   };
 
-  /** One shared bottom bar card */
+  // shared bottom bar (dock + summary)
   const sharedCard: React.CSSProperties = {
     position: "absolute",
     right: EDGE + STACK + GAP,
@@ -117,29 +197,37 @@ export default function Home() {
     borderRadius: 16,
     border: "1px solid rgba(148,163,184,.35)",
     background: "rgba(255,255,255,.65)",
-    backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
     boxShadow: "0 6px 24px rgba(15,23,42,.08)",
     overflow: "hidden",
     zIndex: 40,
   };
-
-  /* Inside sections get no outer chrome */
   const dockWrap: React.CSSProperties = {
-    width: DOCK_W, height: PANEL_H, padding: 12, display: "flex",
+    width: DOCK_W,
+    height: PANEL_H,
+    padding: 12,
+    display: "flex",
   };
   const divider: React.CSSProperties = { width: 1, background: "rgba(148,163,184,.35)" };
   const hud: React.CSSProperties = {
-    width: HUD_W, height: PANEL_H, padding: 14,
-    display: "flex", flexDirection: "column", justifyContent: "space-between",
+    width: HUD_W,
+    height: PANEL_H,
+    padding: 14,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   };
-  const price: React.CSSProperties   = { fontSize: 22, fontWeight: 700, color: "#111827", lineHeight: 1.1 };
+  const price: React.CSSProperties = { fontSize: 22, fontWeight: 700, color: "#111827", lineHeight: 1.1 };
   const address: React.CSSProperties = { fontSize: 14, color: "#374151" };
-  const opens: React.CSSProperties   = { display: "flex", gap: 10, flexWrap: "wrap" };
-  const pill: React.CSSProperties    = {
-    fontSize: 12, color: "#111827",
+  const opens: React.CSSProperties = { display: "flex", gap: 10, flexWrap: "wrap" };
+  const pill: React.CSSProperties = {
+    fontSize: 12,
+    color: "#111827",
     border: "1px solid rgba(148,163,184,.35)",
     background: "rgba(255,255,255,.65)",
-    borderRadius: 999, padding: "6px 10px",
+    borderRadius: 999,
+    padding: "6px 10px",
   };
 
   const css = `
@@ -155,79 +243,32 @@ export default function Home() {
     }
   `;
 
-  /** Quick-fact toast state + positioned next to hovered/tapped icon */
-  const [fact, setFact] = React.useState<null | { label: string; value: string }>(null);
-  const [factTop, setFactTop] = React.useState<number | null>(null);
-  const factTimer = React.useRef<number | null>(null);
+  /** Popover state anchored to icon rect */
+  const [pop, setPop] = React.useState<PopoverState>({ open: false });
+  const hideTimer = React.useRef<number | null>(null);
 
-  // toast visual
-  const factStyle: React.CSSProperties = {
-    position: "fixed",
-    right: EDGE + STACK + 12, // to the LEFT of the icon rail
-    top: factTop ?? 0,
-    transform: "translateY(-50%)",
-    zIndex: 60,
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid rgba(148,163,184,.35)",
-    background: "rgba(255,255,255,.90)",
-    backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-    boxShadow: "0 6px 24px rgba(15,23,42,.10)",
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial",
-    fontSize: 13,
-    color: "#111827",
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-    pointerEvents: "none",
-  };
-  const factDot: React.CSSProperties = { width: 6, height: 6, borderRadius: 999, background: "#111827" };
-
-  /** Utility: compute top from a button’s rect (center vertically) */
-  const centerTop = (btn: HTMLElement) => {
-    const r = btn.getBoundingClientRect();
-    return r.top + r.height / 2;
-  };
-
-  /** Utility to show/hide toast with optional auto-hide after tap */
-  const showFact = (name: QuickName, btn?: HTMLElement, autoHideMs?: number) => {
-    setFact(formatFact(name));
-    if (btn) setFactTop(centerTop(btn));
-    if (factTimer.current) window.clearTimeout(factTimer.current);
-    if (autoHideMs) {
-      factTimer.current = window.setTimeout(() => setFact(null), autoHideMs);
-    }
-  };
-  const hideFact = () => {
-    if (factTimer.current) window.clearTimeout(factTimer.current);
-    setFact(null);
-  };
-
-  /** Is a given icon one of the quick facts? */
-  const isQuick = (n: IconName): n is QuickName =>
-    (["bed","bath","car","solar","plug"] as const).includes(n as any);
-
-  /** Handle click across the rail */
-  const handleIconClick = (name: IconName, btn?: HTMLElement) => {
-    if (isQuick(name)) {
-      showFact(name, btn, 1600); // auto hide after 1.6s
-      return;
-    }
-    routeFor(name as Exclude<IconName, QuickName>);
-  };
+  function showPopover(name: IconName, target: HTMLElement) {
+    const txt = getQuickText(name);
+    if (!txt) return;
+    const r = target.getBoundingClientRect();
+    const left = r.left - 14; // nudge left a touch
+    const top = r.top + r.height / 2;
+    setPop({
+      open: true,
+      name,
+      left,
+      top,
+      text: txt,
+    });
+  }
+  function scheduleHide() {
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setPop({ open: false }), 140) as unknown as number;
+  }
 
   return (
     <main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-
-      {/* Quick-fact toast */}
-      {fact && factTop !== null && (
-        <div style={factStyle} role="status" aria-live="polite">
-          <span style={factDot} />
-          <strong style={{fontWeight:600}}>{fact.label}</strong>
-          <span>• {fact.value}</span>
-        </div>
-      )}
 
       {/* ONE long card containing Dock (bare) + divider + HUD (bare) */}
       <div className="shared" style={sharedCard}>
@@ -258,28 +299,25 @@ export default function Home() {
             transition: "transform .12s ease, background-color .12s ease, box-shadow .12s ease",
             outline: "none",
           };
-
           return (
             <button
               key={name}
               type="button"
               className="chip"
               style={style}
-              title={name}
-              aria-label={name}
-              onMouseEnter={(e) => isQuick(name) && showFact(name, e.currentTarget)}
-              onMouseLeave={hideFact}
-              onFocus={(e) => isQuick(name) && showFact(name, e.currentTarget)}
-              onBlur={hideFact}
-              onClick={(e) => handleIconClick(name, e.currentTarget)}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name, e.currentTarget)}
+              title={LABEL[name]}
+              aria-label={LABEL[name]}
+              onClick={() => handleIconClick(name)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name)}
+              onMouseEnter={(e) => showPopover(name, e.currentTarget)}
+              onMouseLeave={scheduleHide}
+              onFocus={(e) => showPopover(name, e.currentTarget)}
+              onBlur={scheduleHide}
               onMouseDown={(e) => (e.currentTarget.style.transform = "translateY(1px)")}
               onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
-              onMouseOver={(e) => (e.currentTarget.style.boxShadow = "0 6px 18px rgba(15,23,42,.10)")}
-              onMouseOut={(e) => (e.currentTarget.style.boxShadow = "none")}
             >
               <Icon
-                name={name as any}
+                name={GLYPH[name] as any}
                 size={22}
                 style={{ color: STRONG[name] ? "rgba(17,24,39,.85)" : "rgba(17,24,39,.70)" }}
               />
@@ -287,6 +325,43 @@ export default function Home() {
           );
         })}
       </div>
+
+      {/* Popover anchored next to hovered icon */}
+      {pop.open && (
+        <div
+          onMouseEnter={() => hideTimer.current && window.clearTimeout(hideTimer.current)}
+          onMouseLeave={scheduleHide}
+          style={{
+            position: "fixed",
+            transform: `translate(calc(${pop.left}px - 12rem), calc(${pop.top}px - 50%))`, // to LEFT of the icon
+            zIndex: 60,
+            background: "rgba(255,255,255,.95)",
+            border: "1px solid rgba(148,163,184,.35)",
+            borderRadius: 12,
+            boxShadow: "0 10px 24px rgba(15,23,42,.14)",
+            padding: "10px 12px",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            minWidth: 160,
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: "rgba(17,24,39,.9)",
+              display: "inline-block",
+            }}
+          />
+          <span style={{ fontSize: 14, color: "#111827", fontWeight: 600 }}>{LABEL[pop.name]}</span>
+          <span style={{ fontSize: 14, color: "#111827", marginLeft: "auto" }}>{pop.text}</span>
+        </div>
+      )}
     </main>
   );
 }
