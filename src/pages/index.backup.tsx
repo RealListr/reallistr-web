@@ -1,9 +1,12 @@
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
+import QuickFactsRail from "@/components/rail/QuickFactsRail";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 
+
 /** ===== Naming & glyphs ================================================== */
+/** Public names we’ll use in the rail. */
 type IconName =
   | "bed"
   | "car"
@@ -22,13 +25,13 @@ const ORDER: IconName[] = [
   "bed", "car", "bath", "solar", "plug", "floor", "media", "map", "info", "like", "data",
 ];
 
-/** Strong tone (darker glyph). */
+/** Which chips get the “strong” tone (darker icon). */
 const STRONG: Record<IconName, boolean> = {
   bed: true, car: true, bath: true,
   solar: false, plug: false, floor: false, media: false, map: false, info: false, like: false, data: false,
 };
 
-/** Tooltip labels. */
+/** Map friendly labels for tooltips/popovers. */
 const LABEL: Record<IconName, string> = {
   bed: "Bedrooms",
   car: "Parking",
@@ -43,28 +46,34 @@ const LABEL: Record<IconName, string> = {
   data: "Data Facts",
 };
 
-/** Aliases to Icon glyph names. */
+/** Our sprite may not have “like” or “map” names; alias them to existing glyphs. */
 const GLYPH: Record<IconName, string> = {
   bed: "bed",
   car: "car",
   bath: "bath",
-  solar: "sun",
+  solar: "sun",           // use your solar glyph id if it’s different
   plug: "plug",
-  floor: "ruler",
-  media: "home",
-  map: "map-pin",
+  floor: "ruler",         // ruler glyph used for “Floor Plan”
+  media: "home",          // home glyph represents Media hub for now
+  map: "map-pin",         // existing map-pin glyph
   info: "info",
-  like: "heart",
-  data: "bar-chart",
+  like: "heart",          // heart glyph as “Like”
+  data: "bar-chart",      // bar-chart glyph
 };
 
-/** ===== Property Data ==================================================== */
+/** ===== Property Data (single source of truth) =========================== */
 const PROPERTY = {
   price: "$2,450,000",
   addressLine: "12 Example Street, Bondi NSW",
   open1: "Sat 11:15–11:45am",
   open2: "Wed 5:30–6:00pm",
-  facts: { bed: 4, bath: 2, car: 2, solar: true, plug: true },
+  facts: {
+    bed: 4,
+    bath: 2,
+    car: 2,
+    solar: true,
+    plug: true,
+  },
 };
 
 const AGENTS: Agent[] = [
@@ -81,47 +90,37 @@ const PANEL_H = 140;
 const HUD_W = 380;
 const DOCK_W = 320;
 
-/** Popover state anchored to icon rect */
-type PopoverState =
-  | { open: false }
-  | { open: true; name: IconName; left: number; top: number; text: string };
-
-function getQuickText(name: IconName): string | null {
-  switch (name) {
-    case "bed": return `${PROPERTY.facts.bed}`;
-    case "bath": return `${PROPERTY.facts.bath}`;
-    case "car": return `${PROPERTY.facts.car}`;
-    case "solar": return PROPERTY.facts.solar ? "Installed" : "Not installed";
-    case "plug": return PROPERTY.facts.plug ? "Installed" : "Not installed";
-    default: return null;
-  }
-}
-
 function handleIconClick(name: IconName) {
   switch (name) {
     case "map":
       window.location.href = `/map?address=${encodeURIComponent(PROPERTY.addressLine)}`;
       return;
+
     case "data":
       window.location.href = "/dash";
       return;
+
     case "info":
       window.location.href = "/p/info";
       return;
+
     case "floor": {
       const ev = new CustomEvent("open-floor-plan", {
-        detail: { src: "/images/floorplan-demo.svg" },
+        detail: { src: "/images/floorplan-demo.svg" }, // swap to your real src if you have it
       });
       window.dispatchEvent(ev);
       return;
     }
+
     case "media": {
       window.dispatchEvent(new Event("toggle-media-panel"));
       return;
     }
+
     case "like":
       alert("Saved to favourites (placeholder).");
       return;
+
     // popover-only
     case "bed":
     case "bath":
@@ -132,48 +131,117 @@ function handleIconClick(name: IconName) {
   }
 }
 
+
+/** ===== Small popover positioned next to an icon ======================== */
+type PopoverState =
+  | { open: false }
+  | {
+      open: true;
+      name: IconName;
+      left: number;
+      top: number;
+      text: string;
+    };
+
+function getQuickText(name: IconName): string | null {
+  switch (name) {
+    case "bed":
+      return `${PROPERTY.facts.bed}`;
+    case "bath":
+      return `${PROPERTY.facts.bath}`;
+    case "car":
+      return `${PROPERTY.facts.car}`;
+    case "solar":
+      return PROPERTY.facts.solar ? "Installed" : "Not installed";
+    case "plug":
+      return PROPERTY.facts.plug ? "Installed" : "Not installed";
+    default:
+      return null;
+  }
+}
+
 /** ===== Page ============================================================ */
 export default function Home() {
   const page: React.CSSProperties = {
-    position: "relative", width: "100vw", height: "100vh", overflow: "hidden",
+    position: "relative",
+    width: "100vw",
+    height: "100vh",
+    overflow: "hidden",
     background: "linear-gradient(135deg,#f3f4f6,#e5e7eb)",
   };
 
   // right rail styles
   const stack: React.CSSProperties = {
-    position: "absolute", right: EDGE, bottom: EDGE,
-    display: "flex", flexDirection: "column", gap: 12, alignItems: "center", zIndex: 50,
+    position: "absolute",
+    right: EDGE,
+    bottom: EDGE,
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    alignItems: "center",
+    zIndex: 50,
   };
   const chipBase: React.CSSProperties = {
-    width: STACK, height: STACK, borderRadius: 12,
-    border: "1px solid rgba(148,163,184,.35)", background: "rgba(255,255,255,.35)",
-    backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+    width: STACK,
+    height: STACK,
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "rgba(255,255,255,.35)",
+    backdropFilter: "blur(6px)",
+    WebkitBackdropFilter: "blur(6px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
   };
   const chipStrong: React.CSSProperties = {
-    ...chipBase, border: "1px solid rgba(148,163,184,.55)", background: "rgba(255,255,255,.55)",
+    ...chipBase,
+    border: "1px solid rgba(148,163,184,.55)",
+    background: "rgba(255,255,255,.55)",
   };
 
   // shared bottom bar (dock + summary)
   const sharedCard: React.CSSProperties = {
-    position: "absolute", right: EDGE + STACK + GAP, bottom: EDGE,
-    display: "flex", alignItems: "stretch", gap: 0, borderRadius: 16,
-    border: "1px solid rgba(148,163,184,.35)", background: "rgba(255,255,255,.65)",
-    backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-    boxShadow: "0 6px 24px rgba(15,23,42,.08)", overflow: "hidden", zIndex: 40,
+    position: "absolute",
+    right: EDGE + STACK + GAP,
+    bottom: EDGE,
+    display: "flex",
+    alignItems: "stretch",
+    gap: 0,
+    borderRadius: 16,
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "rgba(255,255,255,.65)",
+    backdropFilter: "blur(8px)",
+    WebkitBackdropFilter: "blur(8px)",
+    boxShadow: "0 6px 24px rgba(15,23,42,.08)",
+    overflow: "hidden",
+    zIndex: 40,
   };
-  const dockWrap: React.CSSProperties = { width: DOCK_W, height: PANEL_H, padding: 12, display: "flex" };
+  const dockWrap: React.CSSProperties = {
+    width: DOCK_W,
+    height: PANEL_H,
+    padding: 12,
+    display: "flex",
+  };
   const divider: React.CSSProperties = { width: 1, background: "rgba(148,163,184,.35)" };
   const hud: React.CSSProperties = {
-    width: HUD_W, height: PANEL_H, padding: 14,
-    display: "flex", flexDirection: "column", justifyContent: "space-between",
+    width: HUD_W,
+    height: PANEL_H,
+    padding: 14,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
   };
   const price: React.CSSProperties = { fontSize: 22, fontWeight: 700, color: "#111827", lineHeight: 1.1 };
   const address: React.CSSProperties = { fontSize: 14, color: "#374151" };
   const opens: React.CSSProperties = { display: "flex", gap: 10, flexWrap: "wrap" };
   const pill: React.CSSProperties = {
-    fontSize: 12, color: "#111827", border: "1px solid rgba(148,163,184,.35)",
-    background: "rgba(255,255,255,.65)", borderRadius: 999, padding: "6px 10px",
+    fontSize: 12,
+    color: "#111827",
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "rgba(255,255,255,.65)",
+    borderRadius: 999,
+    padding: "6px 10px",
   };
 
   const css = `
@@ -188,8 +256,14 @@ export default function Home() {
       .dock .list { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; gap: 10px; }
     }
   `;
+      {/* Popover anchored next to hovered icon */}
+      
 
-  // Popover state & helpers (must be BEFORE return)
+      {/* Mount once: listens for "open-floor-plan" */}
+      <FloorPlanOverlay />
+    </main>
+
+  /** Popover state anchored to icon rect */
   const [pop, setPop] = React.useState<PopoverState>({ open: false });
   const hideTimer = React.useRef<number | null>(null);
 
@@ -197,9 +271,15 @@ export default function Home() {
     const txt = getQuickText(name);
     if (!txt) return;
     const r = target.getBoundingClientRect();
-    const left = r.left - 14;
+    const left = r.left - 14; // nudge left a touch
     const top = r.top + r.height / 2;
-    setPop({ open: true, name, left, top, text: txt });
+    setPop({
+      open: true,
+      name,
+      left,
+      top,
+      text: txt,
+    });
   }
   function scheduleHide() {
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
@@ -210,12 +290,14 @@ export default function Home() {
     <main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
-      {/* ONE long card containing Dock + divider + HUD */}
+      {/* ONE long card containing Dock (bare) + divider + HUD (bare) */}
       <div className="shared" style={sharedCard}>
         <div className="dock" style={dockWrap}>
           <AgentDock agents={AGENTS} width={DOCK_W} height={PANEL_H} maxVisible={3} chrome="bare" />
         </div>
+
         <div className="divider" style={divider} />
+
         <section className="hud" style={hud} aria-label="Property summary">
           <div>
             <div style={price}>{PROPERTY.price}</div>
@@ -255,14 +337,19 @@ export default function Home() {
               onMouseUp={(e) => (e.currentTarget.style.transform = "translateY(0)")}
             >
               <Icon
-                name={GLYPH[name] as any}
-                className="h-[22px] w-[22px]"
-                style={{ color: STRONG[name] ? "rgba(17,24,39,.85)" : "rgba(17,24,39,.70)" }}
-              />
+  name={GLYPH[name] as any}
+  className="h-[22px] w-[22px]"
+  style={{ color: STRONG[name] ? "rgba(17,24,39,.85)" : "rgba(17,24,39,.70)" }}
+/>
+
             </button>
           );
         })}
       </div>
+<>
+  {/* ...your existing page layout... */}
+  <FloorPlanOverlay />
+</>
 
       {/* Popover anchored next to hovered icon */}
       {pop.open && (
@@ -271,7 +358,7 @@ export default function Home() {
           onMouseLeave={scheduleHide}
           style={{
             position: "fixed",
-            transform: `translate(calc(${pop.left}px - 12rem), calc(${pop.top}px - 50%))`,
+            transform: `translate(calc(${pop.left}px - 12rem), calc(${pop.top}px - 50%))`, // to LEFT of the icon
             zIndex: 60,
             background: "rgba(255,255,255,.95)",
             border: "1px solid rgba(148,163,184,.35)",
@@ -289,17 +376,17 @@ export default function Home() {
           <span
             aria-hidden
             style={{
-              width: 6, height: 6, borderRadius: 999,
-              background: "rgba(17,24,39,.9)", display: "inline-block",
+              width: 6,
+              height: 6,
+              borderRadius: 999,
+              background: "rgba(17,24,39,.9)",
+              display: "inline-block",
             }}
           />
           <span style={{ fontSize: 14, color: "#111827", fontWeight: 600 }}>{LABEL[pop.name]}</span>
           <span style={{ fontSize: 14, color: "#111827", marginLeft: "auto" }}>{pop.text}</span>
         </div>
       )}
-
-      {/* Floor plan overlay mounted once */}
-      <FloorPlanOverlay />
     </main>
   );
 }
