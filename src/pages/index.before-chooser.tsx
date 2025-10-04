@@ -3,7 +3,6 @@ import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
-import MediaChooser, { openMediaChooser } from "@/components/rail/MediaChooser";
 // near other imports
 
 // inside your page component's JSX (toward the bottom of <main>)
@@ -307,10 +306,7 @@ export default function Home() {
       {/* Floor plan overlay mounted once */}
       <FloorPlanOverlay />
     
-      
-      <MediaChooser />
       <MediaOverlay />
-<MediaOverlay />
 </main>
   );
 }
