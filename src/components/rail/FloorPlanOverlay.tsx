@@ -12,6 +12,7 @@ export default function FloorPlanOverlay() {
     const handler = (e: Event) => {
       const ce = e as OpenEvt;
       if (ce?.detail?.src) {
+        setErr(null);
         setSrc(ce.detail.src);
         setOpen(true);
       }
@@ -36,7 +37,28 @@ export default function FloorPlanOverlay() {
         style={{ width: "75vw", height: "75vh", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }}
       >
         {!err ? (
-          <img src={src} alt="Floor plan" className="h-full w-full object-contain bg-white" loading="eager" decoding="async" />
+          <img
+            src={src}
+            alt="Floor plan"
+            className="h-full w-full object-contain bg-white"
+            loading="eager"
+            decoding="async"
+            onError={() => setErr("Couldn’t load the floor plan.")}
+          />
+        ) : (
+          <div className="h-full w-full grid place-items-center text-sm text-muted-foreground">
+            <div className="text-center">
+              <div className="mb-2 font-medium">{err}</div>
+              <button
+                className="px-3 py-1 rounded-md border border-black/10 bg-white hover:bg-black/5"
+                onClick={() => { setErr(null); const t = src; setSrc(""); setTimeout(() => setSrc(t), 0); }}
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           aria-label="Close"
           onClick={() => setOpen(false)}
