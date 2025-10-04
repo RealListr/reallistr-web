@@ -9,7 +9,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <FloorPlanOverlay />
-      <FloorPlanCapture defaultSrc="/images/floorplan-123.png" />
+      <FloorPlanCapture defaultSrc="/images/floorplans/demo-floorplan.svg" />
       <Component {...pageProps} />
     </>
   );
