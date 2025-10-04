@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 type OpenEvt = CustomEvent<{ kind: "image"|"video"|"podcast" }>;
