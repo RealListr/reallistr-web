@@ -9,7 +9,6 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Component {...pageProps} />
-      {/* Global UI mounts */}
       <FloorPlanOverlay />
       <MediaOverlay />
       <MediaPanel />
