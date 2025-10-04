@@ -8,18 +8,13 @@ import {
 type AnyIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 const ALIASES: Record<string, AnyIcon> = {
-  home: Home,
-  car: Car,
-  plug: Plug, ev: Plug, power: Plug,
-  card: CreditCard,
-  map: MapPin,
-  phone: Phone,
-  shield: Shield,
+  home: Home, car: Car, plug: Plug, ev: Plug, power: Plug,
+  card: CreditCard, map: MapPin, phone: Phone, shield: Shield,
 
-  // 🔆 solar + synonyms
+  // solar + synonyms
   solar: SunMedium, sun: SunMedium, energy: SunMedium,
 
-  // ❤️ like + synonyms
+  // like + synonyms
   like: Heart, liked: Heart, favourite: Heart, favorite: Heart,
   heart: Heart, save: Bookmark, saved: Bookmark, bookmark: Bookmark,
 
@@ -31,27 +26,21 @@ const ALIASES: Record<string, AnyIcon> = {
   info: Info, settings: Settings, list: List,
 };
 
-function toPascal(input: string) {
-  return (input || "")
-    .replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim()
-    .split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join("");
+function toPascal(s: string) {
+  return (s||"").replace(/[_-]+/g," ").trim()
+    .split(/\s+/).map(w=>w[0]?.toUpperCase()+w.slice(1).toLowerCase()).join("");
 }
 
 function resolveIcon(name?: string): AnyIcon {
   if (!name) return Circle;
   const key = name.toLowerCase().trim();
   if (key in ALIASES) return ALIASES[key];
-
-  const pascal = toPascal(key);
-  const dyn = (Lucide as Record<string, AnyIcon | undefined>)[pascal];
-  return dyn ?? Circle; // never undefined → no prerender crash
+  const dyn = (Lucide as Record<string, AnyIcon|undefined>)[toPascal(key)];
+  return dyn ?? Circle;
 }
 
 export default function Icon({
-  name,
-  className,
-  ...props
+  name, className, ...props
 }: { name?: string } & React.SVGProps<SVGSVGElement>) {
   const C = resolveIcon(name);
   return <C className={className ?? "h-5 w-5"} aria-hidden="true" {...props} />;
