@@ -29,7 +29,7 @@ export default function MediaOverlay(){
   return (
     <>
       <div
-        className="fixed inset-0 z-[120] bg-black/20 backdrop-blur-sm"
+        className="fixed inset-0 z-[210] bg-black/20 backdrop-blur-sm"
         onClick={()=>setOpen(false)}
         aria-hidden
       />

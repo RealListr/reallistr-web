@@ -1,26 +1,54 @@
 "use client";
 import * as React from "react";
 
+declare global {
+  interface Window {
+    __openMediaPanel?: () => void;
+    __closeMediaPanel?: () => void;
+  }
+}
+
 export default function MediaPanel(){
   const [open, setOpen] = React.useState(false);
 
+  const openPanel  = React.useCallback(()=> setOpen(true), []);
+  const closePanel = React.useCallback(()=> setOpen(false), []);
+
   React.useEffect(()=>{
-    const toggle = ()=> setOpen(v=>!v);
+    // Make imperative helpers available ASAP
+    window.__openMediaPanel  = openPanel;
+    window.__closeMediaPanel = closePanel;
+
+    const toggle = () => {
+      // debug ping so we KNOW the event reached the client
+      console.log("[MediaPanel] toggle-media-panel received");
+      setOpen(v => !v);
+    };
+
     window.addEventListener("toggle-media-panel", toggle);
-    const onKey = (e: KeyboardEvent)=> e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent)=> e.key === "Escape" && closePanel();
     document.addEventListener("keydown", onKey);
+
+    // Optional: #media hash also opens (handy for debugging)
+    if (location.hash === "#media") openPanel();
+
     return ()=>{
       window.removeEventListener("toggle-media-panel", toggle);
       document.removeEventListener("keydown", onKey);
+      // clean up globals
+      if (window.__openMediaPanel  === openPanel)  delete window.__openMediaPanel;
+      if (window.__closeMediaPanel === closePanel) delete window.__closeMediaPanel;
     };
-  },[]);
+  }, [openPanel, closePanel]);
 
-  if(!open) return null; // prevent any <img> from rendering while closed
+  if(!open) return null;
 
   const Tile = ({label, kind}:{label:string; kind:"image"|"video"|"podcast"}) => (
     <button
       onClick={()=>{
-        const src = kind==="image" ? "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-size='28' fill='%23999'%3E"+label+" demo%3C/text%3E%3C/svg%3E" : "";
+        const src = kind==="image"
+          ? "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-size='28' fill='%23999'%3E"+label+" demo%3C/text%3E%3C/svg%3E"
+          : "";
         window.dispatchEvent(new CustomEvent("open-media-overlay", { detail: { kind, src } }));
       }}
       className="group relative aspect-[4/3] w-full rounded-xl border border-black/5 bg-white/90 backdrop-blur-md shadow hover:shadow-lg transition"
@@ -34,15 +62,15 @@ export default function MediaPanel(){
 
   return (
     <>
-      <div className="fixed inset-0 z-[100]" onClick={()=>setOpen(false)} aria-hidden />
+      <div className="fixed inset-0 z-[190]" onClick={closePanel} aria-hidden />
       <aside
-        className="fixed right-4 top-24 z-[110] w-[360px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-2xl border border-black/5 p-4"
+        className="fixed right-4 top-24 z-[200] w-[360px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-2xl border border-black/5 p-4"
         role="dialog" aria-modal="true" aria-label="Media panel"
       >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-muted-foreground">Media</h3>
           <button
-            onClick={()=>setOpen(false)}
+            onClick={closePanel}
             className="h-8 w-8 grid place-items-center rounded-lg border border-black/5 bg-white/90"
             aria-label="Close media panel"
           >×</button>
