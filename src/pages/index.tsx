@@ -1,6 +1,8 @@
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
+import QuickFactsRail from "@/components/rail/QuickFactsRail";
+
 
 /** ===== Naming & glyphs ================================================== */
 /** Public names we’ll use in the rail. */
@@ -242,6 +244,7 @@ export default function Home() {
       .dock .list { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); overflow-x: auto; gap: 10px; }
     }
   `;
+<QuickFactsRail beds={3} baths={2} parking={1} solar="Installed" ev="Available" />
 
   /** Popover state anchored to icon rect */
   const [pop, setPop] = React.useState<PopoverState>({ open: false });

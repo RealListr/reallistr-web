@@ -3,19 +3,16 @@ import * as Popover from "@radix-ui/react-popover";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  trigger: React.ReactNode;     // your icon button
-  label: string;                // e.g. "Solar"
-  value?: string | number;      // e.g. "Installed"
+  trigger: React.ReactNode;   // your icon button
+  label: string;              // e.g. "Solar"
+  value?: string | number;    // e.g. "Installed"
   className?: string;
 };
 
 export default function QuickFact({ trigger, label, value, className }: Props) {
   return (
     <Popover.Root>
-      <Popover.Trigger asChild>
-        {/* click only, no hover; button itself handles hover styles */}
-        {trigger}
-      </Popover.Trigger>
+      <Popover.Trigger asChild>{trigger}</Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           side="left"
