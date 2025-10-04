@@ -1,5 +1,3 @@
-import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
-import FloorPlanCapture from "@/components/rail/FloorPlanCapture";
 import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
@@ -282,10 +280,7 @@ export default function Home() {
   }
 
   return (
-  <>
-    <FloorPlanOverlay />
-    <FloorPlanCapture defaultSrc="/images/floorplan-123.png" />
-  <main style={page}>
+  <><main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
       {/* ONE long card containing Dock (bare) + divider + HUD (bare) */}
@@ -341,7 +336,6 @@ export default function Home() {
               />
             </button>
           );
-  </>
 )
         })}
       </div>
