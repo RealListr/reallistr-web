@@ -2,10 +2,8 @@ import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
-import MediaOverlay from "@/components/rail/MediaOverlay";
-import MediaChooser from "@/components/rail/MediaChooser";
-import MediaOverlay from "@/components/rail/MediaOverlay";
-import MediaChooser from "@/components/rail/MediaChooser";
+import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
+import MediaChooser, { openMediaChooser } from "@/components/rail/MediaChooser";
 // near other imports
 
 // inside your page component's JSX (toward the bottom of <main>)
@@ -330,35 +328,11 @@ const page: React.CSSProperties = {
     
       
       
-      
-      
       <MediaChooser />
       <MediaOverlay />
 <MediaChooser />
       <MediaOverlay />
-<MediaChooser />
-      <MediaOverlay />
-<MediaChooser />
-      <MediaOverlay />
 <MediaOverlay />
-  <button
-        onClick={() => { (window as any).rlOpenMediaChooser?.([
-          { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-          { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-          { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" },
-        ]); }}
-        className="fixed bottom-6 right-6 z-[3000] px-3 py-2 rounded-full shadow-lg bg-black text-white text-xs">
-        Media ▶︎
-      </button>
-      <button
-        onClick={() => { (window as any).rlOpenMediaChooser?.([
-          { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-          { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-          { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" }
-        ]); }}
-        className="fixed bottom-6 right-6 z-[3000] px-3 py-2 rounded-full shadow-lg bg-black text-white text-xs">
-        Media ▶︎
-      </button>
-    </main>
+</main>
   );
 }

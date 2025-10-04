@@ -16,6 +16,22 @@ export function openMediaChooser(items: MediaItem[]) {
 }
 
 export default function MediaChooser() {
+  if (typeof window !== "undefined") {
+    (window as any).rlOpenMediaChooser = (items:any[]) => {
+      window.dispatchEvent(new CustomEvent("open-media-chooser", { detail: { items } }));
+    };
+    window.addEventListener("keydown", (e:any) => {
+      if (e.key === "M" && e.shiftKey) {
+        const demo = [
+          { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
+          { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
+          { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" },
+        ] as any;
+        window.dispatchEvent(new CustomEvent("open-media-chooser", { detail: { items: demo } }));
+      }
+    }, { once: true });
+  }
+
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<MediaItem[]>([]);
 
