@@ -106,7 +106,7 @@ export default function MediaOverlay() {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={close}
     >
       <div

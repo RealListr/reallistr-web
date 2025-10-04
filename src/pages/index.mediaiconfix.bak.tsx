@@ -141,24 +141,7 @@ function handleIconClick(name: IconName) {
 /** ===== Page ============================================================ */
 export default function Home() {
   
-  
   React.useEffect(() => {
-    const handler = (e:any) => {
-      const el = (e.target as HTMLElement)?.closest?.("[data-rl-media]");
-      if (!el) return;
-      console.log("[Media] rail icon clicked");
-      window.dispatchEvent(new CustomEvent("open-media-chooser", {
-        detail: { items: [
-          { type:"image", src:"https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label:"Living" },
-          { type:"image", src:"https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label:"Kitchen" },
-          { type:"video", src:"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label:"Video" }
-        ] }
-      }));
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
-React.useEffect(() => {
     if (typeof document === "undefined") return;
     const handler = (e: any) => {
       const t = e.target as HTMLElement;

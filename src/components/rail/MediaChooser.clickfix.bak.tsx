@@ -77,7 +77,8 @@ export default function MediaChooser() {
             return (
               <button
                 key={i}
-                onClick={() => { console.log("[MediaChooser] tile click", i, items[i]); openMedia(items, i);
+                onClick={() => {
+                  openMedia(items, i);
                   setOpen(false);
                 }}
                 className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 border border-black/10 hover:border-black/20"
