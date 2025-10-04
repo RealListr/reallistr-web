@@ -14,7 +14,7 @@ export default function FloorPlanFloating({ imageSrc }: { imageSrc: string }) {
 
   return (
     <>
-      <button aria-label="Floor Plan" className={btn} onClick={() => setOpen(true)}>
+      <button aria-label="Floor Plan" onClick={(e)=>{e.preventDefault&&e.preventDefault(); e.stopPropagation&&e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-floor-plan',{detail:{src:'/images/floorplan-123.png'}}));}} className={btn} onClick={() => setOpen(true)}>
         <Icon name="ruler" className="h-5 w-5" />
       </button>
 

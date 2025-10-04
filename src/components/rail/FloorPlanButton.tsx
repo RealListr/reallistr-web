@@ -13,7 +13,7 @@ export default function FloorPlanButton({ imageSrc }: { imageSrc: string }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <button aria-label="Floor Plan" className={btn}>
+        <button aria-label="Floor Plan" onClick={(e)=>{e.preventDefault&&e.preventDefault(); e.stopPropagation&&e.stopPropagation(); window.dispatchEvent(new CustomEvent('open-floor-plan',{detail:{src:'/images/floorplan-123.png'}}));}} className={btn}>
           {/* use a mapping-friendly name; 'ruler' or 'layout' both work via Icon resolver */}
           <Icon name="ruler" className="h-5 w-5" />
         </button>
