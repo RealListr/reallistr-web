@@ -20,9 +20,7 @@ export default function FloorPlanOverlay() {
   }, []);
 
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     if (open) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
@@ -31,21 +29,12 @@ export default function FloorPlanOverlay() {
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[2px]"
-        onClick={() => setOpen(false)}
-      />
+      <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
       <div
         className="fixed z-[81] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] rounded-2xl overflow-hidden"
         style={{ width: "75vw", height: "75vh", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }}
       >
-        <img
-          src={src}
-          alt="Floor plan"
-          className="h-full w-full object-contain bg-white"
-          loading="eager"
-          decoding="async"
-        />
+        <img src={src} alt="Floor plan" className="h-full w-full object-contain bg-white" loading="eager" decoding="async" />
         <button
           aria-label="Close"
           onClick={() => setOpen(false)}
