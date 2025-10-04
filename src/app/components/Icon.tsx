@@ -11,16 +11,19 @@ const ALIASES: Record<string, AnyIcon> = {
   home: Home, car: Car, plug: Plug, ev: Plug, power: Plug,
   card: CreditCard, map: MapPin, phone: Phone, shield: Shield,
 
-  // 🔆 solar + synonyms
+  // solar + synonyms
   solar: SunMedium, sun: SunMedium, energy: SunMedium,
 
-  // ❤️ like + synonyms
+  // like + synonyms
   like: Heart, liked: Heart, favourite: Heart, favorite: Heart,
   heart: Heart, save: Bookmark, saved: Bookmark, bookmark: Bookmark,
 
   // real-estate
   bed: Bed, beds: Bed, bedroom: Bed, bedrooms: Bed,
   bath: Bath, baths: Bath, bathroom: Bath, bathrooms: Bath,
+
+  // floor plan button icon
+  ruler: (Lucide as any).Ruler,
 
   // misc
   info: Info, settings: Settings, list: List,
@@ -36,7 +39,7 @@ function resolveIcon(name?: string): AnyIcon {
   const key = name.toLowerCase().trim();
   if (key in ALIASES) return ALIASES[key];
   const dyn = (Lucide as Record<string, AnyIcon|undefined>)[toPascal(key)];
-  return dyn ?? Circle; // never undefined → no crash
+  return dyn ?? Circle;
 }
 
 export default function Icon({
