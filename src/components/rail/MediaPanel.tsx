@@ -1,71 +1,58 @@
-"use client";
 import * as React from "react";
 import Icon from "@/app/components/Icon";
-
-type ToggleEvt = Event;
 
 export default function MediaPanel() {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const onToggle = (_e: ToggleEvt) => setOpen((v) => !v);
-    window.addEventListener("toggle-media-panel", onToggle as EventListener);
-    return () => window.removeEventListener("toggle-media-panel", onToggle as EventListener);
+    const onToggle = () => setOpen(v => !v);
+    window.addEventListener("toggle-media-panel", onToggle);
+    return () => window.removeEventListener("toggle-media-panel", onToggle);
   }, []);
+
+  // Close on ESC
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    if (open) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   if (!open) return null;
 
-  const Tile = ({
-    label, sub, onClick, icon
-  }: { label: string; sub: string; onClick: () => void; icon: React.ReactNode }) => (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 w-full rounded-xl border border-black/10 bg-white/95 hover:bg-black/5 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-black/20"
-    >
-      <div className="grid h-11 w-11 place-items-center rounded-lg border border-black/10 bg-white/90">
-        {icon}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs text-muted-foreground">{sub}</div>
-      </div>
-      <Icon name="chevron-right" className="h-4 w-4 opacity-50" />
-    </button>
-  );
+  const card =
+    "flex items-center gap-3 rounded-xl border border-black/5 bg-white/90 backdrop-blur-md px-4 py-3 hover:shadow-[0_10px_36px_rgba(0,0,0,0.12)] transition";
 
-  const openImage = () =>
-    window.dispatchEvent(new CustomEvent("open-media", {
-      detail: { kind: "image", src: "/images/media/demo-photo.svg", title: "Gallery" }
-    }));
-
-  const openVideo = () =>
-    window.dispatchEvent(new CustomEvent("open-media", {
-      detail: { kind: "video", src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", title: "Video" }
-    }));
-
-  const openPodcast = () =>
-    window.dispatchEvent(new CustomEvent("open-media", {
-      detail: { kind: "podcast", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", title: "Podcast" }
-    }));
+  const openOverlay = (kind: "image"|"video"|"podcast") => {
+    window.dispatchEvent(new CustomEvent("open-media", { detail: { kind } }));
+  };
 
   return (
-    <>
-      {/* light scrim to click-away */}
-      <div className="fixed inset-0 z-[70]" onClick={() => setOpen(false)} />
-      <div
-        className="fixed z-[71] rounded-2xl border border-black/10 bg-white/95 backdrop-blur-md shadow-[0_18px_50px_rgba(0,0,0,0.18)]"
-        style={{ right: "88px", top: "calc(50% - 120px)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-3 w-[320px]">
-          <div className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Media</div>
-          <div className="grid gap-2">
-            <Tile label="Images" sub="Open gallery" onClick={openImage} icon={<Icon name="image" className="h-5 w-5" />} />
-            <Tile label="Video" sub="Play video" onClick={openVideo} icon={<Icon name="video" className="h-5 w-5" />} />
-            <Tile label="Podcast" sub="Play audio" onClick={openPodcast} icon={<Icon name="headphones" className="h-5 w-5" />} />
-          </div>
-        </div>
+    <aside
+      role="dialog"
+      aria-label="Media"
+      className="fixed right-4 top-20 z-[110] w-[360px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-2xl border border-black/5 p-4"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold">Media</h3>
+        <button aria-label="Close media panel" onClick={()=>setOpen(false)} className="p-2 rounded-lg hover:bg-black/5">
+          <Icon name="x" className="h-5 w-5" />
+        </button>
       </div>
-    </>
+
+      <div className="grid gap-3">
+        <button className={card} onClick={()=>openOverlay("image")}>
+          <Icon name="image" className="h-5 w-5" /><span>Images</span>
+          <span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span>
+        </button>
+        <button className={card} onClick={()=>openOverlay("video")}>
+          <Icon name="video" className="h-5 w-5" /><span>Videos</span>
+          <span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span>
+        </button>
+        <button className={card} onClick={()=>openOverlay("podcast")}>
+          <Icon name="headphones" className="h-5 w-5" /><span>Podcast</span>
+          <span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span>
+        </button>
+      </div>
+    </aside>
   );
 }

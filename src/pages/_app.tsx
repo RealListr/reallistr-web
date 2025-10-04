@@ -10,6 +10,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Component {...pageProps} />
+      {/* Overlays mounted globally */}
       <FloorPlanCapture defaultSrc="/images/floorplans/demo-floorplan.svg" />
       <FloorPlanOverlay />
       <MediaPanel />
