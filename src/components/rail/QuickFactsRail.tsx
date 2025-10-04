@@ -2,9 +2,6 @@ import * as React from "react";
 import QuickFact from "@/components/ui/quick-fact";
 import Icon from "@/app/components/Icon";
 import FloorPlanFloating from "@/components/rail/FloorPlanFloating";
-import FloorPlanFloating from "@/components/rail/FloorPlanFloating";
-import FloorPlanButton from "@/components/rail/FloorPlanButton";
-
 const btn =
   "grid h-12 w-12 place-items-center rounded-2xl border border-black/5 " +
   "bg-white/90 backdrop-blur-md " +
@@ -75,7 +72,7 @@ export default function QuickFactsRail(props: {
           </button>
         }
       />
-    {floorPlanSrc ? <FloorPlanButton imageSrc={floorPlanSrc} /> : null}
+    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
   
