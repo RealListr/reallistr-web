@@ -11,10 +11,10 @@ const ALIASES: Record<string, AnyIcon> = {
   home: Home, car: Car, plug: Plug, ev: Plug, power: Plug,
   card: CreditCard, map: MapPin, phone: Phone, shield: Shield,
 
-  // solar + synonyms
+  // 🔆 solar + synonyms
   solar: SunMedium, sun: SunMedium, energy: SunMedium,
 
-  // like + synonyms
+  // ❤️ like + synonyms
   like: Heart, liked: Heart, favourite: Heart, favorite: Heart,
   heart: Heart, save: Bookmark, saved: Bookmark, bookmark: Bookmark,
 
@@ -36,7 +36,7 @@ function resolveIcon(name?: string): AnyIcon {
   const key = name.toLowerCase().trim();
   if (key in ALIASES) return ALIASES[key];
   const dyn = (Lucide as Record<string, AnyIcon|undefined>)[toPascal(key)];
-  return dyn ?? Circle;
+  return dyn ?? Circle; // never undefined → no crash
 }
 
 export default function Icon({
