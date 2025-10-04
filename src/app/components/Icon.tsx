@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Lucide from "lucide-react";
+import * as Lucide , Image as LucideImage, Video as LucideVideo, Headphones as LucideHeadphones, ChevronRight as LucideChevronRight, X as LucideX from "lucide-react";
 import {
   Home, Car, Plug, CreditCard, MapPin, Phone, Shield, SunMedium,
   Bed, Bath, Circle, Info, Settings, List, Heart, Bookmark
@@ -8,6 +8,12 @@ import {
 type AnyIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 const ALIASES: Record<string, AnyIcon> = {
+  image: (Lucide as any).Image || (Lucide as any).LucideImage,
+  video: (Lucide as any).Video || (Lucide as any).LucideVideo,
+  headphones: (Lucide as any).Headphones || (Lucide as any).LucideHeadphones,
+  "chevron-right": (Lucide as any).ChevronRight || (Lucide as any).LucideChevronRight,
+  x: (Lucide as any).X || (Lucide as any).LucideX,
+
   home: Home, car: Car, plug: Plug, ev: Plug, power: Plug,
   card: CreditCard, map: MapPin, phone: Phone, shield: Shield,
 
