@@ -10,7 +10,18 @@ export function TooltipProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const Tooltip = TooltipPrimitive.Root;
+/** Root with flicker-proof defaults */
+export function Tooltip({
+  children,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Root>) {
+  return (
+    <TooltipPrimitive.Root disableHoverableContent {...props}>
+      {children}
+    </TooltipPrimitive.Root>
+  );
+}
+
 export const TooltipTrigger = TooltipPrimitive.Trigger;
 
 export const TooltipContent = React.forwardRef<
@@ -21,7 +32,6 @@ export const TooltipContent = React.forwardRef<
     ref={ref}
     sideOffset={sideOffset}
     className={cn(
-      // 👇 no hover-capture / no flicker
       "pointer-events-none select-none rounded-2xl border border-black/5 bg-white px-3.5 py-2 text-sm text-zinc-900 shadow-[0_12px_40px_rgba(0,0,0,0.12)] will-change-[transform,opacity]",
       className
     )}
