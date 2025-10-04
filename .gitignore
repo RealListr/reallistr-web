@@ -14,3 +14,5 @@ out/
 # misc
 .DS_Store
 .vercel
+
+backups/
