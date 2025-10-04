@@ -1,41 +1,58 @@
-"use client"
-
+"use client";
 import * as React from "react";
-import Icon from "@/app/components/Icon";
 
-export default function MediaPanel() {
+export default function MediaPanel(){
   const [open, setOpen] = React.useState(false);
-  React.useEffect(() => {
-    const onToggle = () => setOpen(v => !v);
-    window.addEventListener("toggle-media-panel", onToggle);
-    return () => window.removeEventListener("toggle-media-panel", onToggle);
-  }, []);
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    if (open) document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
 
-  if (!open) return null;
+  React.useEffect(()=>{
+    const toggle = ()=> setOpen(v=>!v);
+    window.addEventListener("toggle-media-panel", toggle);
+    const onKey = (e: KeyboardEvent)=> e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    return ()=>{
+      window.removeEventListener("toggle-media-panel", toggle);
+      document.removeEventListener("keydown", onKey);
+    };
+  },[]);
 
-  const card = "flex items-center gap-3 rounded-xl border border-black/5 bg-white/90 backdrop-blur-md px-4 py-3 hover:shadow-[0_10px_36px_rgba(0,0,0,0.12)] transition";
+  if(!open) return null; // prevent any <img> from rendering while closed
 
-  const openOverlay = (kind: "image"|"video"|"podcast") =>
-    window.dispatchEvent(new CustomEvent("open-media", { detail: { kind } }));
+  const Tile = ({label, kind}:{label:string; kind:"image"|"video"|"podcast"}) => (
+    <button
+      onClick={()=>{
+        const src = kind==="image" ? "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f5'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-size='28' fill='%23999'%3E"+label+" demo%3C/text%3E%3C/svg%3E" : "";
+        window.dispatchEvent(new CustomEvent("open-media-overlay", { detail: { kind, src } }));
+      }}
+      className="group relative aspect-[4/3] w-full rounded-xl border border-black/5 bg-white/90 backdrop-blur-md shadow hover:shadow-lg transition"
+    >
+      <span className="absolute left-3 top-3 text-xs font-medium text-muted-foreground">{label}</span>
+      <div className="absolute inset-0 grid place-items-center text-muted-foreground/60 text-sm">
+        Open {label}
+      </div>
+    </button>
+  );
 
   return (
-    <aside role="dialog" aria-label="Media" className="fixed right-4 top-20 z-[110] w-[360px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-2xl border border-black/5 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold">Media</h3>
-        <button aria-label="Close media panel" onClick={()=>setOpen(false)} className="p-2 rounded-lg hover:bg-black/5">
-          <Icon name="x" className="h-5 w-5" />
-        </button>
-      </div>
-      <div className="grid gap-3">
-        <button className={card} onClick={()=>openOverlay("image")}><Icon name="image" className="h-5 w-5" /><span>Images</span><span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span></button>
-        <button className={card} onClick={()=>openOverlay("video")}><Icon name="video" className="h-5 w-5" /><span>Videos</span><span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span></button>
-        <button className={card} onClick={()=>openOverlay("podcast")}><Icon name="headphones" className="h-5 w-5" /><span>Podcast</span><span className="ml-auto opacity-60"><Icon name="chevron-right" className="h-4 w-4" /></span></button>
-      </div>
-    </aside>
+    <>
+      <div className="fixed inset-0 z-[100]" onClick={()=>setOpen(false)} aria-hidden />
+      <aside
+        className="fixed right-4 top-24 z-[110] w-[360px] rounded-2xl bg-white/70 backdrop-blur-xl shadow-2xl border border-black/5 p-4"
+        role="dialog" aria-modal="true" aria-label="Media panel"
+      >
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-muted-foreground">Media</h3>
+          <button
+            onClick={()=>setOpen(false)}
+            className="h-8 w-8 grid place-items-center rounded-lg border border-black/5 bg-white/90"
+            aria-label="Close media panel"
+          >×</button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Tile label="Images"  kind="image" />
+          <Tile label="Videos"  kind="video" />
+          <Tile label="Podcast" kind="podcast" />
+        </div>
+      </aside>
+    </>
   );
 }

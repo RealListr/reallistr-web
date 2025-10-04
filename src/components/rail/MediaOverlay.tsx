@@ -1,42 +1,72 @@
-"use client"
-
+"use client";
 import * as React from "react";
-import Icon from "@/app/components/Icon";
-type OpenEvt = CustomEvent<{ kind: "image"|"video"|"podcast" }>;
 
-export default function MediaOverlay() {
+type OpenEvt = CustomEvent<{ kind: "image"|"video"|"podcast"; src?: string }>;
+
+export default function MediaOverlay(){
   const [open, setOpen] = React.useState(false);
   const [kind, setKind] = React.useState<"image"|"video"|"podcast">("image");
+  const [src, setSrc]   = React.useState<string>("");
 
-  React.useEffect(() => {
-    const handler = (e: Event) => {
+  React.useEffect(()=>{
+    const onOpen = (e: Event)=>{
       const ce = e as OpenEvt;
-      if (ce?.detail?.kind) { setKind(ce.detail.kind); setOpen(true); }
+      setKind(ce.detail?.kind ?? "image");
+      setSrc(ce.detail?.src ?? "");
+      setOpen(true);
     };
-    window.addEventListener("open-media", handler as EventListener);
-    return () => window.removeEventListener("open-media", handler as EventListener);
-  }, []);
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    if (open) document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+    const onKey = (e: KeyboardEvent)=> e.key === "Escape" && setOpen(false);
+    window.addEventListener("open-media-overlay", onOpen as EventListener);
+    document.addEventListener("keydown", onKey);
+    return ()=>{
+      window.removeEventListener("open-media-overlay", onOpen as EventListener);
+      document.removeEventListener("keydown", onKey);
+    };
+  },[]);
 
-  if (!open) return null;
+  if(!open) return null; // <-- nothing in DOM when closed (prevents Safari broken icon)
 
   return (
     <>
-      <div className="fixed inset-0 z-[120] bg-black/20 backdrop-blur-sm" onClick={()=>setOpen(false)} />
-      <div className="fixed left-1/2 top-[45%] z-[130] -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[65vh] rounded-2xl bg-white/95 shadow-2xl border border-black/5 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-black/5 bg-white/80">
-          <h3 className="font-semibold">{kind === "image" ? "Images" : kind === "video" ? "Videos" : "Podcast"}</h3>
-          <button aria-label="Close" onClick={()=>setOpen(false)} className="p-2 rounded-lg hover:bg-black/5"><Icon name="x" className="h-5 w-5" /></button>
+      <div
+        className="fixed inset-0 z-[120] bg-black/20 backdrop-blur-sm"
+        onClick={()=>setOpen(false)}
+        aria-hidden
+      />
+      <div
+        className="fixed left-1/2 top-[45%] z-[130] -translate-x-1/2 -translate-y-1/2 w-[75vw] h-[65vh] rounded-2xl bg-white/95 shadow-2xl border border-black/5 overflow-hidden"
+        role="dialog" aria-modal="true" aria-label="Media"
+      >
+        <div className="h-full w-full grid place-items-center">
+          {kind==="image" && src && (
+            <img src={src} alt="Media" className="max-h-full max-w-full object-contain" />
+          )}
+          {kind==="video" && (
+            <div className="w-full h-full">
+              <video controls className="h-full w-full bg-black">
+                {src ? <source src={src} /> : null}
+              </video>
+            </div>
+          )}
+          {kind==="podcast" && (
+            <div className="p-6 text-sm text-muted-foreground">
+              <p>Podcast player</p>
+              {src ? (
+                <audio controls className="mt-2 w-full">
+                  <source src={src}/>
+                </audio>
+              ) : null}
+            </div>
+          )}
         </div>
-        <div className="w-full h-[calc(65vh-56px)] grid place-items-center">
-          {kind === "image" && <img src="/images/media/demo-gallery.svg" alt="Gallery demo" className="max-w-full max-h-full object-contain" />}
-          {kind === "video" && <video src="/videos/demo.mp4" className="max-w-full max-h-full" controls />}
-          {kind === "podcast" && <div className="text-sm opacity-80">Podcast player placeholder</div>}
-        </div>
+
+        <button
+          aria-label="Close"
+          onClick={()=>setOpen(false)}
+          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-xl border border-black/5 bg-white/90 backdrop-blur-md outline-none focus-visible:ring-2 focus-visible:ring-black/20"
+        >
+          ×
+        </button>
       </div>
     </>
   );
