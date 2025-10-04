@@ -1,7 +1,7 @@
 import * as React from "react";
 import QuickFact from "@/components/ui/quick-fact";
 import Icon from "@/app/components/Icon";
-import FloorPlanFloating from "@/components/rail/FloorPlanFloating";
+
 const btn =
   "grid h-12 w-12 place-items-center rounded-2xl border border-black/5 " +
   "bg-white/90 backdrop-blur-md " +
@@ -15,11 +15,18 @@ export default function QuickFactsRail(props: {
   parking?: number | string;
   solar?: string;
   ev?: string;
-  floorPlanSrc?: string;   // 👈 add this
+  floorPlanSrc?: string;  // optional fallback image for the overlay
   className?: string;
 }) {
-  const { beds, baths, parking, solar, ev, floorPlanSrc, className } = props; // 👈 include here
+  const { beds, baths, parking, solar, ev, floorPlanSrc, className } = props;
 
+  // opens the global overlay (FloorPlanOverlay listens for this)
+  const openFloorPlan = () => {
+    const ev = new CustomEvent("open-floor-plan", {
+      detail: { src: floorPlanSrc || "/images/floorplan-demo.svg" },
+    });
+    window.dispatchEvent(ev);
+  };
 
   return (
     <nav
@@ -31,7 +38,7 @@ export default function QuickFactsRail(props: {
         label="Bedrooms"
         value={beds}
         trigger={
-          <button aria-label="Bedrooms" className={btn}>
+          <button aria-label="Bedrooms" className={btn} data-rail-icon>
             <Icon name="bed" className="h-5 w-5" />
           </button>
         }
@@ -40,7 +47,7 @@ export default function QuickFactsRail(props: {
         label="Bathrooms"
         value={baths}
         trigger={
-          <button aria-label="Bathrooms" className={btn}>
+          <button aria-label="Bathrooms" className={btn} data-rail-icon>
             <Icon name="bath" className="h-5 w-5" />
           </button>
         }
@@ -49,7 +56,7 @@ export default function QuickFactsRail(props: {
         label="Parking"
         value={parking}
         trigger={
-          <button aria-label="Parking" className={btn}>
+          <button aria-label="Parking" className={btn} data-rail-icon>
             <Icon name="car" className="h-5 w-5" />
           </button>
         }
@@ -58,7 +65,7 @@ export default function QuickFactsRail(props: {
         label="Solar"
         value={solar}
         trigger={
-          <button aria-label="Solar" className={btn}>
+          <button aria-label="Solar" className={btn} data-rail-icon>
             <Icon name="solar" className="h-5 w-5" />
           </button>
         }
@@ -67,18 +74,21 @@ export default function QuickFactsRail(props: {
         label="EV Charger"
         value={ev}
         trigger={
-          <button aria-label="EV Charger" className={btn}>
+          <button aria-label="EV Charger" className={btn} data-rail-icon>
             <Icon name="plug" className="h-5 w-5" />
           </button>
         }
       />
-    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
-    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
-    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
-    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
-  
-  
-  
-  </nav>
+
+      {/* Floor Plan button – opens floating overlay */}
+      <button
+        aria-label="Floor Plan"
+        className={btn}
+        onClick={openFloorPlan}
+        data-rail-icon
+      >
+        <Icon name="ruler" className="h-5 w-5" />
+      </button>
+    </nav>
   );
 }
