@@ -140,26 +140,7 @@ function handleIconClick(name: IconName) {
 
 /** ===== Page ============================================================ */
 export default function Home() {
-  
-  React.useEffect(() => {
-    if (typeof document === "undefined") return;
-    const handler = (e: any) => {
-      const t = e.target as HTMLElement;
-      if (!t) return;
-      const el = t.closest("[data-rl-media]") as HTMLElement | null;
-      if (!el) return;
-      console.log("[Media] icon clicked via doc trap");
-      const demo = [
-        { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-        { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-        { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" }
-      ] as any;
-      openMediaChooser(demo);
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
-const page: React.CSSProperties = {
+  const page: React.CSSProperties = {
     position: "relative", width: "100vw", height: "100vh", overflow: "hidden",
     background: "linear-gradient(135deg,#f3f4f6,#e5e7eb)",
   };
@@ -327,10 +308,7 @@ const page: React.CSSProperties = {
       <FloorPlanOverlay />
     
       
-      
       <MediaChooser />
-      <MediaOverlay />
-<MediaChooser />
       <MediaOverlay />
 <MediaOverlay />
 </main>
