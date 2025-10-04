@@ -1,6 +1,7 @@
 import * as React from "react";
 import QuickFact from "@/components/ui/quick-fact";
 import Icon from "@/app/components/Icon";
+import FloorPlanButton from "@/components/rail/FloorPlanButton";
 
 const btn =
   "grid h-12 w-12 place-items-center rounded-2xl border border-black/5 " +
@@ -13,11 +14,13 @@ export default function QuickFactsRail(props: {
   beds?: number | string;
   baths?: number | string;
   parking?: number | string;
-  solar?: string;      // e.g. "Installed"
-  ev?: string;         // e.g. "Available"
+  solar?: string;
+  ev?: string;
+  floorPlanSrc?: string;   // 👈 add this
   className?: string;
 }) {
-  const { beds, baths, parking, solar, ev, className } = props;
+  const { beds, baths, parking, solar, ev, floorPlanSrc, className } = props; // 👈 include here
+
 
   return (
     <nav
@@ -70,6 +73,7 @@ export default function QuickFactsRail(props: {
           </button>
         }
       />
-    </nav>
+    {floorPlanSrc ? <FloorPlanButton imageSrc={floorPlanSrc} /> : null}
+  </nav>
   );
 }
