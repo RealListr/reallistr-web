@@ -34,7 +34,7 @@ export default function FloorPlanOverlay() {
       <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
       <div
         className="fixed z-[81] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] rounded-2xl overflow-hidden"
-        style={{ width: "75vw", height: "75vh", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }}
+        style={{ width:"75vw", height:"75vh", left:"50%", top:"calc(50% - 64px)", transform:"translate(-50%,-50%)" }}
       >
         {!err ? (
           <img
