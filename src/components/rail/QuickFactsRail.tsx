@@ -2,6 +2,7 @@ import * as React from "react";
 import QuickFact from "@/components/ui/quick-fact";
 import Icon from "@/app/components/Icon";
 import FloorPlanFloating from "@/components/rail/FloorPlanFloating";
+import FloorPlanFloating from "@/components/rail/FloorPlanFloating";
 import FloorPlanButton from "@/components/rail/FloorPlanButton";
 
 const btn =
@@ -76,6 +77,8 @@ export default function QuickFactsRail(props: {
       />
     {floorPlanSrc ? <FloorPlanButton imageSrc={floorPlanSrc} /> : null}
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
+    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
+  
   
   </nav>
   );

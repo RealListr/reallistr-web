@@ -4,6 +4,7 @@ import Icon from "@/app/components/Icon";
 export default function FloorPlanFloating({ imageSrc }: { imageSrc: string }) {
   const [open, setOpen] = React.useState(false);
 
+  // 12x12 rail button with subtle hover (no lift)
   const btn =
     "grid h-12 w-12 place-items-center rounded-2xl border border-black/5 " +
     "bg-white/90 backdrop-blur-md " +
@@ -19,11 +20,22 @@ export default function FloorPlanFloating({ imageSrc }: { imageSrc: string }) {
 
       {open ? (
         <>
+          {/* overlay */}
           <div
             className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[2px]"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed inset-6 md:inset-10 lg:inset-16 z-[81] rounded-2xl overflow-hidden bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)]">
+          {/* modal: 75% of viewport, centered */}
+          <div
+            className="fixed z-[81] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.24)] rounded-2xl overflow-hidden"
+            style={{
+              width: "75vw",
+              height: "75vh",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+          >
             <img
               src={imageSrc}
               alt="Floor plan"

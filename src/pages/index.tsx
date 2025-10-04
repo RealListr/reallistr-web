@@ -11,7 +11,7 @@ import QuickFactsRail from "@/components/rail/QuickFactsRail";
   solar="Installed"
   ev="Available"
   floorPlanSrc="/images/floorplan-123.png"   // 👈 set to your real path
- floorPlanSrc="/images/floorplan-123.png"/>
+ floorPlanSrc="/images/floorplan-123.png" floorPlanSrc="/images/floorplan-123.png"/>
 
 
 /** ===== Naming & glyphs ================================================== */
