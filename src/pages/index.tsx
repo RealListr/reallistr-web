@@ -3,16 +3,6 @@ import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import QuickFactsRail from "@/components/rail/QuickFactsRail";
 
-// ...
-<QuickFactsRail
-  beds={3}
-  baths={2}
-  parking={1}
-  solar="Installed"
-  ev="Available"
-  floorPlanSrc="/images/floorplan-123.png"   // 👈 set to your real path
- floorPlanSrc="/images/floorplan-123.png" floorPlanSrc="/images/floorplan-123.png" floorPlanSrc="/images/floorplan-123.png"/>
-
 
 /** ===== Naming & glyphs ================================================== */
 /** Public names we’ll use in the rail. */
@@ -280,7 +270,7 @@ export default function Home() {
   }
 
   return (
-  <><main style={page}>
+    <main style={page}>
       <style dangerouslySetInnerHTML={{ __html: css }} />
 
       {/* ONE long card containing Dock (bare) + divider + HUD (bare) */}
@@ -336,7 +326,6 @@ export default function Home() {
               />
             </button>
           );
-)
         })}
       </div>
 
