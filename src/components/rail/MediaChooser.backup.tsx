@@ -24,7 +24,7 @@ export default function MediaChooser() {
       const detail = (e as CustomEvent<OpenChooserDetail>).detail;
       if (!detail?.items?.length) return;
       setItems(detail.items);
-      console.log("[MediaChooser] open event", detail); setOpen(true);
+      setOpen(true);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -42,13 +42,13 @@ export default function MediaChooser() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[1200] pointer-events-none">
+    <div className="fixed inset-0 z-[950] pointer-events-none">
       {/* Transparent scrim that closes the chooser */}
       <div className="absolute inset-0" onClick={close} />
 
       {/* Panel: floats next to the rail on the right side */}
       <div
-        className="pointer-events-auto fixed left-20 top-1/2 -translate-y-1/2 z-[960]
+        className="pointer-events-auto fixed right-20 top-1/2 -translate-y-1/2 z-[960]
                    w-[340px] max-h-[70vh] rounded-2xl bg-white shadow-2xl border border-black/10
                    p-3 flex flex-col gap-3"
       >
