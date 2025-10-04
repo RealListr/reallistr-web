@@ -75,6 +75,8 @@ export default function QuickFactsRail(props: {
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
     {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
+    {floorPlanSrc ? <FloorPlanFloating imageSrc={floorPlanSrc} /> : null}
+  
   
   
   </nav>
