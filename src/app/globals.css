@@ -4,3 +4,25 @@
 
 /* Optional: light reset for full-bleed layout */
 html, body, #__next { height: 100%; }
+
+/* --- Hardening: rail icon buttons never become circles --- */
+[data-rail-icon] {
+  border-radius: 1rem !important;   /* ~rounded-2xl */
+  aspect-ratio: 1 / 1;              /* square */
+}
+
+/* --- Hide any broken/empty images the browser would render as tiny badges --- */
+img[src=""], img:not([src]) {
+  display: none !important;
+}
+
+/* Rail buttons must stay rounded squares */
+[data-rail-icon] {
+  border-radius: 1rem !important;   /* ~rounded-2xl */
+  aspect-ratio: 1 / 1;
+}
+
+/* Hide any browser “broken image” badges */
+img[src=""], img:not([src]) {
+  display: none !important;
+}

@@ -31,7 +31,7 @@ export default function QuickFactsRail(props: {
         label="Bedrooms"
         value={beds}
         trigger={
-          <button aria-label="Bedrooms" className={btn}>
+          <button aria-label="Bedrooms" className={btn} data-rail-icon data-rail-icon>
             <Icon name="bed" className="h-5 w-5" />
           </button>
         }
@@ -40,7 +40,7 @@ export default function QuickFactsRail(props: {
         label="Bathrooms"
         value={baths}
         trigger={
-          <button aria-label="Bathrooms" className={btn}>
+          <button aria-label="Bathrooms" className={btn} data-rail-icon data-rail-icon>
             <Icon name="bath" className="h-5 w-5" />
           </button>
         }
@@ -49,7 +49,7 @@ export default function QuickFactsRail(props: {
         label="Parking"
         value={parking}
         trigger={
-          <button aria-label="Parking" className={btn}>
+          <button aria-label="Parking" className={btn} data-rail-icon data-rail-icon>
             <Icon name="car" className="h-5 w-5" />
           </button>
         }
@@ -58,7 +58,7 @@ export default function QuickFactsRail(props: {
         label="Solar"
         value={solar}
         trigger={
-          <button aria-label="Solar" className={btn}>
+          <button aria-label="Solar" className={btn} data-rail-icon data-rail-icon>
             <Icon name="solar" className="h-5 w-5" />
           </button>
         }
@@ -67,7 +67,7 @@ export default function QuickFactsRail(props: {
         label="EV Charger"
         value={ev}
         trigger={
-          <button aria-label="EV Charger" className={btn}>
+          <button aria-label="EV Charger" className={btn} data-rail-icon data-rail-icon>
             <Icon name="plug" className="h-5 w-5" />
           </button>
         }
