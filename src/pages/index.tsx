@@ -4,7 +4,6 @@ import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
 // near other imports
-import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
 
 // inside your page component's JSX (toward the bottom of <main>)
 <MediaOverlay />
