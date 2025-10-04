@@ -257,9 +257,7 @@ export default function Home() {
     }
   `;
       {/* Popover anchored next to hovered icon */}
-      {pop.open && (
-        /* ...your popover JSX... */
-      )}
+      
 
       {/* Mount once: listens for "open-floor-plan" */}
       <FloorPlanOverlay />
