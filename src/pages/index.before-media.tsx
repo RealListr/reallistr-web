@@ -2,7 +2,6 @@ import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
-import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
 // near other imports
 import MediaOverlay, { openMedia } from "@/components/rail/MediaOverlay";
 
@@ -306,8 +305,6 @@ export default function Home() {
 
       {/* Floor plan overlay mounted once */}
       <FloorPlanOverlay />
-    
-      <MediaOverlay />
-</main>
+    </main>
   );
 }
