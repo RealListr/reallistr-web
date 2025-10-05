@@ -29,7 +29,7 @@ export default function MediaChooser() {
       // Compute anchored position
       const PANEL_W = 560; // chooser width
       const PANEL_H = 360; // chooser height
-      const MARGIN = 16;
+      const MARGIN = 24;
 
       // Prefer the right-rail Media button as anchor
       const btn = document.querySelector('[aria-label="Media"]') as HTMLElement | null;
@@ -37,10 +37,10 @@ export default function MediaChooser() {
       if (btn) {
         const r = btn.getBoundingClientRect();
         const idealLeft = r.left - PANEL_W - MARGIN;                       // to the LEFT of the rail
-        const idealTop  = r.top + r.height / 2 - PANEL_H / 2;               // vertically centered on the button
+        const idealTop = btn.top + btn.height/2 - PANEL_H/2 + OFFSET_Y;               // vertically centered on the button
 
         // Clamp inside viewport
-        const left = Math.max(MARGIN, Math.min(idealLeft, window.innerWidth - PANEL_W - MARGIN));
+        const left = Math.max(MARGIN, btn.left - GAP - PANEL_W);
         const top  = Math.max(MARGIN, Math.min(idealTop,  window.innerHeight - PANEL_H - MARGIN));
 
         setPos({ top, left });
