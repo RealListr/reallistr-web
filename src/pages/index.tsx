@@ -113,15 +113,15 @@ function handleIconClick(name: IconName) {
       return;
     }
     case "media": {
-      // Demo payload — replace with real listing media later.
       const demo = [
         { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=1400&q=80", label: "Living" },
         { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1400&q=80", label: "Kitchen" },
-        { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" },
-      ] as any[];
+        { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" }
+      ];
       window.dispatchEvent(new CustomEvent("open-media-chooser", { detail: { items: demo } }));
       return;
     }
+  }
     case "like":
       alert("Saved to favourites (placeholder).");
       return;
