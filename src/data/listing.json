@@ -1,0 +1,19 @@
+{
+  "id": "demo-12-example-st",
+  "price": "$2,450,000",
+  "addressLine": "12 Example Street, Bondi NSW",
+  "bed": 4,
+  "bath": 2,
+  "car": 2,
+  "open1": "Sat 11:15–11:45am",
+  "open2": "Wed 5:30–6:00pm",
+  "agents": [
+    {"id":"1","name":"Westley Buhagiar","role":"Principal","phone":"+61123456789"},
+    {"id":"2","name":"Alex Morton","role":"Sales Agent","phone":"+61123450000"}
+  ],
+  "media": [
+    {"type":"image","src":"https://images.unsplash.com/photo-1501183638710-841dd1904471?w=1600&q=80","label":"Living"},
+    {"type":"image","src":"https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1600&q=80","label":"Kitchen"},
+    {"type":"video","src":"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4","label":"Video"}
+  ]
+}
