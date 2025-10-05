@@ -51,7 +51,9 @@ export default function Home() {
   };
 
   return (
-    <main style={page}>
+  <main style={page}>
+    <div style={{ width: "100%", maxWidth: 760, margin: "0 auto", padding: "0 8px" }}>
+
       {/* Logo row */}
       <div style={{ padding: "14px 16px 0", display: "flex", alignItems: "center" }}>
         <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: ".2px", color: "#0f172a" }}>RealListr</div>

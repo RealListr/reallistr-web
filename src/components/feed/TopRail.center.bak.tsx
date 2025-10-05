@@ -1,8 +1,5 @@
 import * as React from "react";
 
-const FEED_MAX_W = 760;
-
-
 type Chip = { id: string; label: string; thumb?: string };
 export default function TopRail({
   chips,
@@ -14,10 +11,7 @@ export default function TopRail({
   onChange?: (id: string) => void;
 }) {
   return (
-  <div style={{ background: "transparent" }}>
-    <div style={{ width: "100%", maxWidth: FEED_MAX_W, margin: "12px auto", padding: "0 8px" }}>
-      <div style={{ display:"flex", gap:12, alignItems:"center", overflowX:"auto", padding:"8px 2px" }}>
-
+    <div style={{ padding: "14px 12px 8px", borderBottom: "1px solid rgba(148,163,184,.25)" }}>
       <div style={{ display: "flex", gap: 14, overflowX: "auto" }}>
         {chips.map((c) => {
           const active = c.id === value;
