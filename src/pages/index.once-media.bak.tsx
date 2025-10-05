@@ -2,11 +2,14 @@ import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
-import MediaChooser from "@/components/rail/MediaChooser";
 import MediaOverlay from "@/components/rail/MediaOverlay";
+import MediaChooser from "@/components/rail/MediaChooser";
 // near other imports
 
-// inside your page component's JSX (toward the bottom of <main>)/** ===== Naming & glyphs ================================================== */
+// inside your page component's JSX (toward the bottom of <main>)
+<MediaOverlay />
+
+/** ===== Naming & glyphs ================================================== */
 type IconName =
   | "bed"
   | "car"
@@ -339,9 +342,30 @@ const page: React.CSSProperties = {
 
       {/* Floor plan overlay mounted once */}
       <FloorPlanOverlay />
+    
+      
+      
+      
+      
+      
+      
+      
       <MediaChooser />
       <MediaOverlay />
-<button
+<MediaChooser />
+      <MediaOverlay />
+<MediaChooser />
+      <MediaOverlay />
+<MediaChooser />
+      <MediaOverlay />
+<MediaChooser />
+      <MediaOverlay />
+<MediaChooser />
+      <MediaOverlay />
+<MediaChooser />
+      <MediaOverlay />
+<MediaOverlay />
+  <button
         onClick={() => { (window as any).rlOpenMediaChooser?.([
           { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
           { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
