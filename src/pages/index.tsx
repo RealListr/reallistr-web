@@ -4,6 +4,7 @@ import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 import MediaChooser from "@/components/rail/MediaChooser";
 import MediaOverlay from "@/components/rail/MediaOverlay";
+import MediaDock from "@/components/rail/MediaDock";
 
 /** ===== Naming & glyphs ================================================== */
 type IconName =
@@ -21,9 +22,7 @@ type IconName =
 
 const ORDER: IconName[] = [
   "bed", "car", "bath", "solar", "plug", "floor", "media", "map", "info", "like", "data",
-];
-
-const STRONG: Record<IconName, boolean> = {
+];const STRONG: Record<IconName, boolean> = {
   bed: true, car: true, bath: true,
   solar: false, plug: false, floor: false, media: false, map: false, info: false, like: false, data: false,
 };
@@ -300,6 +299,7 @@ export default function Home() {
 
       {/* Rail overlays (mount exactly once) */}
       <FloorPlanOverlay />
+      <MediaDock />
       <MediaChooser />
       <MediaOverlay />
     </main>
