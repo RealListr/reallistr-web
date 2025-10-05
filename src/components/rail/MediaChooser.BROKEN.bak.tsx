@@ -1,3 +1,9 @@
+# --- Backup existing file (if present)
+mkdir -p src/components/rail
+cp -v src/components/rail/MediaChooser.tsx src/components/rail/MediaChooser.before-fix.bak.tsx 2>/dev/null || true
+
+# --- Overwrite with corrected, anchored & clamped chooser
+cat > src/components/rail/MediaChooser.tsx <<'TSX'
 import * as React from "react";
 
 type Item =
@@ -139,7 +145,7 @@ export default function MediaChooser() {
             style={{
               position: "relative",
               width: "100%",
-              height: i === 2 && items.length >= 3 ? 140 : 180,
+              height: i === 2 && items.length >= 3 ? 140 : 180, // third item shorter, to suggest more content
               borderRadius: 12,
               border: "1px solid rgba(148,163,184,.28)",
               overflow: "hidden",
@@ -212,3 +218,4 @@ export default function MediaChooser() {
     </div>
   );
 }
+TSX
