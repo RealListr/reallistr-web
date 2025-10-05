@@ -6,6 +6,7 @@ type MediaItem =
   | { type: "image"; src: string; alt?: string; label?: string };
 
 type OpenChooserDetail = { items: MediaItem[] };
+
 const EVT = "open-media-chooser";
 
 export function openMediaChooser(items: MediaItem[]) {
@@ -16,6 +17,7 @@ export function openMediaChooser(items: MediaItem[]) {
 export default function MediaChooser() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<MediaItem[]>([]);
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
     const onOpen = (e: Event) => {
@@ -24,7 +26,9 @@ export default function MediaChooser() {
       setItems(detail.items);
       setOpen(true);
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
     window.addEventListener(EVT, onOpen as EventListener);
     window.addEventListener("keydown", onKey);
     return () => {
@@ -33,21 +37,24 @@ export default function MediaChooser() {
     };
   }, []);
 
-  if (!open) return null;
-
   const close = () => setOpen(false);
+
+  // Hidden until opened at least once
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-[1400] pointer-events-none">
-      {/* click-away */}
+      {/* Click anywhere to close */}
       <div className="absolute inset-0" onClick={close} />
 
-      {/* Slim panel to the LEFT of the right rail */}
+      {/* Panel sits LEFT of the right rail: adjust right-* to snug up to your rail */}
       <div
+        ref={panelRef}
         className={[
           "pointer-events-auto fixed right-24 top-1/2 -translate-y-1/2",
           "w-[360px] max-h-[72vh] rounded-2xl border border-black/10 bg-white shadow-2xl",
           "p-3 flex flex-col gap-3",
+          "origin-right animate-[fadeIn_120ms_ease-out]",
         ].join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
@@ -62,6 +69,7 @@ export default function MediaChooser() {
           </button>
         </div>
 
+        {/* Tiles */}
         <div className="grid grid-cols-2 gap-3 overflow-auto pr-1">
           {items.map((it, i) => {
             const label =
@@ -69,8 +77,7 @@ export default function MediaChooser() {
             return (
               <button
                 key={i}
-                onClick={() => {
-                  openMedia(items, i);
+                onClick={() => { console.log("[MediaChooser] tile click", i, items[i]); openMedia(items, i);
                   setOpen(false);
                 }}
                 className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 border border-black/10 hover:border-black/20"
@@ -92,6 +99,8 @@ export default function MediaChooser() {
                     </div>
                   </div>
                 )}
+
+                {/* bottom label */}
                 <div
                   className="absolute inset-x-0 bottom-0 text-[11px] leading-tight px-2 py-1
                              bg-gradient-to-t from-black/60 to-transparent text-white
