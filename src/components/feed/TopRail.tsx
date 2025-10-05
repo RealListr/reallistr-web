@@ -2,59 +2,27 @@ import * as React from "react";
 
 const FEED_MAX_W = 760;
 
+const AREAS = [
+  "Parina", "Downtown", "Marina", "The Springs", "Al Barsha"
+];
 
-type Chip = { id: string; label: string; thumb?: string };
-export default function TopRail({
-  chips,
-  value,
-  onChange,
-}: {
-  chips: Chip[];
-  value?: string;
-  onChange?: (id: string) => void;
-}) {
+export default function TopRail() {
   return (
-  <div style={{ background: "transparent" }}>
-    <div style={{ width: "100%", maxWidth: FEED_MAX_W, margin: "12px auto", padding: "0 8px" }}>
-      <div style={{ display:"flex", gap:12, alignItems:"center", overflowX:"auto", padding:"8px 2px" }}>
-
-      <div style={{ display: "flex", gap: 14, overflowX: "auto" }}>
-        {chips.map((c) => {
-          const active = c.id === value;
-          return (
-            <button
-              key={c.id}
-              onClick={() => onChange?.(c.id)}
-              style={{
-                flex: "0 0 auto",
-                display: "grid",
-                placeItems: "center",
-                gap: 6,
-                padding: 0,
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-              }}
-              aria-pressed={active}
-            >
-              <span
+    <div style={{ background: "transparent" }}>
+      <div style={{ width: "100%", maxWidth: FEED_MAX_W, margin: "12px auto", padding: "0 8px" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", overflowX: "auto", padding: "8px 2px" }}>
+          {AREAS.map((name, i) => (
+            <div key={name} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 64 }}>
+              <div
                 style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: "999px",
-                  background:
-                    c.thumb
-                      ? `url(${c.thumb}) center/cover no-repeat`
-                      : "linear-gradient(135deg,#d1d5db,#e5e7eb)",
-                  border: active ? "3px solid #60a5fa" : "2px solid rgba(148,163,184,.45)",
-                  boxShadow: active ? "0 0 0 3px rgba(96,165,250,.25)" : "none",
+                  width: 44, height: 44, borderRadius: "999px",
+                  border: "2px solid rgba(59,130,246,.35)", background: "linear-gradient(135deg,#e5e7eb,#f8fafc)"
                 }}
-                aria-hidden
               />
-              <span style={{ fontSize: 12, color: "#374151" }}>{c.label}</span>
-            </button>
-          );
-        })}
+              <div style={{ fontSize: 12, color: "#374151", marginTop: 6 }}>{name}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
