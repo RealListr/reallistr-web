@@ -7,27 +7,27 @@ export type MediaItem =
 
 export type FeedListing = {
   id: string;
-  agent: { name: string; agency?: string; avatarUrl?: string; agencyLogoUrl?: string };
-  price: string;
-  address: string;
-  facts: { bed?: number; bath?: number; car?: number };
-  openTimes?: string[];               // e.g., ["Sat 11:15–11:45am", "Wed 5:30–6:00pm"]
-  media: MediaItem[];
-  infoHtml?: string;                  // shown in Info overlay
+  agent?: { name?: string; agency?: string; avatarUrl?: string; agencyLogoUrl?: string };
+  price?: string;
+  address?: string;
+  facts?: { bed?: number; bath?: number; car?: number };
+  openTimes?: string[];
+  media?: MediaItem[];
+  infoHtml?: string;
 };
 
 type Props = {
-  data: FeedListing;
+  data?: FeedListing;
   onFollow?: () => void;
   onLike?: () => void;
   onSave?: () => void;
 };
 
-const COL_W = 760; // matches centered feed
+const COL_W = 760;        // feed width
 const MEDIA_ASPECT = 4 / 5; // 4:5 like Instagram
 
-function openMediaOverlay(items: MediaItem[], startIndex = 0) {
-  if (!items?.length) return;
+function openMediaOverlay(items: MediaItem[] = [], startIndex = 0) {
+  if (!items.length) return;
   window.dispatchEvent(new CustomEvent("open-media-overlay", { detail: { items, startIndex } }));
 }
 function openInfoOverlay(listing: FeedListing) {
@@ -38,8 +38,16 @@ function openMapOverlay(listing: FeedListing) {
 }
 
 export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
+  // Defensive defaults to avoid SSR/prerender crashes
+  if (!data) return null;
+  const agent = data.agent ?? {};
+  const price = data.price ?? "";
+  const address = data.address ?? "";
+  const facts = data.facts ?? {};
+  const media = data.media ?? [];
+
   const w = COL_W;
-  const h = Math.round((COL_W / MEDIA_ASPECT) * 1); // fixed 4:5 box
+  const h = Math.round(COL_W / (MEDIA_ASPECT || (4 / 5)));
 
   return (
     <article
@@ -53,9 +61,9 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
         boxShadow: "0 10px 28px rgba(15,23,42,.06)",
         overflow: "hidden",
       }}
-      aria-label={`${data.agent?.name || "Agent"} listing card`}
+      aria-label={`${agent.name || "Agent"} listing card`}
     >
-      {/* Header: avatar + agent + agency badge + follow / like / save */}
+      {/* Header */}
       <header
         style={{
           display: "flex",
@@ -66,40 +74,44 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          {/* Agent avatar */}
           <div
             style={{
               width: 28,
               height: 28,
               borderRadius: "50%",
-              background:
-                data.agent?.avatarUrl ? `url(${data.agent.avatarUrl}) center/cover` : "linear-gradient(180deg,#f1f5f9,#e5e7eb)",
+              background: agent.avatarUrl
+                ? `url(${agent.avatarUrl}) center/cover`
+                : "linear-gradient(180deg,#f1f5f9,#e5e7eb)",
               border: "1px solid rgba(148,163,184,.35)",
               flex: "0 0 auto",
             }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             <div style={{ display: "grid", lineHeight: 1.1 }}>
-              <span style={{ fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>{data.agent?.name || "Agent"}</span>
-              <span style={{ fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>{data.agent?.agency || "Agency"}</span>
+              <span style={{ fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>
+                {agent.name || "Agent"}
+              </span>
+              <span style={{ fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>
+                {agent.agency || "Agency"}
+              </span>
             </div>
-            {/* Agency badge (logo or neutral building) */}
+            {/* Agency badge */}
             <div
-              title={data.agent?.agency || "Agency"}
+              title={agent.agency || "Agency"}
               style={{
                 width: 20,
                 height: 20,
                 borderRadius: "50%",
                 border: "1px solid rgba(148,163,184,.30)",
-                background: data.agent?.agencyLogoUrl
-                  ? `url(${data.agent.agencyLogoUrl}) center/cover`
+                background: agent.agencyLogoUrl
+                  ? `url(${agent.agencyLogoUrl}) center/cover`
                   : "rgba(241,245,249,.9)",
                 display: "grid",
                 placeItems: "center",
                 flex: "0 0 auto",
               }}
             >
-              {!data.agent?.agencyLogoUrl && (
+              {!agent.agencyLogoUrl && (
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M3 21h18M5 21V9l7-4 7 4v12" stroke="#334155" strokeWidth="1.5" />
                 </svg>
@@ -108,7 +120,6 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
           </div>
         </div>
 
-        {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             onClick={onFollow}
@@ -138,33 +149,21 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
 
       {/* Media */}
       <div
-        style={{
-          width: "100%",
-          height: h,
-          background: "#e5e7eb",
-          position: "relative",
-          overflow: "hidden",
-        }}
-        onClick={() => openMediaOverlay(data.media, 0)}
+        style={{ width: "100%", height: h, background: "#e5e7eb", overflow: "hidden" }}
+        onClick={() => openMediaOverlay(media, 0)}
         role="button"
         aria-label="Open gallery"
       >
-        {/* Use the first media item as the poster */}
-        {data.media?.[0]?.type === "image" && (
+        {media[0]?.type === "image" && (
           <img
-            src={data.media[0].src}
-            alt={data.media[0].label || "photo"}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-            }}
+            src={media[0].src}
+            alt={media[0].label || "photo"}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         )}
-        {data.media?.[0]?.type === "video" && (
+        {media[0]?.type === "video" && (
           <video
-            src={data.media[0].src}
+            src={media[0].src}
             muted
             playsInline
             loop
@@ -173,7 +172,7 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
         )}
       </div>
 
-      {/* Meta: price on the left, open times to the right */}
+      {/* Price + open times */}
       <div
         style={{
           padding: "12px 14px 4px",
@@ -183,7 +182,7 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
           justifyContent: "space-between",
         }}
       >
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{data.price}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{price}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
           {(data.openTimes || []).map((t, i) => (
             <span
@@ -204,9 +203,9 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
       </div>
 
       {/* Address */}
-      <div style={{ padding: "0 14px 10px", color: "#374151" }}>{data.address}</div>
+      <div style={{ padding: "0 14px 10px", color: "#374151" }}>{address}</div>
 
-      {/* Facts row: bed / bath / car / info / map (all mini ghost icons in ONE line) */}
+      {/* Facts row (incl Info / Map) */}
       <div
         style={{
           padding: "8px 12px 14px",
@@ -216,12 +215,10 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
           borderTop: "1px solid rgba(148,163,184,.20)",
         }}
       >
-        <Fact icon="bed" value={data.facts?.bed} />
-        <Fact icon="bath" value={data.facts?.bath} />
-        <Fact icon="car" value={data.facts?.car} />
-
+        <Fact icon="bed" value={facts.bed} />
+        <Fact icon="bath" value={facts.bath} />
+        <Fact icon="car" value={facts.car} />
         <span style={{ flex: 1 }} />
-
         <MiniBtn title="Property info" onClick={() => openInfoOverlay(data)} glyph="info" />
         <MiniBtn title="Map" onClick={() => openMapOverlay(data)} glyph="map" />
       </div>
