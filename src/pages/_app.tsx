@@ -3,7 +3,8 @@ import type { AppProps } from "next/app";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   React.useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    // Global capture for the rail Media button (aria/title/data).
+    const openFromRail = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
       const hit = t?.closest?.('[data-rl-media],button[aria-label="Media"],[title="Media"]');
       if (!hit) return;
@@ -14,8 +15,29 @@ export default function MyApp({ Component, pageProps }: AppProps) {
       ] as any;
       window.dispatchEvent(new CustomEvent("open-media-chooser", { detail: { items } }));
     };
-    document.addEventListener("click", handler, true);
-    return () => document.removeEventListener("click", handler, true);
+    document.addEventListener("click", openFromRail, true);
+
+    // DEBUG KILL-SWITCH: remove stray top-left "Media" buttons if any slipped in.
+    const nukeDebugButtons = () => {
+      const cand = Array.from(document.querySelectorAll("button, a, div, span"))
+        .filter(el => /media/i.test(el.textContent || ""))
+        // exclude the right rail cluster area (right:24px region)
+        .filter(el => {
+          const r = el.getBoundingClientRect();
+          // obvious top-left location guard
+          return r.left < 120 && r.top < 80;
+        });
+      cand.forEach(el => el.remove());
+    };
+    nukeDebugButtons();
+    const mo = new MutationObserver(nukeDebugButtons);
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+
+    return () => {
+      document.removeEventListener("click", openFromRail, true);
+      mo.disconnect();
+    };
   }, []);
+
   return <Component {...pageProps} />;
 }

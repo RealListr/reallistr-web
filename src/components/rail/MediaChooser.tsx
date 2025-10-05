@@ -37,68 +37,68 @@ export default function MediaChooser() {
 
   const close = () => setOpen(false);
 
-  return (
-    <div className="fixed inset-0 z-[1400] pointer-events-none">
-      {/* click-away */}
-      <div className="absolute inset-0" onClick={close} />
+  // inline styles (no Tailwind)
+  const wrap: React.CSSProperties = { position: "fixed", inset: 0 as any, zIndex: 1400, pointerEvents: "none" };
+  const scrim: React.CSSProperties = { position: "absolute", inset: 0 as any };
+  const panel: React.CSSProperties = {
+    position: "fixed",
+    right: 24, top: "50%",
+    transform: "translateY(-50%)",
+    width: 360, maxHeight: "72vh",
+    borderRadius: 16, border: "1px solid rgba(0,0,0,.10)",
+    background: "#fff", boxShadow: "0 18px 50px rgba(0,0,0,.18)",
+    padding: 12, display: "flex", flexDirection: "column", gap: 12,
+    pointerEvents: "auto"
+  };
+  const headerRow: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "space-between" };
+  const closeBtn: React.CSSProperties = { padding: "4px 8px", borderRadius: 8, background: "#eee", fontSize: 12, border: "1px solid #ddd" };
+  const grid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, overflow: "auto", paddingRight: 4 };
+  const tile: React.CSSProperties = {
+    position: "relative", width: "100%", aspectRatio: "4 / 3",
+    borderRadius: 12, overflow: "hidden",
+    background: "#fafafa", border: "1px solid rgba(0,0,0,.10)",
+    cursor: "pointer"
+  };
+  const labelBar: React.CSSProperties = {
+    position: "absolute", left: 0, right: 0, bottom: 0,
+    fontSize: 11, lineHeight: 1.15, padding: "6px 8px",
+    color: "#fff",
+    background: "linear-gradient(to top, rgba(0,0,0,.6), transparent)"
+  };
 
-      {/* Slim panel to the LEFT of the right rail */}
-      <div
-        className={[
-          "pointer-events-auto fixed right-24 top-1/2 -translate-y-1/2",
-          "w-[360px] max-h-[72vh] rounded-2xl border border-black/10 bg-white shadow-2xl",
-          "p-3 flex flex-col gap-3",
-        ].join(" ")}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-[13px] font-semibold tracking-tight">Select Media</h3>
-          <button
-            className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-[12px]"
-            onClick={close}
-            aria-label="Close media chooser"
-          >
-            ✕
-          </button>
+  return (
+    <div style={wrap} aria-label="Media chooser">
+      <div style={scrim} onClick={close} />
+      <div style={panel} onClick={(e) => e.stopPropagation()}>
+        <div style={headerRow}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Select Media</h3>
+          <button style={closeBtn} onClick={close} aria-label="Close media chooser">✕</button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 overflow-auto pr-1">
+        <div style={grid}>
           {items.map((it, i) => {
-            const label =
-              ("label" in it && it.label) || (it as any).alt || (it.type === "video" ? "Video" : "Image");
+            const label = ("label" in it && it.label) || (it as any).alt || (it.type === "video" ? "Video" : "Image");
             return (
               <button
                 key={i}
-                onClick={() => {
-                  openMedia(items, i);
-                  setOpen(false);
-                }}
-                className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-neutral-50 border border-black/10 hover:border-black/20"
+                style={tile}
                 title={label}
+                onClick={() => { openMedia(items, i); setOpen(false); }}
               >
                 {it.type === "image" ? (
-                  <img
-                    src={it.src}
-                    alt={label}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.opacity = "0.2";
-                    }}
-                  />
+                  <img src={it.src} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                       onError={(e) => ((e.currentTarget as HTMLImageElement).style.opacity = "0.2")} />
                 ) : (
-                  <div className="w-full h-full grid place-items-center">
-                    <div className="rounded-full w-10 h-10 grid place-items-center border border-white/60 bg-black/70 text-white text-xs">
-                      ▶
-                    </div>
+                  <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center" }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 20,
+                      display: "grid", placeItems: "center",
+                      background: "rgba(0,0,0,.7)", color: "#fff",
+                      border: "1px solid rgba(255,255,255,.5)", fontSize: 12
+                    }}>▶</div>
                   </div>
                 )}
-                <div
-                  className="absolute inset-x-0 bottom-0 text-[11px] leading-tight px-2 py-1
-                             bg-gradient-to-t from-black/60 to-transparent text-white
-                             opacity-0 group-hover:opacity-100 transition"
-                >
-                  {label}
-                </div>
+                <div style={labelBar}>{label}</div>
               </button>
             );
           })}
