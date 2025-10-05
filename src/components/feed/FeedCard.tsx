@@ -7,307 +7,257 @@ export type MediaItem =
 
 export type FeedListing = {
   id: string;
-  agent?: { name?: string; agency?: string; avatarUrl?: string; agencyLogoUrl?: string };
-  price?: string;
-  address?: string;
-  facts?: { bed?: number; bath?: number; car?: number };
-  openTimes?: string[];
-  media?: MediaItem[];
-  infoHtml?: string;
+  agent: { name: string; agency?: string; avatarUrl?: string; agencyLogoUrl?: string };
+  price: string;
+  address: string;
+  facts: { bed?: number; bath?: number; car?: number };
+  openTimes?: string[];          // e.g., ["Sat 11:15–11:45am", "Wed 5:30–6:00pm"]
+  media: MediaItem[];
+  infoHtml?: string;             // HTML for Info overlay
 };
 
 type Props = {
-  data?: FeedListing;
+  data: FeedListing;
   onFollow?: () => void;
   onLike?: () => void;
   onSave?: () => void;
 };
 
-const COL_W = 760;        // feed width
-const MEDIA_ASPECT = 4 / 5; // 4:5 like Instagram
+const COL_W = 760;            // centered feed width
+const MEDIA_ASPECT = 4 / 5;   // 4:5 like Instagram
 
-function openMediaOverlay(items: MediaItem[] = [], startIndex = 0) {
-  if (!items.length) return;
+// ---- tiny inline icons (ghost-y stroke) -------------------------------
+const ico = {
+  bed:   (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M3 10h18M6 10V7a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3M3 21v-6m18 6v-6" fill="none" stroke="#334155" strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  bath:  (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M5 13h14m-14 0a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4M8 5a3 3 0 0 1 6 0v8" fill="none" stroke="#334155" strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  car:   (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M3 12l2-5h14l2 5M5 17h14M7 17v2m10-2v2" fill="none" stroke="#334155" strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  info:  (p:any) => (<svg viewBox="0 0 24 24" {...p}><circle cx="12" cy="12" r="9" fill="none" stroke="#334155" strokeWidth="1.6"/><path d="M12 8h.01M11 12h2v5h-2z" fill="#334155"/></svg>),
+  map:   (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M9 3l-6 3v15l6-3 6 3 6-3V3l-6 3-6-3z" fill="none" stroke="#334155" strokeWidth="1.6"/><circle cx="15" cy="9" r="2" fill="#334155"/></svg>),
+  heart: (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M20.8 8.6a4.6 4.6 0 0 0-8-2.9 4.6 4.6 0 0 0-8 2.9c0 5.2 8 9.8 8 9.8s8-4.6 8-9.8z" fill="none" stroke="#334155" strokeWidth="1.6"/></svg>),
+  save:  (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M6 3h12v18l-6-3-6 3V3z" fill="none" stroke="#334155" strokeWidth="1.6"/></svg>),
+  user:  (p:any) => (<svg viewBox="0 0 24 24" {...p}><circle cx="12" cy="8" r="4" fill="none" stroke="#334155" strokeWidth="1.6"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="#334155" strokeWidth="1.6"/></svg>),
+  building: (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M4 20h16M6 20V6h8v14M10 10h2m-2 4h2m3 6V9h3v11" fill="none" stroke="#334155" strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  chev:  (p:any) => (<svg viewBox="0 0 24 24" {...p}><path d="M6 9l6 6 6-6" fill="none" stroke="#334155" strokeWidth="1.8" strokeLinecap="round"/></svg>),
+};
+
+// ---- helpers for overlays we already have mounted ---------------------
+function openInfo(html?: string) {
+  window.dispatchEvent(new CustomEvent("open-info-overlay", { detail: { html } }));
+}
+function openMap(address: string) {
+  window.dispatchEvent(new CustomEvent("open-map-overlay", { detail: { address } }));
+}
+function openGallery(items: MediaItem[], startIndex = 0) {
   window.dispatchEvent(new CustomEvent("open-media-overlay", { detail: { items, startIndex } }));
 }
-function openInfoOverlay(listing: FeedListing) {
-  window.dispatchEvent(new CustomEvent("open-listing-info", { detail: { listing } }));
-}
-function openMapOverlay(listing: FeedListing) {
-  window.dispatchEvent(new CustomEvent("open-listing-map", { detail: { listing } }));
-}
 
+// ---- FeedCard ----------------------------------------------------------
 export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
-  // Defensive defaults to avoid SSR/prerender crashes
-  if (!data) return null;
-  const agent = data.agent ?? {};
-  const price = data.price ?? "";
-  const address = data.address ?? "";
-  const facts = data.facts ?? {};
-  const media = data.media ?? [];
+  const { agent, price, address, facts, openTimes = [], media } = data;
 
-  const w = COL_W;
-  const h = Math.round(COL_W / (MEDIA_ASPECT || (4 / 5)));
+  // carousel state
+  const imgs = media.filter(m => m.type === "image");
+  const [idx, setIdx] = React.useState(0);
+  const cap = Math.min(imgs.length || 0, 6);
 
-  return (
-    <article
-      style={{
-        width: "100%",
-        maxWidth: w,
-        margin: "24px auto",
-        borderRadius: 16,
-        border: "1px solid rgba(148,163,184,.30)",
-        background: "rgba(255,255,255,.96)",
-        boxShadow: "0 10px 28px rgba(15,23,42,.06)",
-        overflow: "hidden",
-      }}
-      aria-label={`${agent.name || "Agent"} listing card`}
-    >
-      {/* Header */}
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "10px 14px",
-          borderBottom: "1px solid rgba(148,163,184,.25)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              background: agent.avatarUrl
-                ? `url(${agent.avatarUrl}) center/cover`
-                : "linear-gradient(180deg,#f1f5f9,#e5e7eb)",
-              border: "1px solid rgba(148,163,184,.35)",
-              flex: "0 0 auto",
-            }}
-          />
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <div style={{ display: "grid", lineHeight: 1.1 }}>
-              <span style={{ fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>
-                {agent.name || "Agent"}
-              </span>
-              <span style={{ fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>
-                {agent.agency || "Agency"}
-              </span>
-            </div>
-            {/* Agency badge */}
-            <div
-              title={agent.agency || "Agency"}
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: "50%",
-                border: "1px solid rgba(148,163,184,.30)",
-                background: agent.agencyLogoUrl
-                  ? `url(${agent.agencyLogoUrl}) center/cover`
-                  : "rgba(241,245,249,.9)",
-                display: "grid",
-                placeItems: "center",
-                flex: "0 0 auto",
-              }}
-            >
-              {!agent.agencyLogoUrl && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M3 21h18M5 21V9l7-4 7 4v12" stroke="#334155" strokeWidth="1.5" />
-                </svg>
-              )}
-            </div>
-          </div>
-        </div>
+  // simple swipe
+  const startX = React.useRef<number | null>(null);
+  function onTouchStart(e: React.TouchEvent) { startX.current = e.touches[0].clientX; }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (startX.current == null) return;
+    const dx = e.changedTouches[0].clientX - startX.current;
+    if (Math.abs(dx) > 40) setIdx(i => {
+      const n = imgs.length;
+      if (!n) return 0;
+      return dx < 0 ? Math.min(i + 1, n - 1) : Math.max(i - 1, 0);
+    });
+    startX.current = null;
+  }
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            onClick={onFollow}
-            title="Follow"
-            style={{
-              height: 30,
-              padding: "0 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(148,163,184,.35)",
-              background: "rgba(240,253,244,.9)",
-              color: "#065f46",
-              fontSize: 12,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M12 12v7m-3.5-3.5h7" stroke="#065f46" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-            Follow
-          </button>
-          <IconBtn title="Like" onClick={onLike} glyph="heart" />
-          <IconBtn title="Save" onClick={onSave} glyph="bookmark" />
-        </div>
-      </header>
+  const wrap: React.CSSProperties = {
+    width: "100%",
+    maxWidth: COL_W,
+    margin: "22px auto",
+    borderRadius: 16,
+    border: "1px solid rgba(148,163,184,.28)",
+    boxShadow: "0 10px 24px rgba(2,6,23,.06)",
+    background: "#fff",
+    overflow: "hidden",
+  };
 
-      {/* Media */}
-      <div
-        style={{ width: "100%", height: h, background: "#e5e7eb", overflow: "hidden" }}
-        onClick={() => openMediaOverlay(media, 0)}
-        role="button"
-        aria-label="Open gallery"
-      >
-        {media[0]?.type === "image" && (
-          <img
-            src={media[0].src}
-            alt={media[0].label || "photo"}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        )}
-        {media[0]?.type === "video" && (
-          <video
-            src={media[0].src}
-            muted
-            playsInline
-            loop
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-          />
-        )}
-      </div>
+  const hdr: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
+  };
 
-      {/* Price + open times */}
-      <div
-        style={{
-          padding: "12px 14px 4px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{price}</div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {(data.openTimes || []).map((t, i) => (
-            <span
-              key={i}
-              style={{
-                fontSize: 12,
-                color: "#0f172a",
-                border: "1px solid rgba(148,163,184,.30)",
-                background: "rgba(255,255,255,.9)",
-                borderRadius: 999,
-                padding: "6px 10px",
-              }}
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
+  const chip: React.CSSProperties = {
+    height: 32, borderRadius: 999, padding: "0 12px",
+    display: "inline-flex", alignItems: "center", gap: 8,
+    border: "1px solid rgba(148,163,184,.38)", background: "rgba(236,253,245,.8)",
+    fontSize: 13, color: "#065f46",
+  };
 
-      {/* Address */}
-      <div style={{ padding: "0 14px 10px", color: "#374151" }}>{address}</div>
-
-      {/* Facts row (incl Info / Map) */}
-      <div
-        style={{
-          padding: "8px 12px 14px",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          borderTop: "1px solid rgba(148,163,184,.20)",
-        }}
-      >
-        <Fact icon="bed" value={facts.bed} />
-        <Fact icon="bath" value={facts.bath} />
-        <Fact icon="car" value={facts.car} />
-        <span style={{ flex: 1 }} />
-        <MiniBtn title="Property info" onClick={() => openInfoOverlay(data)} glyph="info" />
-        <MiniBtn title="Map" onClick={() => openMapOverlay(data)} glyph="map" />
-      </div>
-    </article>
-  );
-}
-
-/* ---------- Small building blocks ---------- */
-
-function IconBtn({ title, onClick, glyph }: { title: string; onClick?: () => void; glyph: "heart" | "bookmark" }) {
-  return (
+  const iconBtn = (title:string, onClick:()=>void, children:React.ReactNode) => (
     <button
       title={title}
       onClick={onClick}
       style={{
-        width: 32,
-        height: 32,
-        borderRadius: 8,
+        width: 34, height: 34, borderRadius: 999,
         border: "1px solid rgba(148,163,184,.35)",
         background: "rgba(255,255,255,.9)",
-        display: "grid",
-        placeItems: "center",
+        display: "grid", placeItems: "center",
       }}
     >
-      {glyph === "heart" ? (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M12 21s-7-4.35-9.5-8.1C.9 9.5 3.2 6 6.8 6c2 0 3.4 1.1 4.2 2.3C11.8 7.1 13.2 6 15.2 6c3.6 0 5.9 3.5 4.3 6.9C19 16.65 12 21 12 21z" stroke="#334155" strokeWidth="1.4" />
-        </svg>
-      ) : (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M6 3h12v18l-6-4-6 4V3z" stroke="#334155" strokeWidth="1.4" />
-        </svg>
-      )}
+      {children}
     </button>
   );
-}
 
-function Fact({ icon, value }: { icon: "bed" | "bath" | "car"; value?: number }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#0f172a" }}>
-      {icon === "bed" && (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M3 18V6m18 12V6M3 12h18" stroke="#0f172a" strokeWidth="1.6" />
-        </svg>
-      )}
-      {icon === "bath" && (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M4 13h16v3a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-3Zm3-6a3 3 0 0 1 6 0v6" stroke="#0f172a" strokeWidth="1.6" />
-        </svg>
-      )}
-      {icon === "car" && (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M4 16h16l-2-6H6l-2 6Zm3 0v2m10-2v2" stroke="#0f172a" strokeWidth="1.6" />
-        </svg>
-      )}
-      <span style={{ fontWeight: 600 }}>{value ?? 0}</span>
-    </div>
-  );
-}
+  // upcoming (first) open time only; dropdown for the rest
+  const [opensOpen, setOpensOpen] = React.useState(false);
+  const primaryOpen = openTimes[0];
 
-function MiniBtn({ title, onClick, glyph }: { title: string; onClick?: () => void; glyph: "info" | "map" }) {
   return (
-    <button
-      title={title}
-      onClick={onClick}
-      style={{
-        height: 32,
-        padding: "0 10px",
-        borderRadius: 999,
-        border: "1px solid rgba(148,163,184,.30)",
-        background: "rgba(255,255,255,.9)",
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        fontSize: 12,
-        color: "#0f172a",
-      }}
-    >
-      {glyph === "info" ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="12" cy="12" r="9" stroke="#0f172a" strokeWidth="1.5" />
-          <path d="M12 10v6m0-8.5v.01" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M12 21s6-6.6 6-11.1A6 6 0 0 0 6 9.9C6 14.4 12 21 12 21z" stroke="#0f172a" strokeWidth="1.5" />
-        </svg>
-      )}
-      <span style={{ fontWeight: 600 }}>{title}</span>
-    </button>
+    <article style={wrap} aria-label={`${agent?.name} listing`}>
+      {/* Header */}
+      <div style={hdr}>
+        <div style={{width:24, height:24, borderRadius:999, background:"#e5e7eb"}} />
+        <div style={{display:"flex", flexDirection:"column", lineHeight:1}}>
+          <strong style={{fontSize:13, color:"#0f172a"}}>{agent?.name || "Agent"}</strong>
+          <div style={{display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#475569"}}>
+            {agent?.agency && (<ico.building width={14} height={14} /> as any)}
+            <span>{agent?.agency || "Agency"}</span>
+          </div>
+        </div>
+        <div style={{marginLeft:"auto", display:"flex", gap:8}}>
+          <span style={chip} onClick={onFollow}>
+            <span style={{display:"grid", placeItems:"center", width:16, height:16, borderRadius:999, background:"#a7f3d0"}}>+</span>
+            <span>Follow</span>
+          </span>
+          {iconBtn("Like",    onLike  || (()=>{}), <ico.heart width={18} height={18} />)}
+          {iconBtn("Save",    onSave  || (()=>{}), <ico.save  width={18} height={18} />)}
+        </div>
+      </div>
+
+      {/* Media (4:5) with swipe + pager dots */}
+      <div
+        style={{
+          position:"relative",
+          width:"100%",
+          height: Math.round((COL_W) / MEDIA_ASPECT),
+          background:"#f1f5f9",
+          overflow:"hidden",
+        }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onClick={()=> openGallery(media, idx)}
+      >
+        <div
+          style={{
+            display:"flex",
+            height:"100%",
+            transform:`translateX(-${idx * 100}%)`,
+            transition:"transform .25s ease",
+          }}
+        >
+          {(imgs.length ? imgs : [{src:"/images/placeholder.jpg", type:"image" as const}]).map((m, i) => (
+            <img
+              key={i}
+              src={m.src}
+              alt={m.label || `image ${i+1}`}
+              style={{width:"100%", height:"100%", objectFit:"cover", flex:"0 0 100%"}}
+              loading="lazy"
+            />
+          ))}
+        </div>
+
+        {/* Pager dots (capped at 6), centered in white strip below image */}
+        {imgs.length > 1 && (
+          <div style={{position:"absolute", left:"50%", bottom:12, transform:"translateX(-50%)", display:"flex", gap:6}}>
+            {Array.from({length: cap}).map((_, i) => {
+              const active = i === Math.min(idx, cap-1);
+              return (
+                <button
+                  key={i}
+                  onClick={(e)=>{e.stopPropagation(); setIdx(i);}}
+                  aria-label={`Go to image ${i+1}`}
+                  style={{
+                    width:8, height:8, borderRadius:999,
+                    border: "1px solid rgba(148,163,184,.6)",
+                    background: active ? "#0f172a" : "rgba(255,255,255,.9)",
+                    opacity: active ? 1 : .8
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Price + single open pill (dropdown for rest) */}
+      <div style={{display:"flex", alignItems:"center", gap:12, padding:"14px 16px 6px 16px"}}>
+        <div style={{fontSize:22, fontWeight:800, color:"#0f172a"}}>{price}</div>
+        <div style={{fontSize:14, color:"#475569"}}>{address}</div>
+        <div style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:8, position:"relative"}}>
+          {primaryOpen && (
+            <button
+              onClick={()=> setOpensOpen(o=>!o)}
+              style={{fontSize:12, padding:"6px 10px", borderRadius:999, border:"1px solid rgba(148,163,184,.35)", background:"#fff"}}
+            >
+              {primaryOpen}
+              <span style={{marginLeft:6, display:"inline-block", verticalAlign:"middle"}}>
+                <ico.chev width={14} height={14} />
+              </span>
+            </button>
+          )}
+          {opensOpen && openTimes.length > 1 && (
+            <div
+              style={{
+                position:"absolute", right:0, top:"calc(100% + 6px)",
+                background:"#fff", border:"1px solid rgba(148,163,184,.35)", borderRadius:12,
+                boxShadow:"0 10px 24px rgba(2,6,23,.1)", padding:8, zIndex:10
+              }}
+            >
+              {openTimes.slice(1).map((t, i)=>(<div key={i} style={{fontSize:12, padding:"6px 10px", whiteSpace:"nowrap"}}>{t}</div>))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Facts row (icons only) + Info/Map mini buttons on SAME row */}
+      <div style={{
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"6px 12px 12px 12px",
+      }}>
+        <div style={{display:"flex", alignItems:"center", gap:16}}>
+          <span style={{display:"inline-flex", alignItems:"center", gap:6, color:"#0f172a"}}>
+            <ico.bed width={18} height={18} /> {facts.bed ?? 0}
+          </span>
+          <span style={{display:"inline-flex", alignItems:"center", gap:6, color:"#0f172a"}}>
+            <ico.bath width={18} height={18} /> {facts.bath ?? 0}
+          </span>
+          <span style={{display:"inline-flex", alignItems:"center", gap:6, color:"#0f172a"}}>
+            <ico.car width={18} height={18} /> {facts.car ?? 0}
+          </span>
+
+          {/* divider */}
+          <span style={{width:1, height:16, background:"rgba(148,163,184,.45)"}} />
+
+          {/* icons-only Info + Map */}
+          <button
+            onClick={()=> openInfo(data.infoHtml)}
+            title="Property info"
+            style={{width:34, height:34, borderRadius:999, border:"1px solid rgba(148,163,184,.35)", background:"#fff", display:"grid", placeItems:"center"}}
+          >
+            <ico.info width={18} height={18} />
+          </button>
+          <button
+            onClick={()=> openMap(address)}
+            title="Map"
+            style={{width:34, height:34, borderRadius:999, border:"1px solid rgba(148,163,184,.35)", background:"#fff", display:"grid", placeItems:"center"}}
+          >
+            <ico.map width={18} height={18} />
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }
