@@ -15,55 +15,66 @@ export type FeedListing = {
   facts: { bed?: number; bath?: number; car?: number };
   media: MediaItem[];
   infoHtml?: string;
-  // initial flags (hydrated later from API)
   liked?: boolean;
   saved?: boolean;
   followed?: boolean;
 };
 
 type Props = {
-  item: FeedListing;
-  onFocus?: (id: string) => void; // lets the page know which card is "active"
+  item?: FeedListing;  // <-- defensive
+  onFocus?: (id: string) => void;
 };
 
 export default function FeedCard({ item, onFocus }: Props) {
-  const [liked, setLiked] = React.useState(!!item.liked);
-  const [saved, setSaved] = React.useState(!!item.saved);
-  const [followed, setFollowed] = React.useState(!!item.followed);
+  // Normalize early so SSR never touches undefined fields
+  const data: FeedListing = item ?? {
+    id: "unknown",
+    agent: { name: "Agent" },
+    price: "",
+    address: "",
+    facts: {},
+    media: [],
+    infoHtml: "",
+    liked: false,
+    saved: false,
+    followed: false,
+  };
 
-  // Expose focus state upward for keyboard shortcuts (optional)
+  const [liked, setLiked] = React.useState(!!data.liked);
+  const [saved, setSaved] = React.useState(!!data.saved);
+  const [followed, setFollowed] = React.useState(!!data.followed);
+
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   React.useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const onFocusIn = () => onFocus?.(item.id);
+    const onFocusIn = () => onFocus?.(data.id);
     el.addEventListener("focusin", onFocusIn);
     return () => el.removeEventListener("focusin", onFocusIn);
-  }, [item.id, onFocus]);
+  }, [data.id, onFocus]);
 
   const openMedia = () => {
-    if (!item.media?.length) return;
+    if (!data.media?.length) return;
     window.dispatchEvent(new CustomEvent("open-media-overlay", {
-      detail: { items: item.media, startIndex: 0 }
+      detail: { items: data.media, startIndex: 0 }
     }));
   };
 
   const openInfo = () => {
     window.dispatchEvent(new CustomEvent("open-info-overlay", {
-      detail: { html: item.infoHtml || "<p>No extra info.</p>" }
+      detail: { html: data.infoHtml || "<p>No extra info.</p>" }
     }));
   };
 
   const openMap = () => {
     window.dispatchEvent(new CustomEvent("open-map-overlay", {
-      detail: { address: item.address }
+      detail: { address: data.address }
     }));
   };
 
   const toggleLiked = () => {
     setLiked(v => !v);
     showToast(!liked ? "Liked" : "Unliked");
-    // TODO: POST optimistic update
   };
   const toggleSaved = () => {
     setSaved(v => !v);
@@ -71,7 +82,7 @@ export default function FeedCard({ item, onFocus }: Props) {
   };
   const toggleFollow = () => {
     setFollowed(v => !v);
-    showToast(!followed ? `Following ${item.agent.name}` : `Unfollowed ${item.agent.name}`);
+    showToast(!followed ? `Following ${data.agent.name}` : `Unfollowed ${data.agent.name}`);
   };
 
   const Card = (props: React.HTMLAttributes<HTMLDivElement>) => (
@@ -95,14 +106,13 @@ export default function FeedCard({ item, onFocus }: Props) {
   );
 
   return (
-    <Card className="rl-card" aria-label={`${item.address}`}>
-
+    <Card className="rl-card" aria-label={`${data.address}`}>
       {/* Header: agent chip + mini Follow */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}>
         <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#e5e7eb" }} aria-hidden />
         <div style={{ lineHeight: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{item.agent.name}</div>
-          {item.agent.agency && <div style={{ fontSize: 11, color: "#475569" }}>{item.agent.agency}</div>}
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{data.agent.name}</div>
+          {data.agent.agency && <div style={{ fontSize: 11, color: "#475569" }}>{data.agent.agency}</div>}
         </div>
         <button
           onClick={toggleFollow}
@@ -122,8 +132,6 @@ export default function FeedCard({ item, onFocus }: Props) {
           <Icon name="user-plus" className="h-[14px] w-[14px]" />
           {followed ? "Following" : "Follow"}
         </button>
-
-        {/* Compact top-right actions */}
         <div style={{ display: "flex", gap: 8, marginLeft: 10 }}>
           <IconToggle on={liked} onClick={toggleLiked} onIcon="heart" offIcon="heart" labelOn="Unlike" labelOff="Like" />
           <IconToggle on={saved} onClick={toggleSaved} onIcon="bookmark" offIcon="bookmark" labelOn="Unsave" labelOff="Save" />
@@ -137,25 +145,23 @@ export default function FeedCard({ item, onFocus }: Props) {
         style={{ display: "block", width: "100%", height: 360, overflow: "hidden", position: "relative", cursor: "pointer" }}
       >
         <img
-          src={(item.media?.[0]?.src) || "/images/placeholder.jpg"}
+          src={(data.media?.[0]?.src) || "/images/placeholder.jpg"}
           alt=""
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
         />
       </button>
 
-      {/* Body: price, address, facts */}
+      {/* Body */}
       <div style={{ padding: "12px 14px 8px" }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{item.price}</div>
-        <div style={{ fontSize: 13, color: "#475569" }}>{item.address}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{data.price}</div>
+        <div style={{ fontSize: 13, color: "#475569" }}>{data.address}</div>
 
-        {/* Facts in a single mini-icon row */}
         <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 8, color: "#0f172a" }}>
-          {item.facts.bed != null && <Fact icon="bed" value={item.facts.bed} />}
-          {item.facts.bath != null && <Fact icon="bath" value={item.facts.bath} />}
-          {item.facts.car != null && <Fact icon="car" value={item.facts.car} />}
+          {data.facts.bed != null && <Fact icon="bed" value={data.facts.bed} />}
+          {data.facts.bath != null && <Fact icon="bath" value={data.facts.bath} />}
+          {data.facts.car != null && <Fact icon="car" value={data.facts.car} />}
         </div>
 
-        {/* Mini actions: Info + Map (icons only) */}
         <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
           <MiniIconButton icon="info" label="Property info" onClick={openInfo} />
           <MiniIconButton icon="map-pin" label="Map" onClick={openMap} />
