@@ -30,3 +30,8 @@ backups/
 backups/
 
 backups/
+
+# prevent accidental page builds
+src/pages/*.bak.tsx
+src/pages/*.before-*.tsx
+src/pages/*.switch-*.tsx
