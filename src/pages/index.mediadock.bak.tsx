@@ -4,6 +4,8 @@ import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 
 
+
+import MediaDock from "@/components/rail/MediaDock";
 import MediaChooser from "@/components/rail/MediaChooser";
 import MediaOverlay from "@/components/rail/MediaOverlay";
 /** ===== Naming & glyphs ================================================== */
@@ -298,7 +300,9 @@ export default function Home() {
       )}
 
       {/* Rail overlays (mount exactly once) */}
-      <FloorPlanOverlay /><MediaChooser />
+      <FloorPlanOverlay />
+      <MediaDock />
+      <MediaChooser />
       <MediaOverlay />
 </main>
   );
