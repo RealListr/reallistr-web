@@ -2,10 +2,12 @@ import * as React from "react";
 import Icon from "@/app/components/Icon";
 import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
+
+
+
+import MediaDock from "@/components/rail/MediaDock";
 import MediaChooser from "@/components/rail/MediaChooser";
 import MediaOverlay from "@/components/rail/MediaOverlay";
-import MediaDock from "@/components/rail/MediaDock";
-
 /** ===== Naming & glyphs ================================================== */
 type IconName =
   | "bed"
@@ -302,6 +304,6 @@ export default function Home() {
       <MediaDock />
       <MediaChooser />
       <MediaOverlay />
-    </main>
+</main>
   );
 }
