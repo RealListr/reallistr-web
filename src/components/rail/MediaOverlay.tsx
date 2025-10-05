@@ -1,168 +1,112 @@
 import * as React from "react";
 
-type MediaItem =
-  | { type: "video"; src: string; poster?: string }
-  | { type: "image"; src: string; alt?: string };
-
-type OpenMediaDetail = { items: MediaItem[]; index?: number };
-
-const MEDIA_EVENT = "open-media";
+type MediaItem = { type: "image" | "video" | "podcast"; src: string; label?: string; };
 
 export default function MediaOverlay() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<MediaItem[]>([]);
   const [index, setIndex] = React.useState(0);
 
-  // Lazy-load hls.js only in the browser
-  const videoRef = React.useRef<HTMLVideoElement | null>(null);
-  const hlsRef = React.useRef<any>(null);
-
-  const current = items[index];
-
   React.useEffect(() => {
-    const onOpen = async (e: Event) => {
-      const detail = (e as CustomEvent<OpenMediaDetail>).detail;
-      if (!detail || !detail.items?.length) return;
-
-      setItems(detail.items);
-      setIndex(detail.index ?? 0);
+    const onOpen = (e: Event) => {
+      const { detail } = e as CustomEvent;
+      const list = (detail?.items || []) as MediaItem[];
+      const i = Math.max(0, Math.min(Number(detail?.index ?? 0), list.length - 1));
+      setItems(list);
+      setIndex(i);
       setOpen(true);
     };
-    window.addEventListener(MEDIA_EVENT, onOpen as EventListener);
-    return () => {
-      window.removeEventListener(MEDIA_EVENT, onOpen as EventListener);
-      if (hlsRef.current) {
-        hlsRef.current.destroy?.();
-        hlsRef.current = null;
-      }
-    };
+    window.addEventListener("open-media", onOpen as EventListener);
+    return () => window.removeEventListener("open-media", onOpen as EventListener);
   }, []);
 
-  // Prepare HLS playback if needed
   React.useEffect(() => {
-    const v = videoRef.current;
-    if (!open || !v) return;
-    if (current?.type !== "video") return;
-
-    // Reset any previous hls instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy?.();
-      hlsRef.current = null;
-    }
-
-    const src = current.src;
-    const isHls = /\.m3u8($|\?)/i.test(src);
-
-    const setup = async () => {
-      if (isHls) {
-        // Native HLS (Safari / iOS)
-        if (v.canPlayType("application/vnd.apple.mpegurl")) {
-          v.src = src;
-          await v.play().catch(() => {});
-          return;
-        }
-        // hls.js for other browsers
-        const { default: Hls } = await import("hls.js");
-        if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: true });
-          hlsRef.current = hls;
-          hls.attachMedia(v);
-          hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(src));
-          return;
-        }
-      }
-      // MP4 / fallback
-      v.src = src;
-      await v.play().catch(() => {});
-    };
-
-    setup();
-
-    return () => {
-      v.pause();
-      v.removeAttribute("src");
-      v.load();
-    };
-  }, [open, current]);
-
-  const close = () => setOpen(false);
-  const next = () => setIndex((i) => (i + 1) % items.length);
-  const prev = () => setIndex((i) => (i - 1 + items.length) % items.length);
-
-  React.useEffect(() => {
-    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
+      if (!open) return;
+      if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowRight") setIndex(i => Math.min(i + 1, items.length - 1));
+      if (e.key === "ArrowLeft") setIndex(i => Math.max(i - 1, 0));
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, items.length]);
 
   if (!open) return null;
+  const item = items[index];
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={close}
-    >
-      <div
-        className="relative w-full max-w-5xl rounded-2xl bg-white shadow-xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Media */}
-        <div className="relative bg-black aspect-video">
-          {current?.type === "image" ? (
-            // Use <img> to avoid Next/Image config issues for now
-            <img
-              src={current.src}
-              alt={current.alt ?? "media"}
-              className="w-full h-full object-contain bg-black"
-              onError={(e) => console.warn("Image failed:", current.src, e)}
-            />
-          ) : (
+    <div aria-modal="true" role="dialog" style={{
+      position:"fixed", inset:0, zIndex:1500,
+      background:"rgba(15,23,42,.36)", backdropFilter:"blur(2px)"
+    }}>
+      <div onClick={() => setOpen(false)} style={{position:"absolute", inset:0}} />
+
+      <div style={{
+        position:"absolute", left:"50%", top:"50%",
+        transform:"translate(-50%, -50%)",
+        width:"min(92vw, 1200px)", maxHeight:"86vh",
+        borderRadius:20,
+        border:"1px solid rgba(148,163,184,.35)",
+        background:"rgba(255,255,255,.92)",
+        boxShadow:"0 24px 60px rgba(15,23,42,.30)",
+        overflow:"hidden",
+        display:"grid",
+        gridTemplateRows:"auto 1fr auto"
+      }}>
+        <header style={{display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px"}}>
+          <div style={{fontSize:14, fontWeight:700, color:"#111827"}}>
+            {item?.label || (item?.type ?? "Media")} <span style={{opacity:.6, fontWeight:500}}>• {index+1} / {items.length}</span>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            style={{
+              width:28,height:28,borderRadius:10,
+              border:"1px solid rgba(148,163,184,.35)",
+              background:"rgba(255,255,255,.85)"
+            }}>×</button>
+        </header>
+
+        <div style={{position:"relative", padding:12, display:"grid", placeItems:"center"}}>
+          {item?.type === "image" && (
+            <img src={item.src} alt={item.label || "image"} style={{
+              maxWidth:"100%", maxHeight:"70vh", objectFit:"contain", borderRadius:12
+            }} />
+          )}
+          {item?.type === "video" && (
             <video
-              ref={videoRef}
-              // iOS / mobile requirements
-              playsInline
+              src={item.src}
               controls
-              preload="metadata"
-              poster={current.poster}
-              className="w-full h-full object-contain bg-black"
-              onError={(e) => {
-                const v = e.currentTarget;
-                console.warn("Video error", { code: v.error?.code, msg: v.error?.message, src: current.src });
-              }}
+              style={{maxWidth:"100%", maxHeight:"70vh", borderRadius:12, background:"#000"}}
             />
           )}
+          {item?.type === "podcast" && (
+            <audio src={item.src} controls style={{width:"100%"}} />
+          )}
+
+          {/* Arrows */}
+          <button
+            onClick={() => setIndex(i => Math.max(i - 1, 0))}
+            aria-label="Previous"
+            style={{
+              position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
+              width:36, height:36, borderRadius:9999, border:"1px solid rgba(148,163,184,.35)",
+              background:"rgba(255,255,255,.85)"
+            }}>‹</button>
+          <button
+            onClick={() => setIndex(i => Math.min(i + 1, items.length - 1))}
+            aria-label="Next"
+            style={{
+              position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
+              width:36, height:36, borderRadius:9999, border:"1px solid rgba(148,163,184,.35)",
+              background:"rgba(255,255,255,.85)"
+            }}>›</button>
         </div>
 
-        {/* Controls */}
-        {items.length > 1 && (
-          <div className="absolute inset-x-0 bottom-0 p-3 flex items-center justify-between">
-            <button onClick={prev} className="px-3 py-2 rounded-xl bg-white/90 hover:bg-white">◀︎</button>
-            <span className="text-white/90">{index + 1} / {items.length}</span>
-            <button onClick={next} className="px-3 py-2 rounded-xl bg-white/90 hover:bg-white">▶︎</button>
-          </div>
-        )}
-
-        <button
-          onClick={close}
-          className="absolute top-3 right-3 px-3 py-2 rounded-xl bg-white/90 hover:bg-white"
-          aria-label="Close media"
-        >
-          ✕
-        </button>
+        <footer style={{padding:"10px 16px", fontSize:12, color:"#374151"}}>
+          Press ⎋ to close • ← → to navigate
+        </footer>
       </div>
     </div>
   );
-}
-
-/** Helper for callers */
-export function openMedia(items: MediaItem[], index = 0) {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent<OpenMediaDetail>("open-media", { detail: { items, index } }));
 }
