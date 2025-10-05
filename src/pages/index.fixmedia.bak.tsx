@@ -347,10 +347,7 @@ const page: React.CSSProperties = {
       
       
       
-      
       <MediaChooser />
-      <MediaOverlay />
-<MediaChooser />
       <MediaOverlay />
 <MediaChooser />
       <MediaOverlay />
