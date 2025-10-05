@@ -1,219 +1,160 @@
 import * as React from "react";
-import Icon from "@/app/components/Icon";
-import { showToast } from "@/lib/toast";
+import { openMediaOverlay } from "@/lib/mediaBus";
 
-type MediaItem =
+export type Media =
   | { type: "image"; src: string; label?: string }
-  | { type: "video"; src: string; label?: string }
-  | { type: "audio"; src: string; label?: string };
+  | { type: "video"; src: string; label?: string };
 
 export type FeedListing = {
   id: string;
-  agent: { name: string; agency?: string; avatarUrl?: string };
+  agent: { name: string; agency: string; avatarUrl?: string };
   price: string;
   address: string;
-  facts: { bed?: number; bath?: number; car?: number };
-  media: MediaItem[];
+  facts: { bed: number; bath: number; car: number };
+  media: Media[];
   infoHtml?: string;
   liked?: boolean;
   saved?: boolean;
-  followed?: boolean;
+  following?: boolean;
 };
 
-type Props = {
-  item?: FeedListing;  // <-- defensive
-  onFocus?: (id: string) => void;
+const card: React.CSSProperties = {
+  width: "var(--feed-w, 760px)",
+  margin: "0 auto 18px",
+  borderRadius: 16,
+  border: "1px solid rgba(148,163,184,.35)",
+  background: "rgba(255,255,255,.98)",
+  boxShadow: "0 12px 32px rgba(15,23,42,.08)",
+  overflow: "hidden",
 };
 
-export default function FeedCard({ item, onFocus }: Props) {
-  // Normalize early so SSR never touches undefined fields
-  const data: FeedListing = item ?? {
-    id: "unknown",
-    agent: { name: "Agent" },
-    price: "",
-    address: "",
-    facts: {},
-    media: [],
-    infoHtml: "",
-    liked: false,
-    saved: false,
-    followed: false,
-  };
+const header: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  padding: "12px 14px",
+};
 
-  const [liked, setLiked] = React.useState(!!data.liked);
-  const [saved, setSaved] = React.useState(!!data.saved);
-  const [followed, setFollowed] = React.useState(!!data.followed);
+const avatar: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 999, background: "#e5e7eb", flex: "0 0 auto",
+};
 
-  const rootRef = React.useRef<HTMLDivElement | null>(null);
-  React.useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const onFocusIn = () => onFocus?.(data.id);
-    el.addEventListener("focusin", onFocusIn);
-    return () => el.removeEventListener("focusin", onFocusIn);
-  }, [data.id, onFocus]);
+const hmeta: React.CSSProperties = { lineHeight: 1.1 };
+const nameCss: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: "#0f172a" };
+const agencyCss: React.CSSProperties = { fontSize: 12, color: "#475569" };
 
-  const openMedia = () => {
-    if (!data.media?.length) return;
-    window.dispatchEvent(new CustomEvent("open-media-overlay", {
-      detail: { items: data.media, startIndex: 0 }
-    }));
-  };
+const headRight: React.CSSProperties = { marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" };
+const ghostButton = (active=false): React.CSSProperties => ({
+  height: 32, padding: "0 10px", borderRadius: 999, border: "1px solid rgba(148,163,184,.35)",
+  background: active ? "rgba(34,197,94,.12)" : "rgba(255,255,255,.75)",
+  display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer"
+});
 
-  const openInfo = () => {
-    window.dispatchEvent(new CustomEvent("open-info-overlay", {
-      detail: { html: data.infoHtml || "<p>No extra info.</p>" }
-    }));
-  };
+const mediaWrap: React.CSSProperties = {
+  position: "relative",
+  width: "100%",
+  aspectRatio: "4 / 5",   // lock 4:5 like Instagram
+  background: "#f3f4f6",
+};
 
-  const openMap = () => {
-    window.dispatchEvent(new CustomEvent("open-map-overlay", {
-      detail: { address: data.address }
-    }));
-  };
+const mediaImg: React.CSSProperties = {
+  position: "absolute", inset: 0,
+  width: "100%", height: "100%",
+  objectFit: "cover" as const, objectPosition: "center",
+};
 
-  const toggleLiked = () => {
-    setLiked(v => !v);
-    showToast(!liked ? "Liked" : "Unliked");
-  };
-  const toggleSaved = () => {
-    setSaved(v => !v);
-    showToast(!saved ? "Saved to Watchlist" : "Removed from Watchlist");
-  };
-  const toggleFollow = () => {
-    setFollowed(v => !v);
-    showToast(!followed ? `Following ${data.agent.name}` : `Unfollowed ${data.agent.name}`);
-  };
+const body: React.CSSProperties = { padding: "12px 14px" };
+const priceCss: React.CSSProperties = { fontSize: 18, fontWeight: 800, color: "#0f172a", marginBottom: 4 };
+const addrCss: React.CSSProperties = {
+  fontSize: 13, color: "#374151", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+};
 
-  const Card = (props: React.HTMLAttributes<HTMLDivElement>) => (
-    <div
-      ref={rootRef}
-      tabIndex={0}
-      {...props}
-      style={{
-        ...props.style,
-        outline: "none",
-        borderRadius: 18,
-        border: "1px solid rgba(148,163,184,.35)",
-        background: "rgba(255,255,255,.80)",
-        boxShadow: "0 10px 28px rgba(15,23,42,.10)",
-        overflow: "hidden",
-        transition: "transform .12s ease, box-shadow .12s ease",
-      }}
-      onMouseEnter={(e) => ((e.currentTarget.style.boxShadow = "0 14px 34px rgba(15,23,42,.14)"))}
-      onMouseLeave={(e) => ((e.currentTarget.style.boxShadow = "0 10px 28px rgba(15,23,42,.10)"))}
-    />
-  );
+const factsRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: 16, paddingTop: 10, paddingBottom: 6, fontSize: 13, color: "#0f172a"
+};
+const bottomRow: React.CSSProperties = {
+  display: "flex", alignItems: "center", gap: 10, padding: "10px 14px 12px", borderTop: "1px solid rgba(148,163,184,.28)"
+};
+
+const iconBtn = (active=false): React.CSSProperties => ({
+  width: 34, height: 34, borderRadius: 10,
+  border: "1px solid rgba(148,163,184,.35)",
+  background: active ? "rgba(15,23,42,.08)" : "rgba(255,255,255,.85)",
+  display: "inline-grid", placeItems: "center", cursor: "pointer"
+});
+
+const css = `
+  @media (max-width: 1279px) {
+    .rl-price { font-size: 17px !important; }
+  }
+  @media (max-width: 767px) {
+    .rl-card { margin-bottom: 14px !important; }
+  }
+`;
+
+export default function FeedCard({ listing }: { listing: FeedListing }) {
+  const [liked, setLiked] = React.useState(!!listing.liked);
+  const [saved, setSaved] = React.useState(!!listing.saved);
+  const [following, setFollowing] = React.useState(!!listing.following);
+
+  const openMedia = () => openMediaOverlay(listing.media, 0);
 
   return (
-    <Card className="rl-card" aria-label={`${data.address}`}>
-      {/* Header: agent chip + mini Follow */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}>
-        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#e5e7eb" }} aria-hidden />
-        <div style={{ lineHeight: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{data.agent.name}</div>
-          {data.agent.agency && <div style={{ fontSize: 11, color: "#475569" }}>{data.agent.agency}</div>}
+    <article className="rl-card" style={card} aria-label={`${listing.address} by ${listing.agent.name}`}>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      {/* Header */}
+      <header style={header}>
+        <i style={avatar} aria-hidden />
+        <div style={hmeta}>
+          <div style={nameCss}>{listing.agent.name}</div>
+          <div style={agencyCss}>{listing.agent.agency}</div>
         </div>
-        <button
-          onClick={toggleFollow}
-          aria-label={followed ? "Unfollow agent" : "Follow agent"}
-          style={{
-            marginLeft: "auto",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            border: "1px solid rgba(148,163,184,.35)",
-            background: "rgba(255,255,255,.65)",
-            borderRadius: 999,
-            padding: "6px 10px",
-            fontSize: 12
-          }}
-        >
-          <Icon name="user-plus" className="h-[14px] w-[14px]" />
-          {followed ? "Following" : "Follow"}
-        </button>
-        <div style={{ display: "flex", gap: 8, marginLeft: 10 }}>
-          <IconToggle on={liked} onClick={toggleLiked} onIcon="heart" offIcon="heart" labelOn="Unlike" labelOff="Like" />
-          <IconToggle on={saved} onClick={toggleSaved} onIcon="bookmark" offIcon="bookmark" labelOn="Unsave" labelOff="Save" />
+        <div style={headRight}>
+          <button type="button" style={ghostButton(following)} onClick={() => setFollowing(v => !v)} aria-label={following ? "Following" : "Follow"}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M16 11V7m-8 4V7m-3 8h14" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <span style={{fontSize:12, color:"#0f172a"}}>{following ? "Following" : "Follow"}</span>
+          </button>
+          <button type="button" style={iconBtn(liked)} onClick={() => setLiked(v => !v)} aria-label="Like">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={liked ? "#ef4444" : "none"} stroke="#0f172a"><path d="M12 21s-6.5-4.35-9-7.5C1 10 2.5 6.5 6 6.5c2 0 3.5 1.5 6 4 2.5-2.5 4-4 6-4 3.5 0 5 3.5 3 7  -2.5 3.15-9 7.5-9 7.5z"/></svg>
+          </button>
+          <button type="button" style={iconBtn(saved)} onClick={() => setSaved(v => !v)} aria-label="Save">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "#0f172a" : "none"} stroke="#0f172a"><path d="M6 3h12v18l-6-3-6 3V3z"/></svg>
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Media hero (clickable) */}
-      <button
-        onClick={openMedia}
-        aria-label="Open gallery"
-        style={{ display: "block", width: "100%", height: 360, overflow: "hidden", position: "relative", cursor: "pointer" }}
-      >
-        <img
-          src={(data.media?.[0]?.src) || "/images/placeholder.jpg"}
-          alt=""
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-        />
-      </button>
+      {/* Media (4:5 fixed; click to open gallery) */}
+      <div style={mediaWrap} role="button" onClick={openMedia} aria-label="Open gallery">
+        {listing.media?.[0]?.type === "image" ? (
+          <img src={listing.media[0].src} alt={listing.media[0].label || "image"} style={mediaImg} />
+        ) : (
+          <div style={{...mediaImg, display:"grid", placeItems:"center"}}>
+            <svg width="58" height="58" viewBox="0 0 24 24" fill="#0f172a"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        )}
+      </div>
 
       {/* Body */}
-      <div style={{ padding: "12px 14px 8px" }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>{data.price}</div>
-        <div style={{ fontSize: 13, color: "#475569" }}>{data.address}</div>
+      <section style={body}>
+        <div className="rl-price" style={priceCss}>{listing.price}</div>
+        <div style={addrCss} title={listing.address}>{listing.address}</div>
 
-        <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 8, color: "#0f172a" }}>
-          {data.facts.bed != null && <Fact icon="bed" value={data.facts.bed} />}
-          {data.facts.bath != null && <Fact icon="bath" value={data.facts.bath} />}
-          {data.facts.car != null && <Fact icon="car" value={data.facts.car} />}
+        <div style={factsRow} aria-label="Property facts">
+          <span title="Bedrooms">🛏 {listing.facts.bed}</span>
+          <span title="Bathrooms">🛁 {listing.facts.bath}</span>
+          <span title="Parking">🚗 {listing.facts.car}</span>
         </div>
+      </section>
 
-        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-          <MiniIconButton icon="info" label="Property info" onClick={openInfo} />
-          <MiniIconButton icon="map-pin" label="Map" onClick={openMap} />
-        </div>
+      {/* Bottom mini actions */}
+      <div style={bottomRow}>
+        <button type="button" style={iconBtn()} aria-label="Property info" data-rl="info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f172a"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h2v4h-2z"/></svg>
+        </button>
+        <button type="button" style={iconBtn()} aria-label="Open map" data-rl="map">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f172a"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"/><circle cx="15" cy="10" r="2"/></svg>
+        </button>
       </div>
-    </Card>
-  );
-}
-
-function Fact({ icon, value }: { icon: string; value: number }) {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13 }}>
-      <Icon name={icon as any} className="h-[16px] w-[16px]" />
-      <span>{value}</span>
-    </span>
-  );
-}
-
-function MiniIconButton({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      style={{
-        width: 36, height: 36, borderRadius: 10,
-        border: "1px solid rgba(148,163,184,.35)", background: "rgba(255,255,255,.65)",
-        display: "grid", placeItems: "center"
-      }}
-    >
-      <Icon name={icon as any} className="h-[18px] w-[18px]" />
-    </button>
-  );
-}
-
-function IconToggle({
-  on, onClick, onIcon, offIcon, labelOn, labelOff
-}: { on: boolean; onClick: () => void; onIcon: string; offIcon: string; labelOn: string; labelOff: string }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={on}
-      aria-label={on ? labelOn : labelOff}
-      title={on ? labelOn : labelOff}
-      style={{
-        width: 36, height: 36, borderRadius: 10,
-        border: "1px solid rgba(148,163,184,.35)",
-        background: on ? "rgba(251,207,232,.65)" : "rgba(255,255,255,.65)",
-        display: "grid", placeItems: "center"
-      }}
-    >
-      <Icon name={(on ? onIcon : offIcon) as any} className="h-[18px] w-[18px]" />
-    </button>
+    </article>
   );
 }
