@@ -4,9 +4,8 @@ import AgentDock, { type Agent } from "@/app/components/AgentDock";
 import FloorPlanOverlay from "@/components/rail/FloorPlanOverlay";
 import MediaChooser from "@/components/rail/MediaChooser";
 import MediaOverlay from "@/components/rail/MediaOverlay";
-// near other imports
 
-// inside your page component's JSX (toward the bottom of <main>)/** ===== Naming & glyphs ================================================== */
+/** ===== Naming & glyphs ================================================== */
 type IconName =
   | "bed"
   | "car"
@@ -20,18 +19,15 @@ type IconName =
   | "info"
   | "data";     // was "bar-chart"
 
-/** Order on the rail (top→bottom). */
 const ORDER: IconName[] = [
   "bed", "car", "bath", "solar", "plug", "floor", "media", "map", "info", "like", "data",
 ];
 
-/** Strong tone (darker glyph). */
 const STRONG: Record<IconName, boolean> = {
   bed: true, car: true, bath: true,
   solar: false, plug: false, floor: false, media: false, map: false, info: false, like: false, data: false,
 };
 
-/** Tooltip labels. */
 const LABEL: Record<IconName, string> = {
   bed: "Bedrooms",
   car: "Parking",
@@ -46,7 +42,6 @@ const LABEL: Record<IconName, string> = {
   data: "Data Facts",
 };
 
-/** Aliases to Icon glyph names. */
 const GLYPH: Record<IconName, string> = {
   bed: "bed",
   car: "car",
@@ -119,61 +114,26 @@ function handleIconClick(name: IconName) {
       return;
     }
     case "media": {
-      window.dispatchEvent(new Event("toggle-media-panel"));
+      // Demo payload — replace with real listing media later.
+      const demo = [
+        { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=1400&q=80", label: "Living" },
+        { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=1400&q=80", label: "Kitchen" },
+        { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" },
+      ] as any[];
+      window.dispatchEvent(new CustomEvent("open-media-chooser", { detail: { items: demo } }));
       return;
     }
     case "like":
       alert("Saved to favourites (placeholder).");
       return;
-    // popover-only
-    case "bed":
-    case "bath":
-    case "car":
-    case "solar":
-    case "plug":
+    default:
       return;
   }
 }
 
 /** ===== Page ============================================================ */
 export default function Home() {
-  
-  
-  React.useEffect(() => {
-    const handler = (e:any) => {
-      const el = (e.target as HTMLElement)?.closest?.("[data-rl-media]");
-      if (!el) return;
-      console.log("[Media] rail icon clicked");
-      window.dispatchEvent(new CustomEvent("open-media-chooser", {
-        detail: { items: [
-          { type:"image", src:"https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label:"Living" },
-          { type:"image", src:"https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label:"Kitchen" },
-          { type:"video", src:"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label:"Video" }
-        ] }
-      }));
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
-React.useEffect(() => {
-    if (typeof document === "undefined") return;
-    const handler = (e: any) => {
-      const t = e.target as HTMLElement;
-      if (!t) return;
-      const el = t.closest("[data-rl-media]") as HTMLElement | null;
-      if (!el) return;
-      console.log("[Media] icon clicked via doc trap");
-      const demo = [
-        { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-        { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-        { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" }
-      ] as any;
-      openMediaChooser(demo);
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
-const page: React.CSSProperties = {
+  const page: React.CSSProperties = {
     position: "relative", width: "100vw", height: "100vh", overflow: "hidden",
     background: "linear-gradient(135deg,#f3f4f6,#e5e7eb)",
   };
@@ -228,7 +188,7 @@ const page: React.CSSProperties = {
     }
   `;
 
-  // Popover state & helpers (must be BEFORE return)
+  // Popover (quick fact preview)
   const [pop, setPop] = React.useState<PopoverState>({ open: false });
   const hideTimer = React.useRef<number | null>(null);
 
@@ -284,6 +244,7 @@ const page: React.CSSProperties = {
               style={style}
               title={LABEL[name]}
               aria-label={LABEL[name]}
+              data-rl-media={name === "media" ? true : undefined}
               onClick={() => handleIconClick(name)}
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleIconClick(name)}
               onMouseEnter={(e) => showPopover(name, e.currentTarget)}
@@ -337,28 +298,10 @@ const page: React.CSSProperties = {
         </div>
       )}
 
-      {/* Floor plan overlay mounted once */}
+      {/* Rail overlays (mount exactly once) */}
       <FloorPlanOverlay />
       <MediaChooser />
       <MediaOverlay />
-<button
-        onClick={() => { (window as any).rlOpenMediaChooser?.([
-          { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-          { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-          { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" },
-        ]); }}
-        className="fixed bottom-6 right-6 z-[3000] px-3 py-2 rounded-full shadow-lg bg-black text-white text-xs">
-        Media ▶︎
-      </button>
-      <button
-        onClick={() => { (window as any).rlOpenMediaChooser?.([
-          { type: "image", src: "https://images.unsplash.com/photo-1501183638710-841dd1904471?w=800&q=80", label: "Living" },
-          { type: "image", src: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800&q=80", label: "Kitchen" },
-          { type: "video", src: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4", label: "Video" }
-        ]); }}
-        className="fixed bottom-6 right-6 z-[3000] px-3 py-2 rounded-full shadow-lg bg-black text-white text-xs">
-        Media ▶︎
-      </button>
     </main>
   );
 }

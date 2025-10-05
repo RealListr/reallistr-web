@@ -1,112 +1,163 @@
 import * as React from "react";
 
-type MediaItem = { type: "image" | "video" | "podcast"; src: string; label?: string; };
+type Item =
+  | { type: "image"; src: string; label?: string }
+  | { type: "video"; src: string; label?: string }
+  | { type: "audio"; src: string; label?: string };
 
+const EVT = "open-media-overlay";
+
+/**
+ * MediaOverlay
+ * - Opens via: window.dispatchEvent(new CustomEvent('open-media-overlay', { detail: { items, index } }))
+ * - Arrow keys ← / → navigate; Esc closes
+ * - Click backdrop closes
+ */
 export default function MediaOverlay() {
   const [open, setOpen] = React.useState(false);
-  const [items, setItems] = React.useState<MediaItem[]>([]);
+  const [items, setItems] = React.useState<Item[]>([]);
   const [index, setIndex] = React.useState(0);
+
+  const at = (i: number) => (i + items.length) % items.length;
 
   React.useEffect(() => {
     const onOpen = (e: Event) => {
-      const { detail } = e as CustomEvent;
-      const list = (detail?.items || []) as MediaItem[];
-      const i = Math.max(0, Math.min(Number(detail?.index ?? 0), list.length - 1));
-      setItems(list);
-      setIndex(i);
+      const d = (e as CustomEvent).detail as { items?: Item[]; index?: number } | undefined;
+      if (!d?.items?.length) return;
+      setItems(d.items);
+      setIndex(d.index ?? 0);
       setOpen(true);
     };
-    window.addEventListener("open-media", onOpen as EventListener);
-    return () => window.removeEventListener("open-media", onOpen as EventListener);
+    window.addEventListener(EVT, onOpen as any);
+    return () => window.removeEventListener(EVT, onOpen as any);
   }, []);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!open) return;
       if (e.key === "Escape") setOpen(false);
-      if (e.key === "ArrowRight") setIndex(i => Math.min(i + 1, items.length - 1));
-      if (e.key === "ArrowLeft") setIndex(i => Math.max(i - 1, 0));
+      else if (e.key === "ArrowRight") setIndex((i) => at(i + 1));
+      else if (e.key === "ArrowLeft") setIndex((i) => at(i - 1));
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, items.length]);
 
-  if (!open) return null;
-  const item = items[index];
+  if (!open || !items.length) return null;
+  const current = items[at(index)];
 
   return (
-    <div aria-modal="true" role="dialog" style={{
-      position:"fixed", inset:0, zIndex:1500,
-      background:"rgba(15,23,42,.36)", backdropFilter:"blur(2px)"
-    }}>
-      <div onClick={() => setOpen(false)} style={{position:"absolute", inset:0}} />
-
-      <div style={{
-        position:"absolute", left:"50%", top:"50%",
-        transform:"translate(-50%, -50%)",
-        width:"min(92vw, 1200px)", maxHeight:"86vh",
-        borderRadius:20,
-        border:"1px solid rgba(148,163,184,.35)",
-        background:"rgba(255,255,255,.92)",
-        boxShadow:"0 24px 60px rgba(15,23,42,.30)",
-        overflow:"hidden",
-        display:"grid",
-        gridTemplateRows:"auto 1fr auto"
-      }}>
-        <header style={{display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px"}}>
-          <div style={{fontSize:14, fontWeight:700, color:"#111827"}}>
-            {item?.label || (item?.type ?? "Media")} <span style={{opacity:.6, fontWeight:500}}>• {index+1} / {items.length}</span>
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        // Close on backdrop click
+        if (e.target === e.currentTarget) setOpen(false);
+      }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 90,
+        background: "rgba(2,6,23,.55)",
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
+        display: "grid", placeItems: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "min(1080px, 92vw)",
+          background: "#fff",
+          borderRadius: 14,
+          boxShadow: "0 24px 60px rgba(15,23,42,.35)",
+          border: "1px solid rgba(148,163,184,.35)",
+          padding: 14,
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 6px 10px 6px" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>
+            {current.label ?? (current.type === "image" ? "Image" : current.type === "video" ? "Video" : "Audio")}
           </div>
+          <div style={{ fontSize: 12, color: "#475569" }}>· {at(index) + 1} / {items.length}</div>
           <button
-            onClick={() => setOpen(false)}
             aria-label="Close"
+            onClick={() => setOpen(false)}
             style={{
-              width:28,height:28,borderRadius:10,
-              border:"1px solid rgba(148,163,184,.35)",
-              background:"rgba(255,255,255,.85)"
-            }}>×</button>
-        </header>
-
-        <div style={{position:"relative", padding:12, display:"grid", placeItems:"center"}}>
-          {item?.type === "image" && (
-            <img src={item.src} alt={item.label || "image"} style={{
-              maxWidth:"100%", maxHeight:"70vh", objectFit:"contain", borderRadius:12
-            }} />
-          )}
-          {item?.type === "video" && (
-            <video
-              src={item.src}
-              controls
-              style={{maxWidth:"100%", maxHeight:"70vh", borderRadius:12, background:"#000"}}
-            />
-          )}
-          {item?.type === "podcast" && (
-            <audio src={item.src} controls style={{width:"100%"}} />
-          )}
-
-          {/* Arrows */}
-          <button
-            onClick={() => setIndex(i => Math.max(i - 1, 0))}
-            aria-label="Previous"
-            style={{
-              position:"absolute", left:12, top:"50%", transform:"translateY(-50%)",
-              width:36, height:36, borderRadius:9999, border:"1px solid rgba(148,163,184,.35)",
-              background:"rgba(255,255,255,.85)"
-            }}>‹</button>
-          <button
-            onClick={() => setIndex(i => Math.min(i + 1, items.length - 1))}
-            aria-label="Next"
-            style={{
-              position:"absolute", right:12, top:"50%", transform:"translateY(-50%)",
-              width:36, height:36, borderRadius:9999, border:"1px solid rgba(148,163,184,.35)",
-              background:"rgba(255,255,255,.85)"
-            }}>›</button>
+              marginLeft: "auto", width: 28, height: 28, borderRadius: 10,
+              border: "1px solid rgba(148,163,184,.35)", background: "rgba(248,250,252,.9)"
+            }}
+          >×</button>
         </div>
 
-        <footer style={{padding:"10px 16px", fontSize:12, color:"#374151"}}>
-          Press ⎋ to close • ← → to navigate
-        </footer>
+        {/* Media */}
+        <div style={{ position: "relative" }}>
+          {current.type === "image" ? (
+            <img
+              src={current.src}
+              alt={current.label ?? "Image"}
+              style={{
+                width: "100%", height: "min(70vh, 720px)",
+                objectFit: "cover", borderRadius: 10,
+              }}
+            />
+          ) : current.type === "video" ? (
+            <video
+              src={current.src}
+              controls
+              style={{ width: "100%", height: "min(70vh, 720px)", borderRadius: 10, background: "#000" }}
+            />
+          ) : (
+            <div style={{ height: 180, display: "grid", placeItems: "center" }}>
+              <audio src={current.src} controls />
+            </div>
+          )}
+
+          {/* Nav buttons */}
+          {items.length > 1 && (
+            <>
+              <button
+                aria-label="Previous"
+                onClick={() => setIndex((i) => at(i - 1))}
+                style={navBtnStyle("left")}
+              >
+                ‹
+              </button>
+              <button
+                aria-label="Next"
+                onClick={() => setIndex((i) => at(i + 1))}
+                style={navBtnStyle("right")}
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Footer hint */}
+        <div style={{ fontSize: 11, color: "#64748b", paddingTop: 8 }}>
+          Press <b>Esc</b> to close · ← → to navigate
+        </div>
       </div>
     </div>
   );
+}
+
+function navBtnStyle(side: "left" | "right"): React.CSSProperties {
+  return {
+    position: "absolute",
+    top: "50%",
+    [side]: -12,
+    transform: "translateY(-50%)",
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "rgba(248,250,252,.92)",
+    boxShadow: "0 6px 18px rgba(15,23,42,.16)",
+    display: "grid",
+    placeItems: "center",
+    fontSize: 18,
+    lineHeight: 1,
+  } as React.CSSProperties;
 }

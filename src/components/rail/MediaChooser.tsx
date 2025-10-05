@@ -9,229 +9,156 @@ const EVT = "open-media-chooser";
 
 /**
  * MediaChooser
- * - Opens when window.dispatchEvent(new CustomEvent('open-media-chooser', { detail: { items } }))
- * - Anchors itself to the LEFT of the right-rail "Media" button (aria-label="Media")
- * - Clamps to viewport so it never collides with rail or goes off-screen
+ * - Opens via: window.dispatchEvent(new CustomEvent('open-media-chooser', { detail: { items } }))
+ * - Anchors to the LEFT of the right-rail "Media" button (aria-label="Media")
+ * - Clamps to viewport
+ * - Emits 'open-media-overlay' when a tile is clicked
  */
 export default function MediaChooser() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<Item[]>([]);
   const [pos, setPos] = React.useState<{ top: number; left: number } | null>(null);
+  const panelRef = React.useRef<HTMLDivElement | null>(null);
 
-  const panel = React.useRef<HTMLDivElement | null>(null);
-
-  // One-time event wiring
   React.useEffect(() => {
     const onOpen = (e: Event) => {
       const detail = (e as CustomEvent).detail as { items?: Item[] } | undefined;
-      if (detail?.items && Array.isArray(detail.items)) setItems(detail.items);
+      const next = detail?.items ?? [];
+      setItems(next);
 
-      // Compute anchored position
-      const PANEL_W = 560; // chooser width
-      const PANEL_H = 360; // chooser height
-      const MARGIN = 24;
-
-      // Prefer the right-rail Media button as anchor
+      // Anchor to the Media chip
       const btn = document.querySelector('[aria-label="Media"]') as HTMLElement | null;
+      const railGap = 12;   // pad away from the rail
+      const viewportPad = 16;
 
       if (btn) {
         const r = btn.getBoundingClientRect();
-        const idealLeft = r.left - PANEL_W - MARGIN;                       // to the LEFT of the rail
-        const idealTop = btn.top + btn.height/2 - PANEL_H/2 + OFFSET_Y;               // vertically centered on the button
+        // Preferred position: left of the button, vertically centered on it
+        const preferred = { top: r.top + r.height / 2 - 170, left: r.left - 380 - railGap };
+        // Clamp to viewport after we know our own size
+        requestAnimationFrame(() => {
+          const el = panelRef.current;
+          const w = el?.offsetWidth ?? 360;
+          const h = el?.offsetHeight ?? 300;
+          const maxLeft = window.innerWidth - w - viewportPad;
+          const maxTop = window.innerHeight - h - viewportPad;
 
-        // Clamp inside viewport
-        const left = Math.max(MARGIN, btn.left - GAP - PANEL_W);
-        const top  = Math.max(MARGIN, Math.min(idealTop,  window.innerHeight - PANEL_H - MARGIN));
-
-        setPos({ top, left });
+          setPos({
+            left: Math.max(viewportPad, Math.min(preferred.left, maxLeft)),
+            top: Math.max(viewportPad, Math.min(preferred.top, maxTop)),
+          });
+          setOpen(true);
+        });
       } else {
-        // Fallback: leave room for rail (24 right + 44 chip + 12 gap + 24 pad)
-        const fallbackRightSpace = 24 + 44 + 12 + 24;
-        const left = Math.max(16, window.innerWidth - fallbackRightSpace - PANEL_W);
-        const top  = Math.max(16, window.innerHeight - PANEL_H - 140); // above the HUD
-        setPos({ top, left });
+        // Fallback: bottom-right quadrant
+        setPos({ left: Math.max(16, window.innerWidth - 420), top: Math.max(16, window.innerHeight - 360) });
+        setOpen(true);
       }
-
-      setOpen(true);
     };
 
-    window.addEventListener(EVT, onOpen as EventListener);
-    return () => window.removeEventListener(EVT, onOpen as EventListener);
+    window.addEventListener(EVT, onOpen as any);
+    return () => window.removeEventListener(EVT, onOpen as any);
   }, []);
 
-  // Click-away (only when open and click occurs outside the panel)
   React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (panel.current && !panel.current.contains(e.target as Node)) setOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onClickAway = (e: MouseEvent) => {
+      if (!open) return;
+      const t = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(t)) setOpen(false);
     };
-    window.addEventListener("mousedown", onDown, { capture: true });
-    return () => window.removeEventListener("mousedown", onDown, { capture: true } as any);
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClickAway, { capture: true });
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClickAway, { capture: true } as any);
+    };
   }, [open]);
 
   if (!open || !pos) return null;
 
-  const openOverlay = (index: number) => {
-    window.dispatchEvent(new CustomEvent("open-media", { detail: { items, index } }));
-    setOpen(false);
+  const chrome: React.CSSProperties = {
+    position: "fixed",
+    left: pos.left,
+    top: pos.top,
+    width: 420,
+    borderRadius: 14,
+    background: "rgba(255,255,255,.92)",
+    border: "1px solid rgba(148,163,184,.35)",
+    boxShadow: "0 18px 40px rgba(15,23,42,.16)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    zIndex: 80,
+    padding: 14,
   };
 
+  const title: React.CSSProperties = { fontWeight: 700, color: "#0f172a", marginBottom: 10, fontSize: 14 };
+  const grid: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 12,
+  };
+  const tileBase: React.CSSProperties = {
+    position: "relative",
+    borderRadius: 12,
+    overflow: "hidden",
+    border: "1px solid rgba(148,163,184,.35)",
+    background: "#fff",
+    cursor: "pointer",
+    transition: "transform .12s ease, box-shadow .12s ease",
+  };
+
+  function openOverlayAt(index: number) {
+    window.dispatchEvent(new CustomEvent("open-media-overlay", { detail: { items, index } }));
+    setOpen(false);
+  }
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 60, // above the rail (rail is z-50)
-        pointerEvents: "none",
-      }}
-      aria-hidden="false"
-    >
-      {/* soft backdrop */}
-      <div
-        onClick={() => setOpen(false)}
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(15,23,42,0.10)",
-          backdropFilter: "blur(1.5px)",
-          WebkitBackdropFilter: "blur(1.5px)",
-          pointerEvents: "auto",
-        }}
-      />
-
-      {/* panel */}
-      <div
-        ref={panel}
-        role="dialog"
-        aria-label="Select Media"
-        style={{
-          position: "absolute",
-          top: pos.top,
-          left: pos.left,
-          width: 560,
-          height: 360,
-          borderRadius: 16,
-          border: "1px solid rgba(148,163,184,.35)",
-          background: "rgba(255,255,255,.92)",
-          boxShadow: "0 18px 50px rgba(15,23,42,.18)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-          padding: 16,
-          display: "grid",
-          gridTemplateRows: "auto 1fr",
-          gap: 12,
-          pointerEvents: "auto",
-        }}
-      >
-        {/* header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>Select Media</div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close"
-            style={{
-              width: 26,
-              height: 26,
-              borderRadius: 8,
-              border: "1px solid rgba(148,163,184,.35)",
-              background: "white",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            ×
-          </button>
-        </div>
-
-        {/* grid */}
-        <div
+    <div ref={panelRef} style={chrome} data-rl="media-chooser">
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
+        <div style={title}>Select Media</div>
+        <button
+          aria-label="Close"
+          onClick={() => setOpen(false)}
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gridAutoRows: 150,
-            gap: 14,
-            alignContent: "start",
+            marginLeft: "auto", width: 24, height: 24, borderRadius: 8,
+            border: "1px solid rgba(148,163,184,.35)", background: "rgba(255,255,255,.6)"
           }}
         >
-          {items.map((it, i) => (
-            <button
+          ×
+        </button>
+      </div>
+      <div style={grid}>
+        {items.map((it, i) => {
+          const label = it.label ?? (it.type === "image" ? "Image" : it.type === "video" ? "Video" : "Audio");
+          return (
+            <div
               key={i}
-              onClick={() => openOverlay(i)}
-              style={{
-                all: "unset",
-                cursor: "pointer",
-                display: "grid",
-                gridTemplateRows: "1fr auto",
-                borderRadius: 14,
-                overflow: "hidden",
-                border: "1px solid rgba(148,163,184,.35)",
-                background: "white",
-                boxShadow: "0 4px 14px rgba(15,23,42,.08)",
-              }}
+              role="button"
+              onClick={() => openOverlayAt(i)}
+              onMouseDown={(e) => ((e.currentTarget.style.transform = "translateY(1px)"))}
+              onMouseUp={(e) => ((e.currentTarget.style.transform = "translateY(0)"))}
+              style={tileBase}
             >
-              {/* thumbnail */}
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: 120,
-                  overflow: "hidden",
-                  background: "#f3f4f6",
-                }}
-              >
-                {it.type === "image" ? (
-                  <img
-                    src={it.src}
-                    alt={it.label ?? "image"}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "999px",
-                        background: "rgba(17,24,39,.85)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
+              {it.type === "image" ? (
+                <img src={it.src} alt={label} style={{ width: "100%", height: 140, objectFit: "cover" }} />
+              ) : (
+                <div style={{ width: "100%", height: 140, background: "linear-gradient(135deg,#eef2ff,#e0e7ff)", display: "grid", placeItems: "center" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 999, background: "rgba(15,23,42,.85)", display: "grid", placeItems: "center" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden><path d="M8 5v14l11-7z"/></svg>
                   </div>
-                )}
-              </div>
-              {/* label */}
-              <div
-                style={{
-                  padding: "8px 10px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#111827",
-                }}
-              >
-                {it.label ?? (it.type === "image" ? "Image" : it.type === "video" ? "Video" : "Audio")}
-              </div>
-            </button>
-          ))}
-          {/* ghost cell to keep layout balanced if odd count */}
-          {items.length % 2 === 1 && <div aria-hidden="true" />}
-        </div>
+                </div>
+              )}
+              <span style={{
+                position: "absolute", left: 8, bottom: 8,
+                fontSize: 12, fontWeight: 700, color: "#0f172a",
+                background: "rgba(255,255,255,.85)", borderRadius: 999, padding: "4px 8px",
+                border: "1px solid rgba(148,163,184,.35)"
+              }}>{label}</span>
+            </div>
+          );
+        })}
+        {items.length % 2 === 1 && <div style={{ visibility: "hidden" }} />}
       </div>
     </div>
   );
