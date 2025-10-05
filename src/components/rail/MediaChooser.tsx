@@ -1,5 +1,11 @@
 import * as React from "react";
+import { sanitizeMedia } from "@/lib/media";
 
+if (typeof window !== "undefined") {
+  (window as any).__RL_MEDIA_CHOOSER_MOUNTED__ ??= 0;
+  (window as any).__RL_MEDIA_CHOOSER_MOUNTED__++;
+}
+import { EVT_OPEN_MEDIA_CHOOSER, EVT_OPEN_MEDIA_OVERLAY } from "@/lib/events";
 type Item =
   | { type: "image"; src: string; label?: string }
   | { type: "video"; src: string; label?: string }
@@ -25,7 +31,7 @@ export default function MediaChooser() {
   React.useEffect(() => {
     const onOpen = (e: Event) => {
       const detail = (e as CustomEvent).detail as { items?: Item[] } | undefined;
-      if (detail?.items?.length) setItems(detail.items);
+      if (detail?.items?.length) setItems(sanitizeMedia(detail?.items || []));
 
       const btn = document.querySelector('[aria-label="Media"]') as HTMLElement | null;
       if (btn) {
@@ -80,7 +86,7 @@ export default function MediaChooser() {
   if (!open || !pos) return null;
 
   return (
-    <div
+    <div data-rl="media-chooser"
       ref={panelRef}
       style={{
         position: "fixed",
