@@ -30,8 +30,7 @@ export default function Landing() {
 
       <section style={{padding:"40px 24px", display:"grid", placeItems:"center"}}>
         <div style={{maxWidth: 1100, width:"100%"}}>
-          <PropertyCard listing={listing} />
-        </div>
+          </div>
       </section>
     </main>
   );
