@@ -1,5 +1,4 @@
 import * as React from "react";
-import PropertyCard from "@/app/components/PropertyCard";
 import { useListing } from "@/lib/useListing";
 
 export default function Landing() {
