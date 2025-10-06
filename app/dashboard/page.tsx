@@ -1,4 +1,4 @@
-import DashboardNav from "@/components/DashboardNav";
+import DashboardNav from "../../components/DashboardNav";
 
 function Section({ title, children }: { title:string; children:React.ReactNode }) {
   return (
