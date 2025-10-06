@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400","500","600","700","800"],
+  display: "swap",
+  preload: true,
+  variable: "--font-plusjakarta",
+});
 
 export const metadata: Metadata = {
-  title: "RealLIstr",
+  title: "RealListr",
   description: "Premium property listings",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body>{children}</body>
+      <body className={plusJakarta.variable}>{children}</body>
     </html>
   );
 }

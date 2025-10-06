@@ -1,11 +1,22 @@
+"use client";
 import {
   Bed, Bath, Car, Heart, MoreVertical, User2, Building2,
   MapPin, Info, Share2, Ruler, SunMedium, PlugZap, Home
 } from "lucide-react";
+import { useState } from "react";
+import AgentsRow, { Agent } from "./AgentsRow";
+import AgentsSheet from "./AgentsSheet";
 
 const stories = ["Parina","Downtown","Marina","The Spri…","Al Barsha"];
+const demoAgents: Agent[] = [
+  { id: "a1", name: "Aisha Patel", role: "Lead Agent" },
+  { id: "a2", name: "Samir Khan", role: "Co-Agent" },
+  { id: "a3", name: "Emily Wong", role: "Associate" },
+  { id: "a4", name: "Jordan Lee", role: "Associate" },
+];
 
 export default function PremiumListingCard() {
+  const [agentsOpen, setAgentsOpen] = useState(false);
   const openTime = "Sat 11:15–11:45am ▾";
 
   return (
@@ -33,9 +44,10 @@ export default function PremiumListingCard() {
               <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100 shrink-0">
                 <Building2 className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
               </div>
-              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100 shrink-0">
-                <User2 className="h-6 w-6 text-neutral-500" strokeWidth={1.5} />
-              </div>
+
+              {/* Multi-agent avatars + overflow */}
+              <AgentsRow agents={demoAgents} onOpenSheet={() => setAgentsOpen(true)} />
+
               <div className="min-w-0">
                 <div className="text-[16px] sm:text-[15px] font-semibold text-neutral-900 leading-tight truncate">
                   Aisha Patel
@@ -44,7 +56,7 @@ export default function PremiumListingCard() {
                   Luxe Realty
                 </div>
               </div>
-              {/* Follow (ghost-mini) on mobile */}
+
               <button
                 className="ml-2 inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600 sm:hidden"
                 aria-label="Follow"
@@ -54,12 +66,10 @@ export default function PremiumListingCard() {
             </div>
 
             <div className="flex items-center gap-4 text-neutral-600 ml-auto">
-              {/* Bold, standout Open for Inspection (desktop) */}
               <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
                 <span className="text-[12px] font-bold text-neutral-900">Open for Inspection</span>
                 <span className="text-[12px] font-medium text-neutral-800">{openTime}</span>
               </div>
-
               <button
                 className="hidden sm:inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600"
                 aria-label="Follow"
@@ -74,7 +84,7 @@ export default function PremiumListingCard() {
             </div>
           </div>
 
-          {/* Compact Open for Inspection bar on mobile */}
+          {/* Mobile open for inspection bar */}
           <div className="sm:hidden flex items-center justify-between px-4 pt-2">
             <span className="text-[12px] font-bold text-neutral-900">Open for Inspection</span>
             <span className="text-[12px] font-medium text-neutral-800">{openTime}</span>
@@ -89,7 +99,7 @@ export default function PremiumListingCard() {
             <div className="mt-0.5 text-[13px] text-neutral-600">One JLT, Jumeirah Lake Towers</div>
           </div>
 
-          {/* Specs row — ghost mini icons + extras */}
+          {/* Specs */}
           <div className="flex items-center flex-wrap gap-x-5 gap-y-2 px-4 pb-4 pt-3 text-neutral-500">
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bed className="h-4 w-4 opacity-70" strokeWidth={1.25}/>4</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bath className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
@@ -100,6 +110,9 @@ export default function PremiumListingCard() {
             <span className="inline-flex items-center gap-1.5 text-[12px]"><PlugZap className="h-4 w-4 opacity-70" strokeWidth={1.25}/>EV Charger</span>
           </div>
         </article>
+
+        {/* Agents modal */}
+        <AgentsSheet open={agentsOpen} onClose={()=>setAgentsOpen(false)} agents={demoAgents} agencyName="Luxe Realty" />
       </div>
     </div>
   );
