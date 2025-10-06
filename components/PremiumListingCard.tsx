@@ -1,6 +1,6 @@
 import {
   Bed, Bath, Car, Heart, MoreVertical, User2, Building2,
-  MapPin, Info, Share2, Ruler, SunMedium, PlugZap
+  MapPin, Info, Share2, Ruler, SunMedium, PlugZap, Home
 } from "lucide-react";
 
 const stories = ["Parina","Downtown","Marina","The Spri…","Al Barsha"];
@@ -9,12 +9,10 @@ export default function PremiumListingCard() {
   return (
     <div className="min-h-screen flex justify-center bg-white py-6">
       <div className="w-full max-w-screen-md sm:px-4 px-3 relative">
-        {/* Brand header */}
         <h1 className="mb-3 text-[22px] sm:text-2xl font-extrabold leading-none tracking-tight text-neutral-900">
           RealListr
         </h1>
 
-        {/* Top Rail */}
         <div className="mb-5 flex items-center gap-4 overflow-x-auto rounded-xl bg-white p-2">
           {stories.map((s, i) => (
             <div key={i} className="flex flex-col items-center gap-2 shrink-0">
@@ -26,12 +24,10 @@ export default function PremiumListingCard() {
           ))}
         </div>
 
-        {/* Card */}
         <article className="rounded-2xl border border-neutral-200 bg-white">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Agency & Agent – equal size */}
               <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100 shrink-0">
                 <Building2 className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
               </div>
@@ -46,8 +42,6 @@ export default function PremiumListingCard() {
                   Luxe Realty
                 </div>
               </div>
-
-              {/* Follow (ghost-mini) — on mobile sits next to name */}
               <button
                 className="ml-2 inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600 sm:hidden"
                 aria-label="Follow"
@@ -56,7 +50,6 @@ export default function PremiumListingCard() {
               </button>
             </div>
 
-            {/* Actions — desktop/right; mobile shows icons only on right */}
             <div className="flex items-center gap-5 text-neutral-600 ml-auto">
               <button
                 className="hidden sm:inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600"
@@ -72,7 +65,7 @@ export default function PremiumListingCard() {
             </div>
           </div>
 
-          {/* Media placeholder */}
+          {/* Media */}
           <div className="mt-3 h-[380px] sm:h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200" />
 
           {/* Price + Address */}
@@ -81,25 +74,16 @@ export default function PremiumListingCard() {
             <div className="mt-0.5 text-[13px] text-neutral-600">One JLT, Jumeirah Lake Towers</div>
           </div>
 
-          {/* Specs row (ghost mini) */}
-          <div className="flex items-center flex-wrap gap-x-5 gap-y-2 px-4 pt-3 text-neutral-500">
+          {/* Specs row — ghost mini icons (now includes property type, land, solar, EV) */}
+          <div className="flex items-center flex-wrap gap-x-5 gap-y-2 px-4 pb-4 pt-3 text-neutral-500">
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bed className="h-4 w-4 opacity-70" strokeWidth={1.25}/>4</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bath className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Car className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
-          </div>
 
-          {/* Extra property details (red mini links/icons) */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 pb-4 pt-2">
-            <span className="text-[12px] text-rose-500">House or Apartment etc</span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
-              <Ruler className="h-4 w-4" strokeWidth={1.25}/> Land Size m²
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
-              <SunMedium className="h-4 w-4" strokeWidth={1.25}/> Solar & wattage output
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
-              <PlugZap className="h-4 w-4" strokeWidth={1.25}/> EV Charger
-            </span>
+            <span className="inline-flex items-center gap-1.5 text-[12px]"><Home className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Home</span>
+            <span className="inline-flex items-center gap-1.5 text-[12px]"><Ruler className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Land Size m²</span>
+            <span className="inline-flex items-center gap-1.5 text-[12px]"><SunMedium className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Solar & wattage</span>
+            <span className="inline-flex items-center gap-1.5 text-[12px]"><PlugZap className="h-4 w-4 opacity-70" strokeWidth={1.25}/>EV Charger</span>
 
             <span className="ml-auto text-[12px] text-neutral-500">Sat 11:15–11:45am ▾</span>
           </div>
