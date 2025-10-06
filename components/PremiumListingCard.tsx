@@ -1,11 +1,14 @@
-import { Bed, Bath, Car, Heart, MoreVertical, User2, Building2, MapPin, Info, Share2 } from "lucide-react";
+import {
+  Bed, Bath, Car, Heart, MoreVertical, User2, Building2,
+  MapPin, Info, Share2, Ruler, SunMedium, PlugZap
+} from "lucide-react";
 
 const stories = ["Parina","Downtown","Marina","The Spri…","Al Barsha"];
 
 export default function PremiumListingCard() {
   return (
-    <div className="min-h-screen flex justify-center bg-white py-8">
-      <div className="w-full max-w-screen-md px-4 relative">
+    <div className="min-h-screen flex justify-center bg-white py-6">
+      <div className="w-full max-w-screen-md sm:px-4 px-3 relative">
         {/* Brand header */}
         <h1 className="mb-3 text-[22px] sm:text-2xl font-extrabold leading-none tracking-tight text-neutral-900">
           RealListr
@@ -14,7 +17,7 @@ export default function PremiumListingCard() {
         {/* Top Rail */}
         <div className="mb-5 flex items-center gap-4 overflow-x-auto rounded-xl bg-white p-2">
           {stories.map((s, i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
+            <div key={i} className="flex flex-col items-center gap-2 shrink-0">
               <span className="grid h-[66px] w-[66px] place-items-center rounded-full border border-neutral-200">
                 <span className="h-[58px] w-[58px] rounded-full bg-neutral-100" />
               </span>
@@ -26,26 +29,41 @@ export default function PremiumListingCard() {
         {/* Card */}
         <article className="rounded-2xl border border-neutral-200 bg-white">
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 px-4 pt-4">
-            <div className="flex items-center gap-3">
-              {/* AGENCY circle icon — now same size as agent (52px) */}
-              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 pt-4">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Agency & Agent – equal size */}
+              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100 shrink-0">
                 <Building2 className="h-6 w-6 text-neutral-600" strokeWidth={1.5} />
               </div>
-              {/* Agent avatar (52px) */}
-              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100">
+              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-neutral-100 shrink-0">
                 <User2 className="h-6 w-6 text-neutral-500" strokeWidth={1.5} />
               </div>
-              {/* Names */}
-              <div className="ml-1">
-                <div className="text-[15px] font-semibold text-neutral-900 leading-tight">Aisha Patel</div>
-                <div className="text-[12px] text-neutral-500 leading-tight">Luxe Realty</div>
+              <div className="min-w-0">
+                <div className="text-[16px] sm:text-[15px] font-semibold text-neutral-900 leading-tight truncate">
+                  Aisha Patel
+                </div>
+                <div className="text-[12px] text-neutral-500 leading-tight truncate">
+                  Luxe Realty
+                </div>
               </div>
+
+              {/* Follow (ghost-mini) — on mobile sits next to name */}
+              <button
+                className="ml-2 inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600 sm:hidden"
+                aria-label="Follow"
+              >
+                + Follow
+              </button>
             </div>
 
-            {/* Actions — added Share */}
-            <div className="flex items-center gap-5 text-neutral-600">
-              <button aria-label="Follow" className="text-[13px] font-medium text-emerald-600">+ Follow</button>
+            {/* Actions — desktop/right; mobile shows icons only on right */}
+            <div className="flex items-center gap-5 text-neutral-600 ml-auto">
+              <button
+                className="hidden sm:inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600"
+                aria-label="Follow"
+              >
+                + Follow
+              </button>
               <Share2 className="h-5 w-5 opacity-80" strokeWidth={1.5} />
               <MapPin className="h-5 w-5 opacity-80" strokeWidth={1.5} />
               <Info className="h-5 w-5 opacity-80" strokeWidth={1.5} />
@@ -55,7 +73,7 @@ export default function PremiumListingCard() {
           </div>
 
           {/* Media placeholder */}
-          <div className="mt-3 h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200" />
+          <div className="mt-3 h-[380px] sm:h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200" />
 
           {/* Price + Address */}
           <div className="px-4 pt-4">
@@ -63,12 +81,27 @@ export default function PremiumListingCard() {
             <div className="mt-0.5 text-[13px] text-neutral-600">One JLT, Jumeirah Lake Towers</div>
           </div>
 
-          {/* Meta */}
-          <div className="flex items-center gap-5 px-4 pb-4 pt-3 text-neutral-500">
+          {/* Specs row (ghost mini) */}
+          <div className="flex items-center flex-wrap gap-x-5 gap-y-2 px-4 pt-3 text-neutral-500">
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bed className="h-4 w-4 opacity-70" strokeWidth={1.25}/>4</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bath className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Car className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
-            <div className="ml-auto text-[12px] text-neutral-500">Sat 11:15–11:45am ▾</div>
+          </div>
+
+          {/* Extra property details (red mini links/icons) */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 pb-4 pt-2">
+            <span className="text-[12px] text-rose-500">House or Apartment etc</span>
+            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
+              <Ruler className="h-4 w-4" strokeWidth={1.25}/> Land Size m²
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
+              <SunMedium className="h-4 w-4" strokeWidth={1.25}/> Solar & wattage output
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[12px] text-rose-500">
+              <PlugZap className="h-4 w-4" strokeWidth={1.25}/> EV Charger
+            </span>
+
+            <span className="ml-auto text-[12px] text-neutral-500">Sat 11:15–11:45am ▾</span>
           </div>
         </article>
       </div>
