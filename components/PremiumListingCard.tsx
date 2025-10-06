@@ -6,6 +6,8 @@ import {
 const stories = ["Parina","Downtown","Marina","The Spri…","Al Barsha"];
 
 export default function PremiumListingCard() {
+  const openTime = "Sat 11:15–11:45am ▾";
+
   return (
     <div className="min-h-screen flex justify-center bg-white py-6">
       <div className="w-full max-w-screen-md sm:px-4 px-3 relative">
@@ -42,6 +44,7 @@ export default function PremiumListingCard() {
                   Luxe Realty
                 </div>
               </div>
+              {/* Follow (ghost-mini) on mobile */}
               <button
                 className="ml-2 inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600 sm:hidden"
                 aria-label="Follow"
@@ -50,7 +53,13 @@ export default function PremiumListingCard() {
               </button>
             </div>
 
-            <div className="flex items-center gap-5 text-neutral-600 ml-auto">
+            <div className="flex items-center gap-4 text-neutral-600 ml-auto">
+              {/* Bold, standout Open for Inspection (desktop) */}
+              <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
+                <span className="text-[12px] font-bold text-neutral-900">Open for Inspection</span>
+                <span className="text-[12px] font-medium text-neutral-800">{openTime}</span>
+              </div>
+
               <button
                 className="hidden sm:inline-flex items-center rounded-full border border-neutral-200 px-2.5 py-1 text-[12px] font-medium text-emerald-600"
                 aria-label="Follow"
@@ -65,6 +74,12 @@ export default function PremiumListingCard() {
             </div>
           </div>
 
+          {/* Compact Open for Inspection bar on mobile */}
+          <div className="sm:hidden flex items-center justify-between px-4 pt-2">
+            <span className="text-[12px] font-bold text-neutral-900">Open for Inspection</span>
+            <span className="text-[12px] font-medium text-neutral-800">{openTime}</span>
+          </div>
+
           {/* Media */}
           <div className="mt-3 h-[380px] sm:h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200" />
 
@@ -74,18 +89,15 @@ export default function PremiumListingCard() {
             <div className="mt-0.5 text-[13px] text-neutral-600">One JLT, Jumeirah Lake Towers</div>
           </div>
 
-          {/* Specs row — ghost mini icons (now includes property type, land, solar, EV) */}
+          {/* Specs row — ghost mini icons + extras */}
           <div className="flex items-center flex-wrap gap-x-5 gap-y-2 px-4 pb-4 pt-3 text-neutral-500">
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bed className="h-4 w-4 opacity-70" strokeWidth={1.25}/>4</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Bath className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Car className="h-4 w-4 opacity-70" strokeWidth={1.25}/>2</span>
-
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Home className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Home</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><Ruler className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Land Size m²</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><SunMedium className="h-4 w-4 opacity-70" strokeWidth={1.25}/>Solar & wattage</span>
             <span className="inline-flex items-center gap-1.5 text-[12px]"><PlugZap className="h-4 w-4 opacity-70" strokeWidth={1.25}/>EV Charger</span>
-
-            <span className="ml-auto text-[12px] text-neutral-500">Sat 11:15–11:45am ▾</span>
           </div>
         </article>
       </div>
