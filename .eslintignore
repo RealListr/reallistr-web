@@ -1,0 +1,4 @@
+src/**
+**/*.bak.tsx
+**/*.backup.tsx
+**/*.BROKEN.bak.tsx
