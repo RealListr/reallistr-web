@@ -1,4 +1,5 @@
 import * as React from "react";
+import QuotesButton from "../../../components/quotes/QuotesButton";
 
 export type MediaItem =
   | { type: "image"; src: string; label?: string }
@@ -150,6 +151,11 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
         onTouchEnd={onTouchEnd}
         onClick={()=> openGallery(media, idx)}
       >
+        {/* NEW: Quotes FAB on mobile */}
+        <div style={{ position: "absolute", right: 12, bottom: 12, zIndex: 5 }} className="sm:hidden">
+          <QuotesButton withinMedia address={address} listingId={data.id} />
+        </div>
+
         <div
           style={{
             display:"flex",
@@ -240,6 +246,11 @@ export default function FeedCard({ data, onFollow, onLike, onSave }: Props) {
 
           {/* divider */}
           <span style={{width:1, height:16, background:"rgba(148,163,184,.45)"}} />
+
+          {/* NEW: Quotes (desktop inline, next to mini buttons) */}
+          <div style={{ display: "inline-flex", marginLeft: 8, marginRight: 4 }}>
+            <QuotesButton address={address} listingId={data.id} />
+          </div>
 
           {/* icons-only Info + Map */}
           <button
