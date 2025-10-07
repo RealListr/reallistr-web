@@ -1,56 +1,73 @@
 "use client";
-import { useState, useEffect } from "react";
-import { BadgeDollarSign } from "lucide-react";
+import * as React from "react";
 import QuotesSheet from "./QuotesSheet";
-import { useQuotesFlag } from "./useQuotesFlag";
 
-export default function QuotesButton({
-  address, listingId, withinMedia=false
-}: {
+type Props = {
   address?: string;
-  listingId?: string | number;
-  /** when true, also render a mobile FAB pinned inside a relative media container */
+  listingId?: string;
   withinMedia?: boolean;
-}) {
-  const [open,setOpen] = useState(false);
-  const enabled = useQuotesFlag(); // null|boolean
-  const comingSoon = enabled === false;
+  variant?: "icon" | "pill";
+};
 
-  // Ghost button for the action row
-  const RowBtn = (
-    <button
-      type="button"
-      onClick={()=>setOpen(true)}
-      className="hidden sm:inline-flex items-center gap-2 rounded-full border border-neutral-300 px-3 py-1.5 text-[14px] hover:bg-neutral-50"
-      aria-label="Get quotes"
-      title="Get quotes"
-    >
-      <BadgeDollarSign className="h-[18px] w-[18px]" />
-      <span>Quotes</span>
-    </button>
-  );
+/** Compact trigger for Quotes modal. Default = icon ghost button */
+export default function QuotesButton({
+  address,
+  listingId,
+  withinMedia,
+  variant = "icon",
+}: Props) {
+  const [open, setOpen] = React.useState(false);
 
-  // Mobile floating FAB (auto-hides on sm+; expect parent to be relative)
-  const Fab = withinMedia ? (
-    <button
-      type="button"
-      onClick={()=>setOpen(true)}
-      aria-label="Get quotes"
-      className="sm:hidden absolute bottom-3 right-3 z-20 h-11 w-11 rounded-full border border-neutral-300 bg-white/95 backdrop-blur shadow-md flex items-center justify-center"
-    >
-      <BadgeDollarSign className="h-[20px] w-[20px]" />
-    </button>
-  ) : null;
+  const base = "inline-flex items-center justify-center";
+  const iconCls =
+    "w-[34px] h-[34px] rounded-full border border-neutral-200 bg-white/90 hover:bg-neutral-50";
+  const pillCls =
+    "rounded-full border border-neutral-200 px-3 py-1.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50";
+
+  function Glyph() {
+    // simple “quotes”/speech double-bubble glyph
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 12h5v5H7z" fill="none" stroke="#334155" strokeWidth="1.5" />
+        <path d="M12 7h5v5h-5z" fill="none" stroke="#334155" strokeWidth="1.5" />
+      </svg>
+    );
+  }
+
+  const Button =
+    variant === "icon" ? (
+      <button
+        type="button"
+        aria-label="Get quotes"
+        className={`${base} ${iconCls}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <Glyph />
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={`${base} ${pillCls}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(true);
+        }}
+      >
+        <span className="mr-2"><Glyph /></span> Quotes
+      </button>
+    );
 
   return (
     <>
-      {RowBtn}
-      {Fab}
+      {Button}
       <QuotesSheet
         open={open}
-        onOpenChange={setOpen}
-        prefill={{ address, listingId: String(listingId ?? "") }}
-        comingSoon={comingSoon}
+        onClose={() => setOpen(false)}
+        presetAddress={address}
+        presetListingId={listingId}
       />
     </>
   );
