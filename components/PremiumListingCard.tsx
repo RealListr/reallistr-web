@@ -1,11 +1,15 @@
 "use client";
 import {
-  Bed, Bath, Car, Heart, MoreVertical, User2, Building2,
+  Bed, Bath, Car, Heart, MoreVertical, Building2,
   MapPin, Info, Share2, Ruler, SunMedium, PlugZap, Home
 } from "lucide-react";
 import { useState } from "react";
 import AgentsRow, { Agent } from "./AgentsRow";
 import AgentsSheet from "./AgentsSheet";
+
+// NEW: Quotes
+import QuotesButton from "./quotes/QuotesButton";
+import useQuotesFlag from "./quotes/useQuotesFlag";
 
 const stories = ["Parina","Downtown","Marina","The Spri…","Al Barsha"];
 const demoAgents: Agent[] = [
@@ -18,6 +22,13 @@ const demoAgents: Agent[] = [
 export default function PremiumListingCard() {
   const [agentsOpen, setAgentsOpen] = useState(false);
   const openTime = "Sat 11:15–11:45am ▾";
+
+  // values we pass into Quotes
+  const address = "One JLT, Jumeirah Lake Towers";
+  const listingId = "demo-premium-1";
+
+  // feature flag
+  const { enabled } = useQuotesFlag();
 
   return (
     <div className="min-h-screen flex justify-center bg-white py-6">
@@ -76,10 +87,22 @@ export default function PremiumListingCard() {
               >
                 + Follow
               </button>
+
+              {/* existing mini actions */}
               <Share2 className="h-5 w-5 opacity-80" strokeWidth={1.5} />
               <MapPin className="h-5 w-5 opacity-80" strokeWidth={1.5} />
               <Info className="h-5 w-5 opacity-80" strokeWidth={1.5} />
               <Heart className="h-5 w-5 opacity-80" strokeWidth={1.5} />
+
+              {/* NEW: Quotes button in the action row (desktop) */}
+              {enabled && (
+                <QuotesButton
+                  size="sm"
+                  address={address}
+                  listingId={listingId}
+                />
+              )}
+
               <MoreVertical className="h-5 w-5 opacity-80" strokeWidth={1.5} />
             </div>
           </div>
@@ -90,13 +113,24 @@ export default function PremiumListingCard() {
             <span className="text-[12px] font-medium text-neutral-800">{openTime}</span>
           </div>
 
-          {/* Media */}
-          <div className="mt-3 h-[380px] sm:h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200" />
+          {/* Media with mobile FAB */}
+          <div className="relative mt-3 h-[380px] sm:h-[460px] w-full overflow-hidden rounded-2xl border-y border-neutral-200 bg-gradient-to-br from-neutral-100 to-neutral-200">
+            {/* NEW: Quotes FAB (mobile only) */}
+            {enabled && (
+              <div className="absolute right-3 bottom-3 sm:hidden">
+                <QuotesButton
+                  withinMedia
+                  address={address}
+                  listingId={listingId}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Price + Address */}
           <div className="px-4 pt-4">
             <div className="text-[22px] font-semibold tracking-tight text-neutral-900">AED 4,250,000</div>
-            <div className="mt-0.5 text-[13px] text-neutral-600">One JLT, Jumeirah Lake Towers</div>
+            <div className="mt-0.5 text-[13px] text-neutral-600">{address}</div>
           </div>
 
           {/* Specs */}
@@ -112,7 +146,12 @@ export default function PremiumListingCard() {
         </article>
 
         {/* Agents modal */}
-        <AgentsSheet open={agentsOpen} onClose={()=>setAgentsOpen(false)} agents={demoAgents} agencyName="Luxe Realty" />
+        <AgentsSheet
+          open={agentsOpen}
+          onClose={()=>setAgentsOpen(false)}
+          agents={demoAgents}
+          agencyName="Luxe Realty"
+        />
       </div>
     </div>
   );
