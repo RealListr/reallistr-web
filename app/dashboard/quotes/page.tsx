@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
+import DashNav from "@/components/DashNav";
 export default function QuotesTest() {
-  const [status,setStatus]=useState<string>("");
+  const [status,setStatus]=useState("");
   async function onSubmit(e:React.FormEvent<HTMLFormElement>){
     e.preventDefault();
     setStatus("Submitting…");
@@ -16,7 +17,8 @@ export default function QuotesTest() {
   }
   return (
     <main className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">Quotes — Internal Test</h1>
+      <h1 className="text-2xl font-semibold mb-2">Quotes — Internal Test</h1>
+      <DashNav />
       <form onSubmit={onSubmit} className="space-y-3">
         <input name="name" placeholder="Name" className="w-full border rounded px-3 py-2" />
         <input name="phone" placeholder="Phone" className="w-full border rounded px-3 py-2" />
