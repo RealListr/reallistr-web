@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import DashNav from "@/components/DashNav";
+import DashNav from "../../../components/DashNav";
 export default function QuotesTest() {
   const [status,setStatus]=useState("");
   async function onSubmit(e:React.FormEvent<HTMLFormElement>){

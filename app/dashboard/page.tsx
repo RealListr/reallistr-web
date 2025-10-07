@@ -1,4 +1,4 @@
-import DashNav from "@/components/DashNav";
+import DashNav from "../../components/DashNav";
 export default function Dashboard() {
   return (
     <main className="max-w-3xl mx-auto p-6">

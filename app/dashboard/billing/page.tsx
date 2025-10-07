@@ -1,5 +1,5 @@
 "use client";
-import DashNav from "@/components/DashNav";
+import DashNav from "../../../components/DashNav";
 export default function Billing() {
   function choose(plan:string){ alert(`OK — redirect to: #todo (plan=${plan})`); }
   return (
