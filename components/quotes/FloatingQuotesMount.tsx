@@ -1,14 +1,8 @@
 "use client";
 import QuotesButton from "./QuotesButton";
 
-/**
- * Floating Quotes mount:
- * - Always visible on desktop (bottom-right)
- * - On mobile, appears over content; 'withinMedia' style for compact FAB
- * - Non-invasive: safe to include globally from app/layout.tsx
- */
+/** Floating Quotes mount shown on every page (desktop + mobile FAB) */
 export default function FloatingQuotesMount() {
-  // You can pass real address/listingId later from context/store
   const address = "Preview address";
   const listingId = "preview-listing";
   return (

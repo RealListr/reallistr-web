@@ -1,3 +1,5 @@
+import dynamic from "next/dynamic";
+const FloatingQuotesMount = dynamic(() => import("../components/quotes/FloatingQuotesMount"), { ssr: false });
 import type { Metadata } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
