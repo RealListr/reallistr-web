@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global dark baseline */
+@layer base {
+  :root { color-scheme: dark; }
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-[#0b0d12] text-slate-100 antialiased;
+    background-image:
+      radial-gradient(1200px 800px at 10% -10%, #0f172a 0%, transparent 70%),
+      radial-gradient(1000px 600px at 90% -10%, #0b1324 0%, transparent 70%);
+    background-attachment: fixed;
+  }
+}
+
+@layer base {
+  :root {
+    --bg: 10 13 18;          /* #0a0d12 */
+    --card: 255 255 255 / .06;
+    --muted: 148 163 184;    /* slate-400 */
+    --text: 226 232 240;     /* slate-200 */
+  }
+  .theme-dim   { --bg: 18 22 28;     --card: 255 255 255 / .08; }
+  .theme-light { --bg: 248 250 252;  --card: 0 0 0 / .04; --text: 15 23 42; --muted: 71 85 105; }
+  body { background-color: rgb(var(--bg)); color: rgb(var(--text)); }
+}
