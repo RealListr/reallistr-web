@@ -1,13 +1,11 @@
 "use client";
-import dynamic from "next/dynamic";
-
-const PropertyMap = dynamic(() => import("@/components/maps/PropertyMap"), { ssr: false });
-
-export default function MapPage() {
+import GhostSlider from "@/components/GhostSlider";
+export default function MapShell(){
   return (
-    <main style={{ padding: 24, background: "#000", color: "#fff" }}>
-      <h1 style={{ marginBottom: 12 }}>Map Smoke ✅</h1>
-      <PropertyMap lat={25.074282} lng={55.145424} />
-    </main>
+    <div style={{padding:16}}>
+      <h1>RealListr — Map</h1>
+      <div style={{marginTop:8}}><GhostSlider /></div>
+      <p style={{marginTop:12}}>Map shell loaded. Replace with real map/feed component.</p>
+    </div>
   );
 }
