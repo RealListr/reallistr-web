@@ -8,7 +8,6 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ margin: 0, background: "#000", color: "#fff", fontFamily: "system-ui,sans-serif" }}>
         {children}
-              </MarketProvider>
       </body>
     </html>
   );
