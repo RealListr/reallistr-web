@@ -1,70 +1,76 @@
+"use client";
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import PropertyMap from "@/components/maps/PropertyMap";
 
 export default function PropertyUpload() {
   const [address, setAddress] = useState("");
   const [desc, setDesc] = useState("");
-  const [coords, setCoords] = useState<{lat:number,lng:number}|null>(null);
-  const [images, setImages] = useState<FileList|null>(null);
-  const [videos, setVideos] = useState<FileList|null>(null);
-  const [ok, setOk] = useState<string|null>(null); const [err,setErr]=useState<string|null>(null);
+  const [lat, setLat] = useState<number | "">("");
+  const [lng, setLng] = useState<number | "">("");
+  const [files, setFiles] = useState<FileList | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
 
-  async function geocode() {
-    try {
-      const token = import.meta.env.VITE_MAPBOX_TOKEN!;
-      const q = encodeURIComponent(address);
-      const r = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${q}.json?access_token=${token}`);
-      const j = await r.json();
-      const [lng, lat] = j.features[0].center;
-      setCoords({ lat, lng });
-    } catch(e:any){ setErr("Could not geocode address"); }
-  }
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null); setOk(null);
 
-  async function onSave() {
+    const { data: sessionData } = await supabase.auth.getUser();
+    const userId = sessionData.user?.id;
+    if (!userId) { setErr("Please sign in"); return; }
+    if (lat === "" || lng === "") { setErr("Lat/Lng required"); return; }
+
+    setBusy(true);
     try {
-      setErr(null); setOk(null);
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Not signed in");
-      const { data: prop, error: pe } = await supabase.from("properties").insert({
-        user_id: user.user.id, address, description: desc, map_lat: coords?.lat, map_lng: coords?.lng
-      }).select().single();
-      if (pe) throw pe;
-      if (images?.length) {
-        for (const f of Array.from(images)) {
-          await supabase.storage.from("media").upload(`properties/${prop.id}/images/${Date.now()}-${f.name}`, f, { upsert: true });
+      // 1) upload images (if any)
+      const imageUrls: string[] = [];
+      if (files && files.length) {
+        for (const f of Array.from(files)) {
+          const path = `${userId}/${Date.now()}-${f.name}`;
+          const up = await supabase.storage.from("property-images").upload(path, f, { upsert: true });
+          if (up.error) throw up.error;
+          const { data: pub } = supabase.storage.from("property-images").getPublicUrl(path);
+          imageUrls.push(pub.publicUrl);
         }
       }
-      if (videos?.length) {
-        for (const f of Array.from(videos)) {
-          await supabase.storage.from("media").upload(`properties/${prop.id}/videos/${Date.now()}-${f.name}`, f, { upsert: true });
-        }
-      }
-      setOk("Saved!");
-    } catch(e:any){ setErr(e.message); }
+
+      // 2) insert property
+      const { error } = await supabase.from("properties").insert({
+        user_id: userId,
+        address,
+        description: desc,
+        lat: Number(lat),
+        lng: Number(lng),
+        images: imageUrls,
+      });
+      if (error) throw error;
+      setOk("Property saved ✅");
+      setAddress(""); setDesc(""); setLat(""); setLng(""); setFiles(null);
+    } catch (e: any) {
+      setErr(e.message ?? "Upload failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid gap-2">
-        <input className="rounded-md bg-white/10 px-3 py-2" placeholder="Property address"
-               value={address} onChange={e=>setAddress(e.target.value)} />
-        <textarea className="rounded-md bg-white/10 px-3 py-2" placeholder="Description"
-                  value={desc} onChange={e=>setDesc(e.target.value)} />
-        <div className="flex gap-2">
-          <button className="rounded-md bg-blue-600 px-3 py-2" onClick={geocode}>Pin on Map</button>
-          <button className="rounded-md bg-emerald-600 px-3 py-2" onClick={onSave}>Save Listing</button>
-        </div>
+    <form onSubmit={onSubmit} className="space-y-3 rounded-xl border border-white/10 p-4 text-white">
+      <div className="text-lg font-semibold">Add Property</div>
+      <input className="w-full rounded bg-white/10 p-2" placeholder="Address" value={address} onChange={e=>setAddress(e.target.value)} />
+      <textarea className="w-full rounded bg-white/10 p-2" placeholder="Description" value={desc} onChange={e=>setDesc(e.target.value)} />
+      <div className="flex gap-2">
+        <input className="w-1/2 rounded bg-white/10 p-2" placeholder="Latitude" value={lat} onChange={e=>setLat(e.target.value as any)} />
+        <input className="w-1/2 rounded bg-white/10 p-2" placeholder="Longitude" value={lng} onChange={e=>setLng(e.target.value as any)} />
       </div>
-      {coords && <PropertyMap lat={coords.lat} lng={coords.lng} />}
-      <div className="grid gap-2">
-        <label className="text-sm text-slate-300">Upload images</label>
-        <input type="file" multiple accept="image/*" onChange={(e)=>setImages(e.target.files)} />
-        <label className="text-sm text-slate-300">Upload videos</label>
-        <input type="file" multiple accept="video/*" onChange={(e)=>setVideos(e.target.files)} />
+      <input type="file" multiple accept="image/*" onChange={(e)=>setFiles(e.target.files)} className="block" />
+      <div className="flex gap-2">
+        <button className="rounded bg-blue-600 px-3 py-2 text-sm disabled:opacity-50" disabled={busy}>
+          {busy ? "Uploading…" : "Save Property"}
+        </button>
       </div>
-      {ok && <div className="text-emerald-300 text-sm">{ok}</div>}
       {err && <div className="text-rose-300 text-sm">{err}</div>}
-    </div>
+      {ok && <div className="text-emerald-300 text-sm">{ok}</div>}
+    </form>
   );
 }

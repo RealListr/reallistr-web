@@ -1,8 +1,11 @@
-export const metadata = { title: "RealListr — Fresh App" };
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata = { title: "RealListr — Smoke" };
+
+export default function RootLayout({
+  children,
+}: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#000", color: "#fff" }}>
+      <body style={{ margin: 0, background: "#000", color: "#fff", fontFamily: "system-ui,sans-serif" }}>
         {children}
       </body>
     </html>
