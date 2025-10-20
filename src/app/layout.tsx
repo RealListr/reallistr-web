@@ -1,14 +1,17 @@
+import type { Metadata } from "next";
+import "./globals.css";
 import { MarketProvider } from "@/context/MarketContext";
-export const metadata = { title: "RealListr — Smoke" };
 
-export default function RootLayout({
-  children,
-}: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: "RealListr",
+  description: "RealListr Platform",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, background: "#000", color: "#fff", fontFamily: "system-ui,sans-serif" }}>
-        {children}
-              </MarketProvider>
+      <body>
+        <MarketProvider>{children}</MarketProvider>
       </body>
     </html>
   );
