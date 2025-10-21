@@ -1,11 +1,3 @@
-'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Home from './home-v2/page';
-export default Home;
-
-export default function Root() {
-  const router = useRouter();
-  useEffect(() => { router.replace('/home-v2/dev'); }, [router]);
-  return null;
-}
+// src/app/page.tsx
+export { default } from './home-v2/page';
+export { metadata } from './home-v2/page'; // optional: only if home-v2/page exports metadata
