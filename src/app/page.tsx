@@ -1,15 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import AuthGate from "@/auth/AuthGate";
 import GlobalMarketSwitch from "@/components/GlobalMarketSwitch";
 
-// Client-only dynamic imports (match Oct 11 working setup)
+// Client-only dynamic imports (avoid server evaluating Supabase/Auth)
+const AuthGate = dynamic(() => import("@/auth/AuthGate"), { ssr: false });
 const PropertyMap = dynamic(() => import("@/components/maps/PropertyMap"), {
   ssr: false,
   loading: () => <div style={{ height: 320, border: "1px solid #333", borderRadius: 12 }} />,
 });
-
 const PropertyUpload = dynamic(() => import("@/properties/PropertyUpload"), {
   ssr: false,
   loading: () => <div style={{ height: 120 }} />,
