@@ -1,28 +1,27 @@
 "use client";
-import { useContext } from "react";
-import { MarketContext } from "@/context/MarketContext";
+import { useMarket } from "@/context/MarketContext";
+import { Home, Building2 } from "lucide-react";
 
 export default function GlobalMarketSwitch() {
-  const { market, setMarket } = useContext(MarketContext);
+  const { market, setMarket } = useMarket();
   const isCommercial = market === "commercial";
+
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <div
-        className="relative w-28 h-8 rounded-full bg-white/60 backdrop-blur-lg cursor-pointer border border-white/70 shadow-sm"
-        role="switch"
-        aria-checked={isCommercial}
-        aria-label="Market switch"
-        onClick={() => setMarket(isCommercial ? "domestic" : "commercial")}
-      >
-        <div
-          className={`absolute top-1 left-1 w-10 h-6 rounded-full shadow flex items-center justify-center transition-transform ${
-            isCommercial ? "translate-x-16 bg-slate-100" : "translate-x-0 bg-emerald-100"
-          }`}
-          title={isCommercial ? "Commercial" : "Domestic"}
-        >
-          {isCommercial ? "🏢" : "🏠"}
-        </div>
-      </div>
-    </div>
+    <button
+      aria-label="Toggle market"
+      onClick={() => setMarket(isCommercial ? "domestic" : "commercial")}
+      className="group relative inline-flex items-center gap-1 rounded-full border border-black/10 bg-white/70 px-2.5 py-1 text-sm backdrop-blur transition hover:bg-white"
+      style={{ boxShadow: "0 2px 8px rgba(0,0,0,.06)" }}
+    >
+      <span
+        className="absolute inset-y-0 left-0 m-0.5 h-[calc(100%-4px)] w-1/2 rounded-full bg-black/5 transition-all"
+        style={{ transform: isCommercial ? "translateX(100%)" : "translateX(0)" }}
+      />
+      <Home size={16} className={isCommercial ? "opacity-40" : "opacity-100"} />
+      <span className="min-w-[3.8rem] text-[12px] font-medium">
+        {isCommercial ? "Commercial" : "Domestic"}
+      </span>
+      <Building2 size={16} className={isCommercial ? "opacity-100" : "opacity-40"} />
+    </button>
   );
 }
