@@ -1,1 +1,6 @@
-{ "installCommand": "pnpm install --frozen-lockfile" }
+{
+  "installCommand": "pnpm install --frozen-lockfile",
+  "redirects": [
+    { "source": "/map", "destination": "/home-v2/dev", "permanent": false }
+  ]
+}
