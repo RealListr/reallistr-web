@@ -1,2 +1,6 @@
-// Mirrors the current Home page exactly (no code changes to prod route).
-export { default } from '../page';
+import dynamic from 'next/dynamic';
+const FeedV2 = dynamic(() => import('@/components/feedv2/FeedV2'), { ssr: false });
+
+export default function HomeV2() {
+  return <FeedV2 />;
+}
