@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/bill",
-      "schedule": "0 3 * * *"
-    }
-  ]
-}
+{ "installCommand": "pnpm install --frozen-lockfile" }
