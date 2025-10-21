@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 export default function Health() {
-  return <div style={{ padding: 24 }}>OK — health route rendering ✅</div>;
+  return <pre>OK</pre>;
 }
