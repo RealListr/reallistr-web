@@ -1,17 +1,10 @@
-"use client";
-import GhostSlider from "@/components/GhostSlider";
-import PropertyMap from "@/components/maps/PropertyMap"; // existing component
-
 export default function MapPage() {
   return (
-    <div className="p-6">
-      <header className="flex items-center gap-3 mb-4">
-        <h1 className="text-4xl font-extrabold">RealListr — Map</h1>
-        <GhostSlider />
-      </header>
-      <div className="rounded-xl overflow-hidden border border-black/5 shadow-sm">
-        <PropertyMap />
-      </div>
-    </div>
+    <main style={{ padding: "24px" }}>
+      <h1 style={{ fontSize: 36, fontWeight: 700 }}>RealListr — Map</h1>
+      <p style={{ marginTop: 16 }}>
+        Map shell loaded. Replace with real map/feed component.
+      </p>
+    </main>
   );
 }
