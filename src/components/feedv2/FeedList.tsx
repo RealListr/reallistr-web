@@ -36,10 +36,9 @@ export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'follo
     return () => obs.disconnect();
   }, [hasMore, isLoading, loadMore]);
 
-  const items =
-    Array.isArray(pages)
-      ? pages.flatMap((p: any) => (Array.isArray(p?.items) ? p.items : []))
-      : [];
+  const items = Array.isArray(pages)
+    ? pages.flatMap((p: any) => (Array.isArray(p?.items) ? p.items : []))
+    : [];
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

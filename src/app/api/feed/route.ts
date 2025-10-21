@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
@@ -17,6 +16,5 @@ export async function GET(req: Request) {
   }));
 
   const nextCursor = start + pageSize >= 50 ? null : String(start + pageSize);
-
   return NextResponse.json({ items, nextCursor });
 }

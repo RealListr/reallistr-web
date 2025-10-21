@@ -10,7 +10,6 @@ export function useInfiniteFeed({ kind }: Args) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // reset when kind changes
   useEffect(() => {
     setPages([]);
     setCursor(null);
@@ -33,16 +32,13 @@ export function useInfiniteFeed({ kind }: Args) {
       setCursor(data?.nextCursor ?? null);
       setHasMore(Boolean(data?.nextCursor));
     } catch {
-      // fail soft: stop trying
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
   }, [cursor, kind]);
 
-  // initial fetch on mount (client only)
   useEffect(() => {
-    // guard: window exists => client
     if (typeof window === 'undefined') return;
     if (pages.length === 0 && !isLoading) void fetchPage();
   }, [fetchPage, pages.length, isLoading]);
