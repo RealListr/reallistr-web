@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FeedKind, Listing } from '@/lib/feed/types';
-import { loadMockPage } from '@/lib/feed/mock';
+import type { FeedKind, Listing } from '../lib/feed/types';
+import { loadMockPage } from '../lib/feed/mock';
 
 export function useInfiniteFeed(kind: FeedKind) {
   const [items, setItems] = useState<Listing[]>([]);
