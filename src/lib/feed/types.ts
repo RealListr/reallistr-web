@@ -1,27 +1,18 @@
 export type FeedKind = 'for-you' | 'nearby' | 'following';
 
-export interface Agent {
+export type FeedItem = {
   id: string;
-  name: string;
-  brokerage: string;
-}
+  title: string;
+  price?: string;
+  address?: string;
+  description?: string;
+  badges?: string[];
+  media?: { thumbUrl?: string }[];
+};
 
-export interface Listing {
-  id: string;
-  priceAED: number;
-  beds: number;
-  baths: number;
-  cars: number;
-  type: 'Home' | 'Apartment' | 'Townhouse' | 'Villa';
-  address: string;
-  suburb: string;
-  tags: string[];
-  hero: string | null;
-  agent: Agent;
-  createdAt: string;   // ISO
-}
-
-export interface PageResult<T> {
-  items: T[];
-  nextCursor: string | null;
-}
+export type FeedPage = {
+  items: FeedItem[];
+  page: number;
+  hasMore: boolean;
+  kind: FeedKind;
+};

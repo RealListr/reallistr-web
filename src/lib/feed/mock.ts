@@ -1,29 +1,22 @@
-export type FeedItem = {
-  id: string;
-  title: string;
-  description?: string;
-  price?: string;
-  address?: string;
-  tags?: string[];
-};
+import type { FeedPage, FeedKind, FeedItem } from './types';
 
-export function mockPage(page: number, kind: 'for-you'|'nearby'|'following') {
-  // 20 items per page
-  const items: FeedItem[] = Array.from({ length: 20 }).map((_, i) => {
-    const n = page * 20 + i + 1;
-    return {
-      id: `${kind}-${n}`,
-      title: `Listing #${n}`,
-      description: `Spacious 2–4 br • updated kitchen • great light`,
-      price: `$${(500_000 + n * 1500).toLocaleString()}`,
-      address: `${100 + (n % 80)} Market St`,
-      tags: [kind.replace('-', ' '), n % 3 === 0 ? 'new' : 'featured']
-    };
-  });
-
+function mk(n: number, kind: FeedKind): FeedItem {
   return {
-    items,
-    page,
-    hasMore: page < 4, // 5 pages total for preview
+    id: `mock-${n}`,
+    title: `Listing #${n}`,
+    price: `$${(500_000 + n * 1_000).toLocaleString()}`,
+    address: `${100 + n} Market St`,
+    description: `Spacious 2–4 br · updated kitchen · great light`,
+    badges: [kind.replace('-', ' ')],
+    media: [{ thumbUrl: `https://picsum.photos/seed/${kind}-${n}/640/480` }],
   };
+}
+
+export async function getMockFeed(page: number, kind: FeedKind): Promise<FeedPage> {
+  const start = page * 20;
+  const end = start + 20;
+  const items = Array.from({ length: 20 }, (_, i) => mk(start + i + 1, kind));
+  // simulate latency
+  await new Promise(r => setTimeout(r, 200));
+  return { items, page, hasMore: end < 200, kind };
 }
