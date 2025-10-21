@@ -1,27 +1,57 @@
 'use client';
-import type { FeedKind } from '@/lib/feed/types';
-import { useInfiniteFeed } from '@/hooks/useInfiniteFeed';
+import { useEffect, useRef } from 'react';
 import FeedCard from './FeedCard';
+import { useInfiniteFeed } from '@/hooks/useInfiniteFeed';
 
-export default function FeedList({ kind }: { kind: FeedKind }) {
-  const { items, loading, done, refresh, sentinelRef } = useInfiniteFeed(kind);
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+      <div className="mb-3 h-4 w-28 animate-pulse rounded bg-neutral-200" />
+      <div className="mb-4 h-44 w-full animate-pulse rounded-xl bg-neutral-200" />
+      <div className="mb-2 h-4 w-40 animate-pulse rounded bg-neutral-200" />
+      <div className="mb-3 h-3 w-64 animate-pulse rounded bg-neutral-200" />
+      <div className="flex gap-2">
+        <div className="h-5 w-14 animate-pulse rounded bg-neutral-200" />
+        <div className="h-5 w-16 animate-pulse rounded bg-neutral-200" />
+      </div>
+    </div>
+  );
+}
+
+export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'following' }) {
+  const { pages, isLoading, loadMore, hasMore } = useInfiniteFeed({ kind });
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Observe the sentinel to auto-load next page
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const el = sentinelRef.current;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0];
+        if (e.isIntersecting && hasMore && !isLoading) loadMore();
+      },
+      { rootMargin: '1200px 0px 800px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, isLoading, loadMore]);
 
   return (
-    <div>
-      {/* Pull to refresh (simple button in preview) */}
-      <div className="text-xs text-gray-500 mb-3">
-        <button onClick={() => void refresh()} className="underline">Pull to refresh</button>
-        <span className="mx-2">•</span> Infinite scroll <span className="mx-1">•</span> <span className="italic">{kind}</span>
-      </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {pages.flatMap((p) => p.items).map((item) => (
+        <FeedCard key={item.id} item={item} />
+      ))}
 
-      {items.map((it) => (<FeedCard key={it.id} item={it} />))}
+      {/* Loading skeletons */}
+      {isLoading &&
+        Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
 
       {/* Sentinel */}
       <div ref={sentinelRef} />
-
-      {/* Footer states */}
-      {loading && <div className="py-6 text-center text-sm text-gray-500">Loading…</div>}
-      {done && <div className="py-6 text-center text-sm text-gray-400">You’re all caught up</div>}
+      {!hasMore && !isLoading && (
+        <div className="col-span-full py-8 text-center text-sm text-neutral-500">You’re all caught up 🎉</div>
+      )}
     </div>
   );
 }
