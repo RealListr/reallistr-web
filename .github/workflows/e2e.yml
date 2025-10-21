@@ -1,0 +1,21 @@
+name: e2e
+on:
+  pull_request:
+    branches: [ stable-rail ]
+  push:
+    branches: [ stabilize/**, stabilize/*, stabilize-**, stabilize-* ]
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.17.1 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm start & npx wait-on http://localhost:3000
+      - run: pnpm e2e:ci

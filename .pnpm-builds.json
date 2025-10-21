@@ -1,0 +1,8 @@
+{
+  "trustedDependencies": [
+    "sharp",
+    "esbuild",
+    "@tailwindcss/oxide",
+    "unrs-resolver"
+  ]
+}
