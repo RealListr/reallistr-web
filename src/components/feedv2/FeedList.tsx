@@ -19,13 +19,12 @@ function SkeletonCard() {
 }
 
 export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'following' }) {
-  const { pages, isLoading, loadMore, hasMore } = useInfiniteFeed({ kind });
+  const { pages = [], isLoading, loadMore, hasMore } = useInfiniteFeed({ kind });
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // Observe the sentinel to auto-load next page
   useEffect(() => {
-    if (!sentinelRef.current) return;
     const el = sentinelRef.current;
+    if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
         const e = entries[0];
@@ -37,20 +36,24 @@ export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'follo
     return () => obs.disconnect();
   }, [hasMore, isLoading, loadMore]);
 
+  const items =
+    Array.isArray(pages)
+      ? pages.flatMap((p: any) => (Array.isArray(p?.items) ? p.items : []))
+      : [];
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {pages.flatMap((p) => p.items).map((item) => (
+      {items.map((item: any) => (
         <FeedCard key={item.id} item={item} />
       ))}
 
-      {/* Loading skeletons */}
-      {isLoading &&
-        Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
+      {isLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
 
-      {/* Sentinel */}
       <div ref={sentinelRef} />
       {!hasMore && !isLoading && (
-        <div className="col-span-full py-8 text-center text-sm text-neutral-500">You’re all caught up 🎉</div>
+        <div className="col-span-full py-8 text-center text-sm text-neutral-500">
+          You’re all caught up 🎉
+        </div>
       )}
     </div>
   );

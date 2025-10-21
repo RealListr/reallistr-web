@@ -1,48 +1,55 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FeedKind, Listing } from '../lib/feed/types';
-import { loadMockPage } from '../lib/feed/mock';
+import { useCallback, useEffect, useState } from 'react';
 
-export function useInfiniteFeed(kind: FeedKind) {
-  const [items, setItems] = useState<Listing[]>([]);
+type FeedPage = { items: any[] };
+type Args = { kind: 'for-you' | 'nearby' | 'following' };
+
+export function useInfiniteFeed({ kind }: Args) {
+  const [pages, setPages] = useState<FeedPage[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
-  const load = useCallback(async () => {
-    if (loading || done) return;
-    setLoading(true);
-    const page = await loadMockPage(kind, cursor);
-    setItems(prev => [...prev, ...page.items]);
-    setCursor(page.nextCursor);
-    setDone(page.nextCursor === null);
-    setLoading(false);
-  }, [kind, cursor, loading, done]);
-
-  const refresh = useCallback(async () => {
-    setItems([]);
-    setCursor(null);
-    setDone(false);
-  }, []);
-
-  // Auto-load first page
-  useEffect(() => { setItems([]); setCursor(null); setDone(false); }, [kind]);
-  useEffect(() => { if (items.length === 0 && !loading && !done) { void load(); } }, [items.length, loading, done, load]);
-
-  // Sentinel observer for infinite scroll
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  // reset when kind changes
   useEffect(() => {
-    if (!sentinelRef.current) return;
-    const el = sentinelRef.current;
-    const obs = new IntersectionObserver((entries) => {
-      const e = entries[0];
-      if (e.isIntersecting) void load();
-    }, { rootMargin: '900px 0px' });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [load, sentinelRef.current]);
+    setPages([]);
+    setCursor(null);
+    setHasMore(true);
+  }, [kind]);
 
-  return useMemo(() => ({
-    items, loading, done, load, refresh, sentinelRef
-  }), [items, loading, done, load, refresh]);
+  const fetchPage = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (cursor) params.set('cursor', cursor);
+      params.set('kind', kind);
+
+      const res = await fetch(`/api/feed?${params.toString()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('feed request failed');
+
+      const data = await res.json(); // { items: any[]; nextCursor?: string | null }
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setPages((prev) => [...prev, { items }]);
+      setCursor(data?.nextCursor ?? null);
+      setHasMore(Boolean(data?.nextCursor));
+    } catch {
+      // fail soft: stop trying
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cursor, kind]);
+
+  // initial fetch on mount (client only)
+  useEffect(() => {
+    // guard: window exists => client
+    if (typeof window === 'undefined') return;
+    if (pages.length === 0 && !isLoading) void fetchPage();
+  }, [fetchPage, pages.length, isLoading]);
+
+  const loadMore = useCallback(() => {
+    if (!isLoading && hasMore) void fetchPage();
+  }, [fetchPage, hasMore, isLoading]);
+
+  return { pages, isLoading, loadMore, hasMore };
 }
