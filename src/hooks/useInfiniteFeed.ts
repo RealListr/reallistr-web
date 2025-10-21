@@ -1,51 +1,45 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-type FeedPage = { items: any[] };
-type Args = { kind: 'for-you' | 'nearby' | 'following' };
+type Page<T> = { items: T[]; page: number; hasMore: boolean };
 
-export function useInfiniteFeed({ kind }: Args) {
-  const [pages, setPages] = useState<FeedPage[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
+export function useInfiniteFeed<T>({ kind }: { kind: 'for-you'|'nearby'|'following' }) {
+  const [pages, setPages] = useState<Page<T>[]>([]);
+  const [page, setPage] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const inflight = useRef<Promise<any> | null>(null);
 
-  useEffect(() => {
-    setPages([]);
-    setCursor(null);
-    setHasMore(true);
-  }, [kind]);
-
-  const fetchPage = useCallback(async () => {
+  const loadMore = useCallback(async () => {
+    if (isLoading || !hasMore) return;
     setIsLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (cursor) params.set('cursor', cursor);
-      params.set('kind', kind);
-
-      const res = await fetch(`/api/feed?${params.toString()}`, { cache: 'no-store' });
-      if (!res.ok) throw new Error('feed request failed');
-
-      const data = await res.json(); // { items: any[]; nextCursor?: string | null }
-      const items = Array.isArray(data?.items) ? data.items : [];
-      setPages((prev) => [...prev, { items }]);
-      setCursor(data?.nextCursor ?? null);
-      setHasMore(Boolean(data?.nextCursor));
-    } catch {
-      setHasMore(false);
+      const p = page;
+      const res = await fetch(`/api/feed?page=${p}&kind=${kind}`, { cache: 'no-store' });
+      const data = await res.json();
+      setPages(prev => [...prev, data]);
+      setPage(p + 1);
+      setHasMore(Boolean(data?.hasMore));
+    } catch (e) {
+      console.error('[useInfiniteFeed] load error', e);
     } finally {
       setIsLoading(false);
     }
-  }, [cursor, kind]);
+  }, [page, isLoading, hasMore, kind]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (pages.length === 0 && !isLoading) void fetchPage();
-  }, [fetchPage, pages.length, isLoading]);
+    // reset when kind changes
+    setPages([]);
+    setPage(0);
+    setHasMore(true);
+  }, [kind]);
 
-  const loadMore = useCallback(() => {
-    if (!isLoading && hasMore) void fetchPage();
-  }, [fetchPage, hasMore, isLoading]);
+  // initial page
+  useEffect(() => {
+    if (!inflight.current) {
+      inflight.current = (async () => { await loadMore(); inflight.current = null; })();
+    }
+  }, [loadMore]);
 
-  return { pages, isLoading, loadMore, hasMore };
+  return { pages, isLoading, hasMore, loadMore };
 }

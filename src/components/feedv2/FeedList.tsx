@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import FeedCard from './FeedCard';
 import { useInfiniteFeed } from '@/hooks/useInfiniteFeed';
+import type { FeedItem } from '@/lib/feed/mock';
 
 function SkeletonCard() {
   return (
@@ -19,16 +20,15 @@ function SkeletonCard() {
 }
 
 export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'following' }) {
-  const { pages = [], isLoading, loadMore, hasMore } = useInfiniteFeed({ kind });
+  const { pages, isLoading, loadMore, hasMore } = useInfiniteFeed<FeedItem>({ kind });
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!sentinelRef.current) return;
     const el = sentinelRef.current;
-    if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        const e = entries[0];
-        if (e.isIntersecting && hasMore && !isLoading) loadMore();
+        if (entries[0].isIntersecting && hasMore && !isLoading) loadMore();
       },
       { rootMargin: '1200px 0px 800px' }
     );
@@ -36,24 +36,24 @@ export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'follo
     return () => obs.disconnect();
   }, [hasMore, isLoading, loadMore]);
 
-  const items = Array.isArray(pages)
-    ? pages.flatMap((p: any) => (Array.isArray(p?.items) ? p.items : []))
-    : [];
+  const items = (Array.isArray(pages) ? pages : []).flatMap((p) => p?.items ?? []);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((item: any) => (
-        <FeedCard key={item.id} item={item} />
-      ))}
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {items.map((item) => (
+          <FeedCard key={item.id} item={item} />
+        ))}
+        {isLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
+      </div>
 
-      {isLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
-
+      {/* sentinel */}
       <div ref={sentinelRef} />
+
+      {/* end-of-feed */}
       {!hasMore && !isLoading && (
-        <div className="col-span-full py-8 text-center text-sm text-neutral-500">
-          You’re all caught up 🎉
-        </div>
+        <div className="py-8 text-center text-sm text-neutral-500">You’re all caught up 🎉</div>
       )}
-    </div>
+    </>
   );
 }
