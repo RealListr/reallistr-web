@@ -1,8 +1,6 @@
-import dynamic from "next/dynamic";
+"use client";
 import GlobalMarketSwitch from "@/components/GlobalMarketSwitch";
-
-// Render your existing HomeClient ONLY on the client to avoid SSR crashes.
-const HomeClient = dynamic(() => import("./HomeClient"), { ssr: false });
+import HomeClient from "./HomeClient";
 
 export default function Page() {
   return (
