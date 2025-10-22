@@ -1,45 +1,36 @@
-'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+type Item = { id: string };
 
-type Page<T> = { items: T[]; page: number; hasMore: boolean };
-
-export function useInfiniteFeed<T>({ kind }: { kind: 'for-you'|'nearby'|'following' }) {
-  const [pages, setPages] = useState<Page<T>[]>([]);
-  const [page, setPage] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+export function useInfiniteFeed({ kind }: { kind: 'for-you'|'nearby'|'following' }) {
+  const pageRef = useRef(1);
+  const [pages, setPages] = useState<{ items: Item[] }[]>([]);
+  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const inflight = useRef<Promise<any> | null>(null);
+  const seen = useRef<Set<string>>(new Set());
 
-  const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-    setIsLoading(true);
-    try {
-      const p = page;
-      const res = await fetch(`/api/feed?page=${p}&kind=${kind}`, { cache: 'no-store' });
-      const data = await res.json();
-      setPages(prev => [...prev, data]);
-      setPage(p + 1);
-      setHasMore(Boolean(data?.hasMore));
-    } catch (e) {
-      console.error('[useInfiniteFeed] load error', e);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, isLoading, hasMore, kind]);
+  const load = useCallback(async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    const res = await fetch(`/api/feed?tab=${kind}&page=${pageRef.current}`);
+    const json = await res.json();
 
-  useEffect(() => {
-    // reset when kind changes
-    setPages([]);
-    setPage(0);
-    setHasMore(true);
+    // dedupe across pages
+    const fresh = (json.items || []).filter((it: Item) => {
+      if (seen.current.has(it.id)) return false;
+      seen.current.add(it.id);
+      return true;
+    });
+
+    setPages((p) => [...p, { items: fresh }]);
+    setHasMore(Boolean(json.nextPage));
+    if (json.nextPage) pageRef.current = json.nextPage;
+    setLoading(false);
+  }, [kind, loading, hasMore]);
+
+  useEffect(() => { // reset when tab changes
+    pageRef.current = 1; setPages([]); setHasMore(true); seen.current.clear();
+    load();
   }, [kind]);
 
-  // initial page
-  useEffect(() => {
-    if (!inflight.current) {
-      inflight.current = (async () => { await loadMore(); inflight.current = null; })();
-    }
-  }, [loadMore]);
-
-  return { pages, isLoading, hasMore, loadMore };
+  return { pages, isLoading: loading, hasMore, loadMore: load };
 }

@@ -10,3 +10,7 @@ export async function POST(req: Request) {
   }
   return NextResponse.json({ ok: true });
 }
+export function clientLog(event: string, payload: any = {}) {
+  if (typeof window === 'undefined') return;
+  fetch('/api/client-log', { method: 'POST', body: JSON.stringify({ event, payload }) });
+}
