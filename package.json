@@ -25,6 +25,7 @@
     "@radix-ui/react-tooltip": "1.2.8",
     "@stripe/stripe-js": "^8.0.0",
     "@supabase/supabase-js": "^2.74.0",
+    "@vercel/blob": "^2.0.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "dotenv": "17.2.3",
