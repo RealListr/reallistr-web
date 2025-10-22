@@ -23,18 +23,22 @@ export default function AgentUpload() {
     beds: '',
     baths: '',
     cars: '',
+    propertyType: 'Home',
+    landSizeSqm: '',
+    solarWattage: '',
+    evCharger: 'None',
+    grassType: 'None',
     tags: '',
     inspection: '',
     area: '',
   });
 
-  // media states (URL OR File)
   const [agentAvatar, setAgentAvatar] = useState<MediaState>({ url: '' });
   const [agencyLogo, setAgencyLogo]   = useState<MediaState>({ url: '' });
   const [image, setImage]             = useState<MediaState>({ url: '' });
   const [video, setVideo]             = useState<MediaState>({ url: '' });
 
-  function textInput(label: string, key: keyof typeof form, type='text') {
+  function text(label: string, key: keyof typeof form, type='text') {
     return (
       <input
         placeholder={label}
@@ -46,7 +50,20 @@ export default function AgentUpload() {
     );
   }
 
-  function mediaPicker(label: string, state: MediaState, setState: (v: MediaState)=>void, accept: string) {
+  function select(label: string, key: keyof typeof form, options: string[]) {
+    return (
+      <select
+        aria-label={label}
+        className="w-full border p-2 rounded text-sm bg-white"
+        value={(form as any)[key]}
+        onChange={e => setForm({ ...form, [key]: e.target.value })}
+      >
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    );
+  }
+
+  function media(label: string, state: MediaState, setState: (v: MediaState)=>void, accept: string) {
     return (
       <div className="space-y-1">
         <input
@@ -69,7 +86,6 @@ export default function AgentUpload() {
     e.preventDefault();
     setLoading(true);
 
-    // upload any picked files (URLs already set are used as-is)
     const ensureUrl = async (m: MediaState) =>
       m.file ? await uploadToBlob(m.file) : (m.url || '');
 
@@ -88,7 +104,8 @@ export default function AgentUpload() {
         beds: Number(form.beds || 0),
         baths: Number(form.baths || 0),
         cars: Number(form.cars || 0),
-        tags: form.tags,
+        landSizeSqm: Number((form.landSizeSqm as any) || 0),
+        solarWattage: Number((form.solarWattage as any) || 0),
         agentAvatarUrl,
         agencyLogoUrl,
         imageUrl,
@@ -96,38 +113,41 @@ export default function AgentUpload() {
       }),
     });
 
-    window.location.reload(); // simple launch behavior
+    window.location.reload();
   }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto bg-white border rounded-xl p-4 space-y-3 shadow-sm">
       <h2 className="text-xl font-semibold">Add Property</h2>
 
+      {/* Basics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {textInput('Agent', 'agent')}
-        {textInput('Agency', 'agency')}
-        {textInput('Address', 'address')}
-        {textInput('Price (e.g., AED 1,234,000)', 'price')}
-        {textInput('Beds', 'beds', 'number')}
-        {textInput('Baths', 'baths', 'number')}
-        {textInput('Cars', 'cars', 'number')}
-        {textInput('Tags (comma separated)', 'tags')}
-        {textInput('Inspection (e.g., Sat 11:15–11:45am)', 'inspection')}
-        {textInput('Area', 'area')}
+        {text('Agent', 'agent')}
+        {text('Agency', 'agency')}
+        {text('Address', 'address')}
+        {text('Price (e.g., AED 1,234,000)', 'price')}
+        {text('Beds', 'beds', 'number')}
+        {text('Baths', 'baths', 'number')}
+        {text('Cars', 'cars', 'number')}
+        {select('Property Type', 'propertyType', ['Home','Apartment','Villa','Townhouse','Land','Other'])}
+        {text('Land Size (m²)', 'landSizeSqm', 'number')}
+        {text('Solar Wattage (W)', 'solarWattage', 'number')}
+        {select('EV Charger', 'evCharger', ['None','Type 1','Type 2','CCS','CHAdeMO'])}
+        {select('Type of Grass', 'grassType', ['None','Real','Artificial'])}
+        {text('Tags (comma separated)', 'tags')}
+        {text('Inspection (e.g., Sat 11:15–11:45am)', 'inspection')}
+        {text('Area', 'area')}
       </div>
 
+      {/* Media */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-        {mediaPicker('Agent Avatar', agentAvatar, setAgentAvatar, 'image/*')}
-        {mediaPicker('Agency Logo', agencyLogo, setAgencyLogo, 'image/*')}
-        {mediaPicker('Listing Image', image, setImage, 'image/*')}
-        {mediaPicker('Listing Video', video, setVideo, 'video/*')}
+        {media('Agent Avatar', agentAvatar, setAgentAvatar, 'image/*')}
+        {media('Agency Logo', agencyLogo, setAgencyLogo, 'image/*')}
+        {media('Listing Image', image, setImage, 'image/*')}
+        {media('Listing Video', video, setVideo, 'video/*')}
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full md:w-auto bg-black text-white px-4 py-2 rounded hover:bg-neutral-800"
-      >
+      <button type="submit" disabled={loading} className="w-full md:w-auto bg-black text-white px-4 py-2 rounded hover:bg-neutral-800">
         {loading ? 'Publishing…' : 'Publish Listing'}
       </button>
     </form>

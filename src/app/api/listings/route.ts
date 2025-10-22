@@ -12,11 +12,16 @@ let listings = [
     beds: 4,
     baths: 2,
     cars: 2,
+    propertyType: 'Home',         // maps to icon row
+    landSizeSqm: 0,               // number
+    solarWattage: 0,              // number (watts)
+    evCharger: 'None',            // None | Type 1 | Type 2 | CCS | CHAdeMO
+    grassType: 'None',            // None | Real | Artificial
     tags: ['Home', 'Land Size m²', 'Solar & wattage', 'EV Charger'],
     inspection: 'Sat 11:15–11:45am',
     area: 'JLT',
-    imageUrl: '',      // paste an image URL to test
-    videoUrl: '',      // paste an MP4 URL to test
+    imageUrl: '',
+    videoUrl: '',
   },
 ];
 
@@ -34,9 +39,14 @@ export async function POST(req: Request) {
     agencyLogoUrl: body.agencyLogoUrl || '',
     address: body.address || 'Unknown Address',
     price: body.price || 'AED 0',
-    beds: body.beds ? Number(body.beds) : 0,
-    baths: body.baths ? Number(body.baths) : 0,
-    cars: body.cars ? Number(body.cars) : 0,
+    beds: Number(body.beds || 0),
+    baths: Number(body.baths || 0),
+    cars: Number(body.cars || 0),
+    propertyType: body.propertyType || 'Home',
+    landSizeSqm: Number(body.landSizeSqm || 0),
+    solarWattage: Number(body.solarWattage || 0),
+    evCharger: body.evCharger || 'None',
+    grassType: body.grassType || 'None',
     tags: Array.isArray(body.tags)
       ? body.tags
       : (body.tags || '')
