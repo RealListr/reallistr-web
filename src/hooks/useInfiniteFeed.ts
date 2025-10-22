@@ -1,36 +1,48 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-type Item = { id: string };
+'use client';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-export function useInfiniteFeed({ kind }: { kind: 'for-you'|'nearby'|'following' }) {
-  const pageRef = useRef(1);
-  const [pages, setPages] = useState<{ items: Item[] }[]>([]);
-  const [loading, setLoading] = useState(false);
+type Kind = 'for-you'|'nearby'|'following';
+type Page = { items: any[]; hasMore: boolean };
+
+export function useInfiniteFeed({ kind }: { kind: Kind }) {
+  const [pages, setPages] = useState<Page[]>([]);
+  const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const seen = useRef<Set<string>>(new Set());
+  const [isLoading, setLoading] = useState(false);
+  const inFlight = useRef(false);
 
-  const load = useCallback(async () => {
-    if (loading || !hasMore) return;
+  const load = useCallback(async (p: number) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setLoading(true);
-    const res = await fetch(`/api/feed?tab=${kind}&page=${pageRef.current}`);
-    const json = await res.json();
-
-    // dedupe across pages
-    const fresh = (json.items || []).filter((it: Item) => {
-      if (seen.current.has(it.id)) return false;
-      seen.current.add(it.id);
-      return true;
-    });
-
-    setPages((p) => [...p, { items: fresh }]);
-    setHasMore(Boolean(json.nextPage));
-    if (json.nextPage) pageRef.current = json.nextPage;
-    setLoading(false);
-  }, [kind, loading, hasMore]);
-
-  useEffect(() => { // reset when tab changes
-    pageRef.current = 1; setPages([]); setHasMore(true); seen.current.clear();
-    load();
+    try {
+      const res = await fetch(`/api/feed?kind=${kind}&page=${p}`, { cache: 'no-store' });
+      const json = await res.json();
+      const next: Page = { items: json.items ?? [], hasMore: !!json.hasMore };
+      setPages(prev => (p === 0 ? [next] : [...prev, next]));
+      setHasMore(!!json.hasMore);
+    } catch (e) {
+      // keep UI alive even if fetch fails
+      setHasMore(false);
+      console.error('feed load error', e);
+    } finally {
+      setLoading(false);
+      inFlight.current = false;
+    }
   }, [kind]);
 
-  return { pages, isLoading: loading, hasMore, loadMore: load };
+  // first page
+  useEffect(() => {
+    setPages([]); setPage(0); setHasMore(true);
+    load(0);
+  }, [kind, load]);
+
+  const loadMore = useCallback(() => {
+    if (!hasMore || isLoading) return;
+    const next = page + 1;
+    setPage(next);
+    load(next);
+  }, [hasMore, isLoading, page, load]);
+
+  return useMemo(() => ({ pages, isLoading, loadMore, hasMore }), [pages, isLoading, loadMore, hasMore]);
 }
