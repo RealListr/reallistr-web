@@ -2,14 +2,37 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
-export default function ImageSafe(props: any) {
-  const [err, setErr] = useState(false);
-  if (err) {
-    return <div className="aspect-[16/9] w-full rounded-xl bg-neutral-100 grid place-items-center text-neutral-400 text-xs">
-      image unavailable
-    </div>;
+type Props = { src?: string; alt: string; className?: string; fill?: boolean; width?: number; height?: number };
+
+export default function ImageSafe({ src, alt, className, fill, width, height }: Props) {
+  const [ok, setOk] = useState(true);
+  const finalSrc =
+    ok && src
+      ? src
+      : `https://placehold.co/${(width ?? 800)}x${(height ?? 600)}?text=RealListr`;
+
+  const onErr = () => setOk(false);
+
+  if (fill) {
+    return (
+      <Image
+        src={finalSrc}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 100vw, 800px"
+        className={className}
+        onError={onErr}
+      />
+    );
   }
   return (
-    <Image {...props} onError={() => setErr(true)} loading="lazy" decoding="async" />
+    <Image
+      src={finalSrc}
+      alt={alt}
+      width={width ?? 800}
+      height={height ?? 600}
+      className={className}
+      onError={onErr}
+    />
   );
 }
