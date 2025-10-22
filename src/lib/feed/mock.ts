@@ -13,9 +13,9 @@ const addr = (i:number) => `${100+i} Market St`;
 const title = (i:number) => `Listing #${i}`;
 const price = (i:number) => 500_000 + i * 1_500;
 
-// simple unsplash pics (safe to hotlink)
+// Guaranteed image URL (no 404): seed-based Picsum
 const img = (i:number) =>
-  `https://images.unsplash.com/photo-15${(10+i)%99}000000-000000000000?auto=format&fit=crop&w=1200&q=60`;
+  `https://picsum.photos/seed/reallistr-${i}/1200/800`;
 
 export function getMockPage(kind: FeedKind, page: number, pageSize=20) {
   const items: FeedItem[] = Array.from({length: pageSize}, (_, idx) => {
@@ -29,7 +29,6 @@ export function getMockPage(kind: FeedKind, page: number, pageSize=20) {
       badges: (n % 3 === 0) ? ['featured','new'] : (n % 2 === 0) ? ['new'] : []
     };
   });
-  // stop after a few pages
-  const hasMore = page < 4;
+  const hasMore = page < 4; // a few pages
   return { items, hasMore };
 }

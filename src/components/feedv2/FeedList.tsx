@@ -2,8 +2,6 @@
 import { useEffect, useRef } from 'react';
 import FeedCard from './FeedCard';
 import { useInfiniteFeed } from '@/hooks/useInfiniteFeed';
-import { useSearchParams } from 'next/navigation';
-import type { FeedKind } from '@/lib/feed/types';
 
 function SkeletonCard() {
   return (
@@ -20,9 +18,7 @@ function SkeletonCard() {
   );
 }
 
-export default function FeedList() {
-  const sp = useSearchParams();
-  const kind = (sp.get('tab') as FeedKind) || 'for-you';
+export default function FeedList({ kind }: { kind: 'for-you' | 'nearby' | 'following' }) {
   const { pages, isLoading, loadMore, hasMore } = useInfiniteFeed({ kind });
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,7 +27,8 @@ export default function FeedList() {
     const el = sentinelRef.current;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) loadMore();
+        const e = entries[0];
+        if (e.isIntersecting && hasMore && !isLoading) loadMore();
       },
       { rootMargin: '1200px 0px 800px' }
     );
@@ -40,15 +37,22 @@ export default function FeedList() {
   }, [hasMore, isLoading, loadMore]);
 
   const safePages = Array.isArray(pages) ? pages : [];
-  const items = safePages.flatMap((p) => p.items ?? []);
+  const items = safePages.flatMap((p: any) => p?.items ?? []);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((item) => <FeedCard key={item.id} item={item} />)}
-      {isLoading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
-      <div ref={sentinelRef} />
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((item: any) => (
+        <FeedCard key={item.id} item={item} />
+      ))}
+
+      {isLoading &&
+        Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={`sk-${i}`} />)}
+
+      <div ref={sentinelRef} className="col-span-full h-1" />
       {!hasMore && !isLoading && (
-        <div className="col-span-full py-8 text-center text-sm text-neutral-500">You’re all caught up 🎉</div>
+        <div className="col-span-full py-8 text-center text-sm text-neutral-500">
+          You’re all caught up 🎉
+        </div>
       )}
     </div>
   );
