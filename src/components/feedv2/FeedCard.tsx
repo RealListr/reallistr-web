@@ -4,11 +4,11 @@ type Item = { id:string; title:string; price:number; address:string; image?:stri
 export default function FeedCard({ item }: { item: Item }) {
   return (
     <article className="rounded-2xl border border-neutral-200 bg-white overflow-hidden">
-      <div className="aspect-[3/2] bg-neutral-100">
+      <div className="h-[260px] sm:h-[300px] xl:h-[340px] bg-neutral-100 overflow-hidden">
         <img
           src={item.image || 'https://picsum.photos/seed/fallback/1200/800'}
           alt={item.title}
-          className="w-full h-[260px] sm:h-[300px] xl:h-[340px] object-cover"
+          className="w-full h-full object-cover"
           loading="lazy"
         />
       </div>
