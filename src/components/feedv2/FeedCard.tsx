@@ -8,7 +8,7 @@ export default function FeedCard({ item }: { item: Item }) {
         <img
           src={item.image || 'https://picsum.photos/seed/fallback/1200/800'}
           alt={item.title}
-          className="h-full w-full object-cover"
+          className="w-full h-[260px] sm:h-[300px] xl:h-[340px] object-cover"
           loading="lazy"
         />
       </div>
