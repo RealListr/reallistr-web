@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { FEED_V2_ENABLED, SHORTS_ROW_INTERVAL, AD_SLOT_INTERVAL, AGENTS_RAIL_INTERVAL_BASE, AGENTS_RAIL_INTERVAL_JITTER, SHOW_AD_SLOTS, SHOW_AGENTS_RAIL, SHOW_SHORTS_ROWS } from '@/src/lib/flags';
+import { FEED_V2_ENABLED, SHORTS_ROW_INTERVAL, AD_SLOT_INTERVAL, AGENTS_RAIL_INTERVAL_BASE, AGENTS_RAIL_INTERVAL_JITTER, SHOW_AD_SLOTS, SHOW_AGENTS_RAIL, SHOW_SHORTS_ROWS } from '../../lib/flags';
 import ShortsRow, { Short } from './ShortsRow';
 import AdSlot, { Ad } from './AdSlot';
 import AgentsRail from './AgentsRail';
