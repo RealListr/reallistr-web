@@ -1,6 +1,6 @@
 'use client';
-import Clean from './clean/page';
+import FeedClean from './clean/feed';
 
 export default function Page() {
-  return <Clean />;
+  return <FeedClean />;
 }
