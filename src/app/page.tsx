@@ -1,9 +1,10 @@
-import AgentUpload from '@/components/AgentUpload';
-import FeedV2 from '@/components/feedv2/FeedV2';
+'use client';
+import AgentUpload from '../components/AgentUpload';
+import FeedV2 from '../components/feedv2/FeedV2';
 
 export default function Page() {
   return (
-    <main className="space-y-10 py-6">
+    <main className="space-y-6">
       <AgentUpload />
       <FeedV2 />
     </main>
