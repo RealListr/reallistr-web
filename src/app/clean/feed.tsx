@@ -47,20 +47,23 @@ const AGENTS = [
   { id: 'ag3', name: 'Urban Nest' },
 ];
 
-/* ========================= Icons (compact, RealListr-style) ========================= */
+/* ========================= Ghost rail icons ========================= */
 
 function GhostIconButton({
   label,
   children,
+  onClick,
   className = '',
 }: {
   label: string;
   children: React.ReactNode;
+  onClick?: () => void;
   className?: string;
 }) {
   return (
     <button
       aria-label={label}
+      onClick={onClick}
       className={`p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/30 rounded-md ${className}`}
       style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.45))' }}
     >
@@ -69,24 +72,26 @@ function GhostIconButton({
   );
 }
 
-// Bold thumbs for clarity
-function ThumbUpBold({ className = 'w-[22px] h-[22px] text-white' }) {
+// Heart (Like)
+function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M2.25 12.75A2.25 2.25 0 0 1 4.5 10.5h3.18a2.25 2.25 0 0 0 2.199-1.757l.63-2.834A2.25 2.25 0 0 1 12.702 4.5c.809 0 1.468.659 1.468 1.468v3.032h4.68a2.25 2.25 0 0 1 2.219 2.639l-1.05 5.25A2.25 2.25 0 0 1 17.83 18H10.5a2.25 2.25 0 0 1-2.25-2.25v-3H4.5a2.25 2.25 0 0 1-2.25-2.25Z"/>
-    </svg>
-  );
-}
-function ThumbDownBold({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M21.75 11.25A2.25 2.25 0 0 1 19.5 13.5h-3.18a2.25 2.25 0 0 0-2.199 1.757l-.63 2.834A2.25 2.25 0 0 1 11.298 19.5c-.809 0-1.468-.659-1.468-1.468V15H5.15a2.25 2.25 0 0 1-2.219-2.639l1.05-5.25A2.25 2.25 0 0 1 6.17 6h7.33A2.25 2.25 0 0 1 15.75 8.25v3h3.75a2.25 2.25 0 0 1 2.25 2.25Z"/>
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z" />
     </svg>
   );
 }
 
-// Connect trigger icon (grid of dots)
-function IconGridDots({ className = 'w-5 h-5' }) {
+// Share
+function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z" />
+    </svg>
+  );
+}
+
+// Grid dots (Connect trigger)
+function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
       <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" /><circle cx="19" cy="5" r="2" />
@@ -95,7 +100,8 @@ function IconGridDots({ className = 'w-5 h-5' }) {
     </svg>
   );
 }
-// Menu item icons
+
+// Menu item icons for dropdown
 function IconUsers({ className = 'w-4 h-4' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -153,12 +159,11 @@ function CalendarMini({
   );
 }
 
-/* ========================= Top Controls ========================= */
+/* ========================= Connect Dropdown (top) ========================= */
 
 function ConnectMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!ref.current) return;
@@ -167,7 +172,6 @@ function ConnectMenu() {
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
-
   return (
     <div className="relative" ref={ref}>
       <button
@@ -175,14 +179,10 @@ function ConnectMenu() {
         onClick={() => setOpen((v) => !v)}
         className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
       >
-        <IconGridDots />
+        <IconGridDots className="w-5 h-5" />
       </button>
-
       {open && (
-        <div
-          className="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30"
-          role="menu"
-        >
+        <div className="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30" role="menu">
           <div className="px-2 py-1 text-[12px] text-neutral-500">Connect</div>
           <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
             <IconUsers /> <span className="text-sm">Agents</span>
@@ -207,6 +207,18 @@ function ConnectMenu() {
 function ListingCard({ L }: { L: Listing }) {
   const CAL_SIZE = 50; // 25% larger
 
+  // Per-card connect dropdown (icon-only trigger)
+  const [menuOpen, setMenuOpen] = useState(false);
+  const cardMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!cardMenuRef.current) return;
+      if (!cardMenuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
       {/* Header: aligned circles; Follow under agency */}
@@ -214,12 +226,8 @@ function ListingCard({ L }: { L: Listing }) {
         {/* Agency glyph (same size as avatar) */}
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path
-              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
+            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
 
@@ -245,13 +253,45 @@ function ListingCard({ L }: { L: Listing }) {
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-2 top-2 flex flex-col gap-2">
-          <GhostIconButton label="Like"><ThumbUpBold /></GhostIconButton>
-          <GhostIconButton label="Dislike"><ThumbDownBold /></GhostIconButton>
+          {/* Like (heart) */}
+          <GhostIconButton label="Like">
+            <IconHeart />
+          </GhostIconButton>
+
+          {/* Per-card CONNECT (icon-only) */}
+          <div className="relative" ref={cardMenuRef}>
+            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => !v)}>
+              <IconGridDots />
+            </GhostIconButton>
+            {menuOpen && (
+              <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconUsers /> <span className="text-sm">Agents</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconCard /> <span className="text-sm">Finance</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconShield /> <span className="text-sm">Insurance</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconBolt /> <span className="text-sm">Energy</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Info + Map */}
           <GhostIconButton label="Info">
             <Ic.Info className="w-[22px] h-[22px] text-white" />
           </GhostIconButton>
           <GhostIconButton label="Map">
             <Ic.Pin className="w-[22px] h-[22px] text-white" />
+          </GhostIconButton>
+
+          {/* Share */}
+          <GhostIconButton label="Share">
+            <IconShare />
           </GhostIconButton>
         </div>
       </div>
@@ -259,7 +299,6 @@ function ListingCard({ L }: { L: Listing }) {
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="flex items-start justify-between gap-6">
-          {/* Left: price + copy */}
           <div className="min-w-0">
             <p className="text-2xl font-bold">{L.price}</p>
             <p className="text-sm text-neutral-700 mt-1">{L.address}</p>
@@ -268,13 +307,10 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-        {/* Right: calendar pulled up near image; OPEN same width */}
+          {/* Calendar + OPEN (same width) */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
             <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
-            <div
-              style={{ width: CAL_SIZE }}
-              className="text-[11px] text-center tracking-wide text-neutral-700"
-            >
+            <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
               OPEN
             </div>
           </div>
