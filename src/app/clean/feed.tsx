@@ -127,8 +127,12 @@ function CalendarMini({
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 p-5">
+      {/* Header: [+ Follow] then Agent */}
+      <header className="flex items-center gap-4 p-5">
+        <button className="text-[13px] rounded-full px-2.5 py-1 border border-neutral-200 hover:bg-neutral-50">
+          + Follow
+        </button>
+
         <div className="flex items-center gap-3 min-w-0">
           {/* Agency / brand glyph placeholder */}
           <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
@@ -150,20 +154,6 @@ function ListingCard({ L }: { L: Listing }) {
               <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
             </div>
           </div>
-        </div>
-
-        {/* Actions (wrap nicely on mobile) */}
-        <div className="flex items-center gap-2">
-          <button className="text-sm rounded-full px-3 py-1 border border-neutral-200 hover:bg-neutral-50">
-            + Follow
-          </button>
-          <span className="text-sm rounded-full px-3 py-1 bg-green-100 text-green-800">
-            Open for Inspection
-          </span>
-          {/* Compact iOS-style calendar with time */}
-          <CalendarMini day="Thu" date="23" time="11:15–11:45" className="hidden sm:grid" />
-          {/* On very small screens, keep it but slightly smaller */}
-          <CalendarMini day="Thu" date="23" time="11:15–11:45" className="grid sm:hidden scale-90" />
         </div>
       </header>
 
@@ -190,13 +180,27 @@ function ListingCard({ L }: { L: Listing }) {
 
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
-        <p className="text-2xl font-bold">{L.price}</p>
-        <p className="text-sm text-neutral-700 mt-1">{L.address}</p>
-        <p className="text-sm text-neutral-600 mt-2">
-          Elegant 2-bed in JLT with south light and EV charging.
-        </p>
+        <div className="flex items-start justify-between gap-6">
+          {/* Left: price + copy */}
+          <div className="min-w-0">
+            <p className="text-2xl font-bold">{L.price}</p>
+            <p className="text-sm text-neutral-700 mt-1">{L.address}</p>
+            <p className="text-sm text-neutral-600 mt-2">
+              Elegant 2-bed in JLT with south light and EV charging.
+            </p>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-3">
+          {/* Right: Inspection label + compact calendar */}
+          <div className="shrink-0 flex flex-col items-end gap-1">
+            <span className="text-[12px] text-neutral-600 font-medium">
+              Open for Inspection
+            </span>
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" />
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-4">
           <span className="inline-flex items-center gap-1.5">
             <Ic.Bed /> 4
           </span>
