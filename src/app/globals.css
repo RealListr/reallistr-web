@@ -1,6 +1,2 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Optional: match the clean look */
-:root { color-scheme: light; }
+/* temporary preview styles */
+html,body{background:#fafafa;color:#0a0a0a}
