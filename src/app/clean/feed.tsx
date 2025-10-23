@@ -1,7 +1,7 @@
 'use client';
 
-import { Ic } from '../../components/ghost/GhostIcons'
 import React from 'react';
+import { Ic } from '../../components/ghost/GhostIcons';
 
 type Listing = {
   id: string;
@@ -47,29 +47,7 @@ const AGENTS = [
   { id: 'ag3', name: 'Urban Nest' },
 ];
 
-function Pill({
-  children,
-  tone = 'neutral',
-}: {
-  children: React.ReactNode;
-  tone?: 'neutral' | 'green';
-}) {
-  const cls =
-    tone === 'green'
-      ? 'bg-green-100 text-green-800 ring-1 ring-green-200'
-      : 'bg-neutral-100 text-neutral-800 ring-1 ring-neutral-200';
-  return <span className={`text-[12px] rounded-full px-3 py-1 ${cls}`}>{children}</span>;
-}
-function TimePill({ when, range }: { when: string; range: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-sm rounded-full px-3 py-1 border border-neutral-200 text-neutral-700 bg-white">
-      <Ic.Calendar />
-      <span className="hidden sm:inline">{when}</span>
-      <span>• {range}</span>
-    </span>
-  );
-}
-// --- UI helpers -------------------------------------------------------------
+/* ========================= Helpers ========================= */
 
 function GhostIconButton({
   label,
@@ -92,17 +70,11 @@ function GhostIconButton({
   );
 }
 
-/**
- * iOS-style compact calendar badge with time
- * - 36px mobile, 40px desktop
- * - Top: day (red)
- * - Middle: big date
- * - Bottom: tiny time range
- */
+/** iOS-style compact calendar badge with time */
 function CalendarMini({
   day = 'Thu',
   date = '23',
-  time = '11:15–11:45am',
+  time = '11:15–11:45',
   className = '',
 }: {
   day?: string;
@@ -124,23 +96,33 @@ function CalendarMini({
   );
 }
 
+/* ========================= Card ========================= */
+
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Floating Follow (top-left, subtle) */}
-      <div className="absolute left-3 top-3 sm:left-4 sm:top-4 z-10">
-        <button className="text-[12px] rounded-full px-2 py-[3px] border border-neutral-200 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white">
-          + Follow
-        </button>
-      </div>
+      {/* Floating Follow — tucked into the very top-left corner */}
+      <button
+        className="absolute left-2 top-2 -translate-x-1 -translate-y-1 z-20
+                   text-[11px] rounded-full px-2 py-[2px]
+                   border border-neutral-200 bg-white/70 backdrop-blur-sm
+                   shadow-sm hover:bg-white/90"
+        aria-label="Follow"
+      >
+        + Follow
+      </button>
 
-      {/* Header: agent only (Follow removed from here) */}
-      <header className="flex items-center gap-3 p-5 pt-12 sm:pt-5">
-        {/* Agency / brand glyph */}
+      {/* Header: agent only (clean, compact) */}
+      <header className="flex items-center gap-3 p-5">
+        {/* Agency glyph */}
         <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </div>
 
@@ -153,7 +135,6 @@ function ListingCard({ L }: { L: Listing }) {
           </div>
         </div>
       </header>
-
 
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
@@ -190,10 +171,10 @@ function ListingCard({ L }: { L: Listing }) {
 
           {/* Right: Inspection label + compact calendar */}
           <div className="shrink-0 flex flex-col items-end gap-1">
-            <span className="text-[12px] text-neutral-600 font-medium">
+            <span className="text-[11px] sm:text-[12px] text-neutral-600 font-medium">
               Open for Inspection
             </span>
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" />
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" className="scale-90" />
           </div>
         </div>
 
@@ -228,6 +209,8 @@ function ListingCard({ L }: { L: Listing }) {
     </article>
   );
 }
+
+/* ========================= Extra Sections ========================= */
 
 function ShortsRow() {
   return (
@@ -287,20 +270,22 @@ function HouseAd() {
   );
 }
 
+/* ========================= Page ========================= */
+
 export default function FeedClean() {
-  // interleave extra rows every 6 items (simple, stable)
-  const INTERVAL = 6;
+  const INTERVAL = 6; // interleave extra rows every 6 items
 
   return (
     <main className="mx-auto max-w-4xl p-6">
       {/* Top bar: logo + search */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
-        <button aria-label="Search"
-  className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
-  <Ic.Search />
-</button>
-
+        <button
+          aria-label="Search"
+          className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+        >
+          <Ic.Search />
+        </button>
       </div>
 
       {/* Top circular rail */}
