@@ -101,27 +101,14 @@ function CalendarMini({
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Floating Follow — tucked into the very top-left corner */}
-      <button
-        className="absolute left-2 top-2 -translate-x-1 -translate-y-1 z-20
-                   text-[11px] rounded-full px-2 py-[2px]
-                   border border-neutral-200 bg-white/70 backdrop-blur-sm
-                   shadow-sm hover:bg-white/90"
-        aria-label="Follow"
-      >
-        + Follow
-      </button>
-
-      {/* Header: agent only (clean, compact) */}
+      {/* Header: agent only (clean) */}
       <header className="flex items-center gap-3 p-5">
         {/* Agency glyph */}
         <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
             <path
               d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
             />
           </svg>
         </div>
@@ -139,6 +126,17 @@ function ListingCard({ L }: { L: Listing }) {
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
+
+        {/* + Follow — now inside image zone, top-left */}
+        <button
+          className="absolute left-2 top-2 z-20
+                     text-[11px] rounded-full px-2 py-[2px]
+                     border border-neutral-200 bg-white/75 backdrop-blur-sm
+                     shadow-sm hover:bg-white/90"
+          aria-label="Follow"
+        >
+          + Follow
+        </button>
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-2 top-2 flex flex-col gap-2">
@@ -180,35 +178,20 @@ function ListingCard({ L }: { L: Listing }) {
 
         {/* Features */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-4">
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Bed /> 4
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Bath /> 2
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Car /> 2
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Home /> Home
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Land /> Land Size m²
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Solar /> Solar &amp; wattage
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Charger /> EV Charger
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Ic.Grass /> Grass: {L.grassType ?? 'None'}
-          </span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Bed /> 4</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Bath /> 2</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Car /> 2</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Home /> Home</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Land /> Land Size m²</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Solar /> Solar &amp; wattage</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Charger /> EV Charger</span>
+          <span className="inline-flex items-center gap-1.5"><Ic.Grass /> Grass: {L.grassType ?? 'None'}</span>
         </div>
       </footer>
     </article>
   );
 }
+
 
 /* ========================= Extra Sections ========================= */
 
