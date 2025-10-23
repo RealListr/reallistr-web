@@ -107,28 +107,40 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-      {/* Media */}
+           {/* Media */}
       <div className="relative bg-neutral-100 h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
+
         {/* Right-side action rail */}
         <div className="absolute right-3 top-3 flex flex-col gap-2">
-  {[
-    {label:'Like',      icon:<Ic.ThumbUp />},
-    {label:'Dislike',   icon:<Ic.ThumbDown />},
-    {label:'Info',      icon:<Ic.Info />},
-    {label:'Map',       icon:<Ic.Pin />},
-  ].map(a=>(
-    <button key={a.label} aria-label={a.label}
-      className="w-9 h-9 rounded-full bg-white/90 backdrop-blur border border-neutral-200 shadow-sm grid place-items-center hover:bg-white">
-      {a.icon}
-    </button>
-  ))}
-</div>
-<div className="flex items-center gap-2">
-  <button className="text-sm rounded-full px-3 py-1 border border-neutral-200 hover:bg-neutral-50">+ Follow</button>
-  <span className="text-sm rounded-full px-3 py-1 bg-green-100 text-green-800">Open for Inspection</span>
-  <TimePill when="Sat 23" range="11:15–11:45am" />
-</div>
+          {[
+            { label: 'Like',    icon: <Ic.ThumbUp /> },
+            { label: 'Dislike', icon: <Ic.ThumbDown /> },
+            { label: 'Info',    icon: <Ic.Info /> },
+            { label: 'Map',     icon: <Ic.Pin /> },
+          ].map((a) => (
+            <button
+              key={a.label}
+              aria-label={a.label}
+              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur border border-neutral-200 shadow-sm grid place-items-center hover:bg-white"
+            >
+              {a.icon}
+            </button>
+          ))}
+        </div>
+
+        {/* Bottom inline actions (keep absolute if you want it over the image) */}
+        <div className="flex items-center gap-2 absolute left-3 bottom-3">
+          <button className="text-sm rounded-full px-3 py-1 border border-neutral-200 bg-white/90 backdrop-blur hover:bg-white">
+            + Follow
+          </button>
+          <span className="text-sm rounded-full px-3 py-1 bg-green-100 text-green-800">
+            Open for Inspection
+          </span>
+          <TimePill when="Sat 23" range="11:15–11:45am" />
+        </div>
+      </div> {/* <-- this was missing */}
+
 
 
       {/* Footer */}
