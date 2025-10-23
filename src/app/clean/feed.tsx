@@ -70,22 +70,23 @@ function GhostIconButton({
   );
 }
 
-/** iOS-style compact calendar badge with time */
 function CalendarMini({
   day = 'Thu',
   date = '23',
   time = '11:15–11:45',
+  size = 40,            // <— added: base size in px
   className = '',
 }: {
   day?: string;
   date?: string;
   time?: string;
+  size?: number;
   className?: string;
 }) {
   return (
     <div
       className={`grid place-items-center rounded-lg bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
-      style={{ width: 40, height: 40 }}
+      style={{ width: size, height: size }}
       aria-label={`Inspection ${day} ${date}, ${time}`}
       title={`Inspection ${day} ${date}, ${time}`}
     >
@@ -96,29 +97,36 @@ function CalendarMini({
   );
 }
 
+
 /* ========================= Card ========================= */
 
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header: agent only (clean) */}
+      {/* Header: Agent + Agency, with small Follow tucked under agency */}
       <header className="flex items-center gap-3 p-5">
         {/* Agency glyph */}
         <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path
-              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-            />
+            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
 
-        {/* Agent */}
-        <div className="flex items-center gap-3 min-w-0">
+        {/* Agent block */}
+        <div className="flex items-start gap-3 min-w-0">
           <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
           <div className="min-w-0">
             <p className="font-semibold leading-tight truncate">{L.agent}</p>
             <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
+            {/* Follow tucked neatly under agency */}
+            <button
+              className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200
+                         bg-white hover:bg-neutral-50"
+              aria-label="Follow"
+            >
+              + Follow
+            </button>
           </div>
         </div>
       </header>
@@ -126,17 +134,6 @@ function ListingCard({ L }: { L: Listing }) {
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
-
-        {/* + Follow — now inside image zone, top-left */}
-        <button
-          className="absolute left-2 top-2 z-20
-                     text-[11px] rounded-full px-2 py-[2px]
-                     border border-neutral-200 bg-white/75 backdrop-blur-sm
-                     shadow-sm hover:bg-white/90"
-          aria-label="Follow"
-        >
-          + Follow
-        </button>
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-2 top-2 flex flex-col gap-2">
@@ -167,12 +164,12 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-          {/* Right: Inspection label + compact calendar */}
-          <div className="shrink-0 flex flex-col items-end gap-1">
-            <span className="text-[11px] sm:text-[12px] text-neutral-600 font-medium">
-              Open for Inspection
-            </span>
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" className="scale-90" />
+          {/* Right: Bigger calendar pulled up near the image, with OPEN label */}
+          <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={50} />
+            <span className="text-[11px] tracking-wide text-neutral-700">OPEN</span>
+            {/* Later: add pulse classes conditionally when opening/closing soon */}
+            {/* e.g., <span className="animate-pulse text-[11px] ...">OPEN</span> */}
           </div>
         </div>
 
@@ -191,6 +188,7 @@ function ListingCard({ L }: { L: Listing }) {
     </article>
   );
 }
+
 
 
 /* ========================= Extra Sections ========================= */
