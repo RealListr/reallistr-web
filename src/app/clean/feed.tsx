@@ -70,11 +70,28 @@ function GhostIconButton({
   );
 }
 
+// Bold, unmistakable thumbs (filled silhouettes)
+function ThumbUpBold({ className = 'w-[22px] h-[22px] text-white' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M2.25 12.75A2.25 2.25 0 0 1 4.5 10.5h3.18a2.25 2.25 0 0 0 2.199-1.757l.63-2.834A2.25 2.25 0 0 1 12.702 4.5c.809 0 1.468.659 1.468 1.468v3.032h4.68a2.25 2.25 0 0 1 2.219 2.639l-1.05 5.25A2.25 2.25 0 0 1 17.83 18H10.5a2.25 2.25 0 0 1-2.25-2.25v-3H4.5a2.25 2.25 0 0 1-2.25-2.25Z"/>
+    </svg>
+  );
+}
+function ThumbDownBold({ className = 'w-[22px] h-[22px] text-white' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M21.75 11.25A2.25 2.25 0 0 1 19.5 13.5h-3.18a2.25 2.25 0 0 0-2.199 1.757l-.63 2.834A2.25 2.25 0 0 1 11.298 19.5c-.809 0-1.468-.659-1.468-1.468V15H5.15a2.25 2.25 0 0 1-2.219-2.639l1.05-5.25A2.25 2.25 0 0 1 6.17 6h7.33A2.25 2.25 0 0 1 15.75 8.25v3h3.75a2.25 2.25 0 0 1 2.25 2.25Z"/>
+    </svg>
+  );
+}
+
+/** iOS-style compact calendar badge with time (size-able) */
 function CalendarMini({
   day = 'Thu',
   date = '23',
   time = '11:15–11:45',
-  size = 40,            // <— added: base size in px
+  size = 40,
   className = '',
 }: {
   day?: string;
@@ -97,32 +114,36 @@ function CalendarMini({
   );
 }
 
-
 /* ========================= Card ========================= */
 
 function ListingCard({ L }: { L: Listing }) {
+  const CAL_SIZE = 50; // 25% larger than the old 40px
+
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header: Agent + Agency, with small Follow tucked under agency */}
+      {/* Header: aligned circles; Follow under agency */}
       <header className="flex items-center gap-3 p-5">
-        {/* Agency glyph */}
-        <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
+        {/* Agency glyph (same size as avatar) */}
+        <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </div>
 
-        {/* Agent block */}
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
+        {/* Agent */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
           <div className="min-w-0">
             <p className="font-semibold leading-tight truncate">{L.agent}</p>
             <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
             {/* Follow tucked neatly under agency */}
             <button
-              className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200
-                         bg-white hover:bg-neutral-50"
+              className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50"
               aria-label="Follow"
             >
               + Follow
@@ -137,12 +158,8 @@ function ListingCard({ L }: { L: Listing }) {
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-2 top-2 flex flex-col gap-2">
-          <GhostIconButton label="Like">
-            <Ic.ThumbUp className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
-          <GhostIconButton label="Dislike">
-            <Ic.ThumbDown className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
+          <GhostIconButton label="Like"><ThumbUpBold /></GhostIconButton>
+          <GhostIconButton label="Dislike"><ThumbDownBold /></GhostIconButton>
           <GhostIconButton label="Info">
             <Ic.Info className="w-[22px] h-[22px] text-white" />
           </GhostIconButton>
@@ -164,13 +181,24 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-          {/* Right: Bigger calendar pulled up near the image, with OPEN label */}
+          {/* Right: calendar pulled up near image; OPEN same width */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={50} />
-            <span className="text-[11px] tracking-wide text-neutral-700">OPEN</span>
-            {/* Later: add pulse classes conditionally when opening/closing soon */}
-            {/* e.g., <span className="animate-pulse text-[11px] ...">OPEN</span> */}
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
+            <div
+              style={{ width: CAL_SIZE }}
+              className="text-[11px] text-center tracking-wide text-neutral-700"
+            >
+              OPEN
+            </div>
           </div>
+        </div>
+
+        {/* Connect strip per card */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 justify-end">
+          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Agents</button>
+          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Finance</button>
+          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Insurance</button>
+          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Energy</button>
         </div>
 
         {/* Features */}
@@ -188,8 +216,6 @@ function ListingCard({ L }: { L: Listing }) {
     </article>
   );
 }
-
-
 
 /* ========================= Extra Sections ========================= */
 
@@ -258,15 +284,34 @@ export default function FeedClean() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      {/* Top bar: logo + search */}
+      {/* Top bar: logo + segmented switch + connect + search */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
-        <button
-          aria-label="Search"
-          className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-        >
-          <Ic.Search />
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Segmented switch */}
+          <div className="inline-flex rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
+            <button className="px-3 py-1 text-sm bg-neutral-100">Domestic</button>
+            <button className="px-3 py-1 text-sm hover:bg-neutral-50">Commercial</button>
+          </div>
+
+          {/* Connect chips */}
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="text-xs text-neutral-500 mr-1">Connect:</span>
+            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Agents</button>
+            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Finance</button>
+            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Insurance</button>
+            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Energy</button>
+          </div>
+
+          {/* Search */}
+          <button
+            aria-label="Search"
+            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+          >
+            <Ic.Search />
+          </button>
+        </div>
       </div>
 
       {/* Top circular rail */}
