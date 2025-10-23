@@ -60,6 +60,15 @@ function Pill({
       : 'bg-neutral-100 text-neutral-800 ring-1 ring-neutral-200';
   return <span className={`text-[12px] rounded-full px-3 py-1 ${cls}`}>{children}</span>;
 }
+function TimePill({ when, range }: { when: string; range: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-sm rounded-full px-3 py-1 border border-neutral-200 text-neutral-700 bg-white">
+      <Ic.Calendar />
+      <span className="hidden sm:inline">{when}</span>
+      <span>• {range}</span>
+    </span>
+  );
+}
 
 function ListingCard({ L }: { L: Listing }) {
   return (
@@ -103,22 +112,24 @@ function ListingCard({ L }: { L: Listing }) {
         <img src={L.img} className="w-full h-full object-cover" alt="" />
         {/* Right-side action rail */}
         <div className="absolute right-3 top-3 flex flex-col gap-2">
-          {[
-            { label: 'Like', icon: '👍' },
-            { label: 'Dislike', icon: '👎' },
-            { label: 'Info', icon: 'ℹ️' },
-            { label: 'Map', icon: '📍' },
-          ].map((a) => (
-            <button
-              key={a.label}
-              aria-label={a.label}
-              className="w-9 h-9 rounded-full bg-white/90 backdrop-blur border border-neutral-200 shadow-sm grid place-items-center text-[15px] hover:bg-white"
-            >
-              {a.icon}
-            </button>
-          ))}
-        </div>
-      </div>
+  {[
+    {label:'Like',      icon:<Ic.ThumbUp />},
+    {label:'Dislike',   icon:<Ic.ThumbDown />},
+    {label:'Info',      icon:<Ic.Info />},
+    {label:'Map',       icon:<Ic.Pin />},
+  ].map(a=>(
+    <button key={a.label} aria-label={a.label}
+      className="w-9 h-9 rounded-full bg-white/90 backdrop-blur border border-neutral-200 shadow-sm grid place-items-center hover:bg-white">
+      {a.icon}
+    </button>
+  ))}
+</div>
+<div className="flex items-center gap-2">
+  <button className="text-sm rounded-full px-3 py-1 border border-neutral-200 hover:bg-neutral-50">+ Follow</button>
+  <span className="text-sm rounded-full px-3 py-1 bg-green-100 text-green-800">Open for Inspection</span>
+  <TimePill when="Sat 23" range="11:15–11:45am" />
+</div>
+
 
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
@@ -226,12 +237,11 @@ export default function FeedClean() {
       {/* Top bar: logo + search */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
-        <button
-          aria-label="Search"
-          className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-        >
-          🔍
-        </button>
+        <button aria-label="Search"
+  className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
+  <Ic.Search />
+</button>
+
       </div>
 
       {/* Top circular rail */}
