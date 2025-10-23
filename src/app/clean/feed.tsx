@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
 
 type Listing = {
@@ -47,7 +47,7 @@ const AGENTS = [
   { id: 'ag3', name: 'Urban Nest' },
 ];
 
-/* ========================= Helpers ========================= */
+/* ========================= Icons (compact, RealListr-style) ========================= */
 
 function GhostIconButton({
   label,
@@ -62,7 +62,6 @@ function GhostIconButton({
     <button
       aria-label={label}
       className={`p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/30 rounded-md ${className}`}
-      // pure glyph look: no bg, just a subtle dropshadow to read on any photo
       style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.45))' }}
     >
       <span className="inline-flex">{children}</span>
@@ -70,7 +69,7 @@ function GhostIconButton({
   );
 }
 
-// Bold, unmistakable thumbs (filled silhouettes)
+// Bold thumbs for clarity
 function ThumbUpBold({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
@@ -82,6 +81,46 @@ function ThumbDownBold({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
       <path d="M21.75 11.25A2.25 2.25 0 0 1 19.5 13.5h-3.18a2.25 2.25 0 0 0-2.199 1.757l-.63 2.834A2.25 2.25 0 0 1 11.298 19.5c-.809 0-1.468-.659-1.468-1.468V15H5.15a2.25 2.25 0 0 1-2.219-2.639l1.05-5.25A2.25 2.25 0 0 1 6.17 6h7.33A2.25 2.25 0 0 1 15.75 8.25v3h3.75a2.25 2.25 0 0 1 2.25 2.25Z"/>
+    </svg>
+  );
+}
+
+// Connect trigger icon (grid of dots)
+function IconGridDots({ className = 'w-5 h-5' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" /><circle cx="19" cy="5" r="2" />
+      <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+      <circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
+    </svg>
+  );
+}
+// Menu item icons
+function IconUsers({ className = 'w-4 h-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" />
+    </svg>
+  );
+}
+function IconCard({ className = 'w-4 h-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" />
+    </svg>
+  );
+}
+function IconShield({ className = 'w-4 h-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" />
+    </svg>
+  );
+}
+function IconBolt({ className = 'w-4 h-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M11 21 19 10h-5l3-8-8 11h5Z" />
     </svg>
   );
 }
@@ -114,10 +153,59 @@ function CalendarMini({
   );
 }
 
+/* ========================= Top Controls ========================= */
+
+function ConnectMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        aria-label="Connect"
+        onClick={() => setOpen((v) => !v)}
+        className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+      >
+        <IconGridDots />
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30"
+          role="menu"
+        >
+          <div className="px-2 py-1 text-[12px] text-neutral-500">Connect</div>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+            <IconUsers /> <span className="text-sm">Agents</span>
+          </button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+            <IconCard /> <span className="text-sm">Finance</span>
+          </button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+            <IconShield /> <span className="text-sm">Insurance</span>
+          </button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+            <IconBolt /> <span className="text-sm">Energy</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ========================= Card ========================= */
 
 function ListingCard({ L }: { L: Listing }) {
-  const CAL_SIZE = 50; // 25% larger than the old 40px
+  const CAL_SIZE = 50; // 25% larger
 
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -141,7 +229,6 @@ function ListingCard({ L }: { L: Listing }) {
           <div className="min-w-0">
             <p className="font-semibold leading-tight truncate">{L.agent}</p>
             <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
-            {/* Follow tucked neatly under agency */}
             <button
               className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50"
               aria-label="Follow"
@@ -181,7 +268,7 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-          {/* Right: calendar pulled up near image; OPEN same width */}
+        {/* Right: calendar pulled up near image; OPEN same width */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
             <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
             <div
@@ -191,14 +278,6 @@ function ListingCard({ L }: { L: Listing }) {
               OPEN
             </div>
           </div>
-        </div>
-
-        {/* Connect strip per card */}
-        <div className="mt-3 flex flex-wrap items-center gap-2 justify-end">
-          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Agents</button>
-          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Finance</button>
-          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Insurance</button>
-          <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Energy</button>
         </div>
 
         {/* Features */}
@@ -280,11 +359,11 @@ function HouseAd() {
 /* ========================= Page ========================= */
 
 export default function FeedClean() {
-  const INTERVAL = 6; // interleave extra rows every 6 items
+  const INTERVAL = 6;
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      {/* Top bar: logo + segmented switch + connect + search */}
+      {/* Top bar: logo + segmented switch + CONNECT icon + search */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
 
@@ -295,14 +374,8 @@ export default function FeedClean() {
             <button className="px-3 py-1 text-sm hover:bg-neutral-50">Commercial</button>
           </div>
 
-          {/* Connect chips */}
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="text-xs text-neutral-500 mr-1">Connect:</span>
-            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Agents</button>
-            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Finance</button>
-            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Insurance</button>
-            <button className="text-xs rounded-full px-2 py-1 border border-neutral-200 bg-white hover:bg-neutral-50">Energy</button>
-          </div>
+          {/* CONNECT dropdown trigger (single icon) */}
+          <ConnectMenu />
 
           {/* Search */}
           <button
