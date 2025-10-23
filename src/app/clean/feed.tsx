@@ -126,36 +126,34 @@ function CalendarMini({
 
 function ListingCard({ L }: { L: Listing }) {
   return (
-    <article className="rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header: [+ Follow] then Agent */}
-      <header className="flex items-center gap-4 p-5">
-        <button className="text-[13px] rounded-full px-2.5 py-1 border border-neutral-200 hover:bg-neutral-50">
+    <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
+      {/* Floating Follow (top-left, subtle) */}
+      <div className="absolute left-3 top-3 sm:left-4 sm:top-4 z-10">
+        <button className="text-[12px] rounded-full px-2 py-[3px] border border-neutral-200 bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white">
           + Follow
         </button>
+      </div>
 
+      {/* Header: agent only (Follow removed from here) */}
+      <header className="flex items-center gap-3 p-5 pt-12 sm:pt-5">
+        {/* Agency / brand glyph */}
+        <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
+          <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
+            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        {/* Agent */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* Agency / brand glyph placeholder */}
-          <div className="w-11 h-11 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-              <path
-                d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-
-          {/* Agent */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
-            <div className="min-w-0">
-              <p className="font-semibold leading-tight truncate">{L.agent}</p>
-              <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
-            </div>
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-semibold leading-tight truncate">{L.agent}</p>
+            <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
           </div>
         </div>
       </header>
+
 
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
