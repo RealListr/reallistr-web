@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
 
+/* ========================= Types & Mock Data ========================= */
+
 type Listing = {
   id: string;
   img: string;
@@ -79,46 +81,7 @@ function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
-function ToggleDC({
-  value = 'D',
-  onChange,
-}: {
-  value?: 'D' | 'C';
-  onChange?: (v: 'D' | 'C') => void;
-}) {
-  return (
-    <div
-      className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden"
-      role="tablist"
-      aria-label="Choose Domestic or Commercial"
-      title={value === 'D' ? 'Domestic' : 'Commercial'}
-    >
-      <button
-        role="tab"
-        aria-selected={value === 'D'}
-        onClick={() => onChange?.('D')}
-        className={`px-2.5 py-1 text-sm leading-none ${
-          value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
-        }`}
-      >
-        <span className="sr-only">Domestic</span>
-        <span aria-hidden>D</span>
-      </button>
-      <span className="text-neutral-300 select-none">|</span>
-      <button
-        role="tab"
-        aria-selected={value === 'C'}
-        onClick={() => onChange?.('C')}
-        className={`px-2.5 py-1 text-sm leading-none ${
-          value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
-        }`}
-      >
-        <span className="sr-only">Commercial</span>
-        <span aria-hidden>C</span>
-      </button>
-    </div>
-  );
-}
+
 function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -126,18 +89,18 @@ function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
+
 function IconComment({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      {/* bubble */}
       <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
-      {/* dots */}
       <circle cx="9" cy="10.5" r="1.2" />
       <circle cx="12" cy="10.5" r="1.2" />
       <circle cx="15" cy="10.5" r="1.2" />
     </svg>
   );
 }
+
 function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -462,7 +425,7 @@ function ListingCard({ L }: { L: Listing }) {
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
         {/* Right-side ghost mini actions */}
-        <div className="absolute right-2 top-2 flex flex-col gap-2">
+        <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           {/* Like (heart) */}
           <GhostIconButton label="Like">
             <IconHeart />
@@ -524,8 +487,8 @@ function ListingCard({ L }: { L: Listing }) {
 
           {/* Calendar + OPEN */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
-            <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={50} />
+            <div style={{ width: 50 }} className="text-[11px] text-center tracking-wide text-neutral-700">
               OPEN
             </div>
           </div>
@@ -553,7 +516,6 @@ function ListingCard({ L }: { L: Listing }) {
     </article>
   );
 }
-
 
 /* ========================= Extras ========================= */
 
@@ -617,8 +579,50 @@ function HouseAd() {
 
 /* ========================= Page ========================= */
 
+function ToggleDC({
+  value = 'D',
+  onChange,
+}: {
+  value?: 'D' | 'C';
+  onChange?: (v: 'D' | 'C') => void;
+}) {
+  return (
+    <div
+      className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden"
+      role="tablist"
+      aria-label="Choose Domestic or Commercial"
+      title={value === 'D' ? 'Domestic' : 'Commercial'}
+    >
+      <button
+        role="tab"
+        aria-selected={value === 'D'}
+        onClick={() => onChange?.('D')}
+        className={`px-2.5 py-1 text-sm leading-none ${
+          value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
+        }`}
+      >
+        <span className="sr-only">Domestic</span>
+        <span aria-hidden>D</span>
+      </button>
+      <span className="text-neutral-300 select-none">|</span>
+      <button
+        role="tab"
+        aria-selected={value === 'C'}
+        onClick={() => onChange?.('C')}
+        className={`px-2.5 py-1 text-sm leading-none ${
+          value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
+        }`}
+      >
+        <span className="sr-only">Commercial</span>
+        <span aria-hidden>C</span>
+      </button>
+    </div>
+  );
+}
+
 export default function FeedClean() {
   const INTERVAL = 6;
+  const [mode, setMode] = useState<'D' | 'C'>('D');
 
   return (
     <main className="mx-auto max-w-4xl p-6">
@@ -626,14 +630,9 @@ export default function FeedClean() {
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
 
-        <div className="flex items-center gap-3">
-          <div className="inline-flex rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <button className="px-3 py-1 text-sm bg-neutral-100">Domestic</button>
-            <button className="px-3 py-1 text-sm hover:bg-neutral-50">Commercial</button>
-          </div>
-
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ToggleDC value={mode} onChange={setMode} />
           <ConnectMenu />
-
           <button
             aria-label="Search"
             className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
@@ -645,7 +644,7 @@ export default function FeedClean() {
 
       {/* Top circular rail */}
       <section className="mb-6">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
           {['Parina', 'Downtown', 'Marina', 'The Springs', 'Al Barsha'].map((s) => (
             <div key={s} className="flex flex-col items-center gap-2">
               <div className="w-14 h-14 rounded-full border border-neutral-200 bg-white shadow-sm" />
