@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
 
 type Listing = {
@@ -47,7 +47,7 @@ const AGENTS = [
   { id: 'ag3', name: 'Urban Nest' },
 ];
 
-/* ========================= Ghost rail icons ========================= */
+/* ========================= Small ghost/mono icons ========================= */
 
 function GhostIconButton({
   label,
@@ -72,7 +72,6 @@ function GhostIconButton({
   );
 }
 
-// Heart (Like)
 function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -80,8 +79,6 @@ function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
-
-// Share
 function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -89,8 +86,6 @@ function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
-
-// Grid dots (Connect trigger)
 function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -100,8 +95,6 @@ function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
-
-// Menu item icons for dropdown
 function IconUsers({ className = 'w-4 h-4' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -131,7 +124,7 @@ function IconBolt({ className = 'w-4 h-4' }) {
   );
 }
 
-/** iOS-style compact calendar badge with time (size-able) */
+/** iOS-style compact calendar */
 function CalendarMini({
   day = 'Thu',
   date = '23',
@@ -159,7 +152,7 @@ function CalendarMini({
   );
 }
 
-/* ========================= Connect Dropdown (top) ========================= */
+/* ========================= Top Connect (dropdown) ========================= */
 
 function ConnectMenu() {
   const [open, setOpen] = useState(false);
@@ -202,13 +195,175 @@ function ConnectMenu() {
   );
 }
 
-/* ========================= Card ========================= */
+/* ========================= Floating Comments (sheet) ========================= */
+
+type Comment = {
+  id: string;
+  name: string;
+  suburb?: string;
+  isAgent?: boolean;
+  isPinned?: boolean;
+  time: string;
+  body: string;
+  likes: number;
+  replies?: Comment[];
+};
+
+const DEMO: Comment[] = [
+  {
+    id:'c1', name:'Mina K.', suburb:'JLT', time:'2h', body:'How noisy is it at night near the highway?',
+    likes:6, replies:[
+      { id:'c1r1', name:'Aisha Patel', suburb:'Luxe Realty', isAgent:true, time:'1h', body:'After 9pm it’s pretty quiet; double glazing in bedrooms.', likes:12 }
+    ]
+  },
+  { id:'c2', name:'Samir', suburb:'Marina', time:'3h', body:'Body corp fees estimate?', likes:2 }
+];
+
+function CommentsPanel({
+  open,
+  onClose,
+  listingTitle,
+}: {
+  open: boolean;
+  onClose: () => void;
+  listingTitle: string;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent){ if(e.key==='Escape') onClose(); }
+    document.addEventListener('keydown', onKey);
+    return ()=>document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed inset-0 z-50 ${open?'pointer-events-auto':'pointer-events-none'}`}>
+      {/* Backdrop */}
+      <div className={`absolute inset-0 bg-black/30 transition-opacity ${open?'opacity-100':'opacity-0'}`} onClick={onClose} />
+      {/* Slide-in sheet (floating window) */}
+      <div className={`absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-xl border-l border-neutral-200 transition-transform duration-200 ${open?'translate-x-0':'translate-x-full'}`}>
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-neutral-200">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="min-w-0">
+              <div className="text-xs text-neutral-500 truncate">{listingTitle}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-base font-semibold">Discussion</div>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200">24</span>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 grid place-items-center rounded-full border border-neutral-200 hover:bg-neutral-50">
+              <svg viewBox="0 0 24 24" className="w-5 h-5"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Composer */}
+        <Composer />
+
+        {/* Thread */}
+        <div className="px-4 pb-24">
+          {DEMO.map(c => <CommentItem key={c.id} c={c} depth={0} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Composer() {
+  const [text, setText] = useState('');
+  const canPost = text.trim().length > 0;
+  return (
+    <div className="px-4 py-3 border-b border-neutral-200">
+      <div className="flex gap-2 mb-2">
+        {['Noise','Fees','Schools','Transport'].map(t=>(
+          <button key={t} className="text-xs px-2 py-1 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50">{t}</button>
+        ))}
+      </div>
+      <div className="flex items-end gap-2">
+        <div className="w-9 h-9 rounded-full bg-neutral-100 border border-neutral-200 shrink-0" />
+        <div className="flex-1">
+          <textarea
+            rows={1}
+            placeholder="Reply to this listing…"
+            value={text}
+            onChange={e=>setText(e.target.value)}
+            className="w-full resize-none outline-none text-sm bg-white placeholder:text-neutral-400"
+          />
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center gap-2">
+              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Add image">
+                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M20 5H4a2 2 0 0 0-2 2v10h20V7a2 2 0 0 0-2-2Zm0 12H4v-2l4-4 3 3 5-5 4 4v4Z"/><circle cx="8" cy="9" r="1.5" fill="currentColor"/></svg>
+              </button>
+              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Attach doc">
+                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16h16V8Z"/><path fill="currentColor" d="M14 2v6h6"/></svg>
+              </button>
+              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Emoji">
+                <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".08"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/><path d="M8 14c.9 1.2 2.1 2 4 2s3.1-.8 4-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+            <button
+              disabled={!canPost}
+              className={`text-sm rounded-full px-3 py-1 border ${canPost?'bg-neutral-900 text-white border-neutral-900 hover:opacity-90':'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'}`}
+            >
+              Post
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 text-xs text-neutral-500">Anyone can reply • Replies may be quoted</div>
+    </div>
+  );
+}
+
+function CommentItem({ c, depth }:{ c: Comment; depth:number }) {
+  const [showReplies, setShowReplies] = useState(true);
+  return (
+    <div className="py-3">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-full bg-neutral-100 border border-neutral-200" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium truncate">{c.name}</span>
+            {c.suburb && <span className="text-neutral-500 truncate">• {c.suburb}</span>}
+            {c.isAgent && (
+              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-200">
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5"><path d="M12 2 4 5v6c0 5 3.6 9.7 8 11 4.4-1.3 8-6 8-11V5Z" fill="currentColor"/></svg>
+                Agent
+              </span>
+            )}
+            <span className="text-neutral-400 text-xs ml-auto">{c.time}</span>
+          </div>
+          <div className="mt-1 text-[15px] leading-5 text-neutral-900">{c.body}</div>
+          <div className="mt-2 flex items-center gap-3 text-xs text-neutral-600">
+            <button className="inline-flex items-center gap-1 hover:underline"><svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 21s-6.7-4.03-9.29-6.61A6 6 0 0 1 11.3 5.1l.7.7.7-.7A6 6 0 0 1 21.3 14.4C18.7 16.97 12 21 12 21Z" fill="currentColor"/></svg> {c.likes}</button>
+            <button className="inline-flex items-center gap-1 hover:underline"><svg viewBox="0 0 24 24" className="w-4 h-4"><path fill="currentColor" d="M14 9V5l7 7-7 7v-4H8a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h6Z"/></svg> Reply</button>
+            <button className="hover:underline">Report</button>
+          </div>
+          {c.replies && c.replies.length>0 && (
+            <div className="mt-3">
+              <button onClick={()=>setShowReplies(v=>!v)} className="text-xs text-neutral-600 hover:underline">
+                {showReplies ? `Hide replies (${c.replies.length})` : `View replies (${c.replies.length})`}
+              </button>
+              {showReplies && (
+                <div className="mt-2 pl-4 border-l border-neutral-200">
+                  {c.replies.map(r => <CommentItem key={r.id} c={r} depth={depth+1} />)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ========================= Listing Card ========================= */
 
 function ListingCard({ L }: { L: Listing }) {
-  const CAL_SIZE = 50; // 25% larger
+  const CAL_SIZE = 50;
 
-  // Per-card connect dropdown (icon-only trigger)
+  // Per-card connect (icon-only) + comments panel state
   const [menuOpen, setMenuOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const cardMenuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -221,17 +376,14 @@ function ListingCard({ L }: { L: Listing }) {
 
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header: aligned circles; Follow under agency */}
+      {/* Header: agent/agency; Follow under agency */}
       <header className="flex items-center gap-3 p-5">
-        {/* Agency glyph (same size as avatar) */}
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
             <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
                   stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
-
-        {/* Agent */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
           <div className="min-w-0">
@@ -282,17 +434,11 @@ function ListingCard({ L }: { L: Listing }) {
           </div>
 
           {/* Info + Map */}
-          <GhostIconButton label="Info">
-            <Ic.Info className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
-          <GhostIconButton label="Map">
-            <Ic.Pin className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
+          <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
 
           {/* Share */}
-          <GhostIconButton label="Share">
-            <IconShare />
-          </GhostIconButton>
+          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
         </div>
       </div>
 
@@ -305,9 +451,19 @@ function ListingCard({ L }: { L: Listing }) {
             <p className="text-sm text-neutral-600 mt-2">
               Elegant 2-bed in JLT with south light and EV charging.
             </p>
+
+            {/* Comments trigger (opens floating window) */}
+            <div className="mt-3">
+              <button
+                onClick={() => setCommentsOpen(true)}
+                className="text-sm rounded-full px-3 py-1 border border-neutral-200 hover:bg-neutral-50"
+              >
+                💬 Comments (24)
+              </button>
+            </div>
           </div>
 
-          {/* Calendar + OPEN (same width) */}
+          {/* Calendar + OPEN */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
             <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
             <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
@@ -328,11 +484,14 @@ function ListingCard({ L }: { L: Listing }) {
           <span className="inline-flex items-center gap-1.5"><Ic.Grass /> Grass: {L.grassType ?? 'None'}</span>
         </div>
       </footer>
+
+      {/* Floating comments window (per card) */}
+      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
     </article>
   );
 }
 
-/* ========================= Extra Sections ========================= */
+/* ========================= Extras ========================= */
 
 function ShortsRow() {
   return (
@@ -399,21 +558,18 @@ export default function FeedClean() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      {/* Top bar: logo + segmented switch + CONNECT icon + search */}
+      {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
 
         <div className="flex items-center gap-3">
-          {/* Segmented switch */}
           <div className="inline-flex rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
             <button className="px-3 py-1 text-sm bg-neutral-100">Domestic</button>
             <button className="px-3 py-1 text-sm hover:bg-neutral-50">Commercial</button>
           </div>
 
-          {/* CONNECT dropdown trigger (single icon) */}
           <ConnectMenu />
 
-          {/* Search */}
           <button
             aria-label="Search"
             className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
