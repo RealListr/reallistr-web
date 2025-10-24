@@ -86,6 +86,18 @@ function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
+function IconComment({ className = 'w-[22px] h-[22px] text-white' }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      {/* bubble */}
+      <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+      {/* dots */}
+      <circle cx="9" cy="10.5" r="1.2" />
+      <circle cx="12" cy="10.5" r="1.2" />
+      <circle cx="15" cy="10.5" r="1.2" />
+    </svg>
+  );
+}
 function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -404,34 +416,28 @@ function ListingCard({ L }: { L: Listing }) {
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
         {/* Right-side ghost mini actions */}
-        <div className="absolute right-2 top-2 flex flex-col gap-2">
-          {/* Like (heart) */}
-          <GhostIconButton label="Like">
-            <IconHeart />
-          </GhostIconButton>
+<div className="absolute right-2 top-2 flex flex-col gap-2">
+  {/* Like (heart) */}
+  <GhostIconButton label="Like">
+    <IconHeart />
+  </GhostIconButton>
 
-          {/* Per-card CONNECT (icon-only) */}
-          <div className="relative" ref={cardMenuRef}>
-            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => !v)}>
-              <IconGridDots />
-            </GhostIconButton>
-            {menuOpen && (
-              <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconUsers /> <span className="text-sm">Agents</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconCard /> <span className="text-sm">Finance</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconShield /> <span className="text-sm">Insurance</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconBolt /> <span className="text-sm">Energy</span>
-                </button>
-              </div>
-            )}
-          </div>
+  {/* Per-card CONNECT (icon-only) */}
+  {/* ... your existing Connect dropdown block ... */}
+
+  {/* Info + Map */}
+  <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+  <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+
+  {/* Share */}
+  <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+
+  {/* Comments (NEW) — icon-only, no bulky chip */}
+  <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}>
+    <IconComment />
+  </GhostIconButton>
+</div>
+
 
           {/* Info + Map */}
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
@@ -451,17 +457,6 @@ function ListingCard({ L }: { L: Listing }) {
             <p className="text-sm text-neutral-600 mt-2">
               Elegant 2-bed in JLT with south light and EV charging.
             </p>
-
-            {/* Comments trigger (opens floating window) */}
-            <div className="mt-3">
-              <button
-                onClick={() => setCommentsOpen(true)}
-                className="text-sm rounded-full px-3 py-1 border border-neutral-200 hover:bg-neutral-50"
-              >
-                💬 Comments (24)
-              </button>
-            </div>
-          </div>
 
           {/* Calendar + OPEN */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
