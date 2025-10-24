@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
+import MediaStrip from '../../components/media/MediaStrip'; // <-- add at top with other imports
 
 /* ========================= Types & Mock Data ========================= */
 
@@ -516,6 +517,17 @@ function ListingCard({ L }: { L: Listing }) {
     </article>
   );
 }
+{/* existing hero image */}
+<img src={L.img} className="w-full h-full object-cover" alt="" />
+
+{/* non-invasive media controls (counter + lightbox for Active/Pro) */}
+<MediaStrip
+  plan="active" // change per listing: 'lite' | 'active' | 'pro'
+  assets={[
+    { kind: 'image', src: L.img, alt: L.address },
+    // you can add more images/videos later from your data source
+  ]}
+/>
 
 /* ========================= Extras ========================= */
 
