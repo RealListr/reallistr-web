@@ -8,26 +8,29 @@ type Props = {
   className?: string;
 };
 
+/**
+ * Client-only Leaflet map:
+ * - No global `L`
+ * - Leaflet loaded dynamically inside useEffect (browser only)
+ * - Safe to import anywhere without breaking SSR/prerender
+ */
 export default function PropertyMap({ lat, lng, zoom = 14, className = '' }: Props) {
   const el = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Guard: never run on server
     if (typeof window === 'undefined' || !el.current) return;
 
     let map: any;
-    let leaflet: any;
 
     (async () => {
-      // Dynamically load leaflet only on the client
-      const mod: any = await import('leaflet'); // handled by next.config alias on server anyway
-      leaflet = mod?.default?.map ? mod.default : mod;
+      // Dynamically import Leaflet on the client
+      const mod: any = await import('leaflet');
+      const L = mod?.default?.map ? mod.default : mod;
 
-      map = leaflet.map(el.current).setView([lat, lng], zoom);
-      leaflet
-        .tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' })
+      map = L.map(el.current).setView([lat, lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' })
         .addTo(map);
-      leaflet.marker([lat, lng]).addTo(map);
+      L.marker([lat, lng]).addTo(map);
     })();
 
     return () => {
