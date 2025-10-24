@@ -79,6 +79,46 @@ function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
     </svg>
   );
 }
+function ToggleDC({
+  value = 'D',
+  onChange,
+}: {
+  value?: 'D' | 'C';
+  onChange?: (v: 'D' | 'C') => void;
+}) {
+  return (
+    <div
+      className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden"
+      role="tablist"
+      aria-label="Choose Domestic or Commercial"
+      title={value === 'D' ? 'Domestic' : 'Commercial'}
+    >
+      <button
+        role="tab"
+        aria-selected={value === 'D'}
+        onClick={() => onChange?.('D')}
+        className={`px-2.5 py-1 text-sm leading-none ${
+          value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
+        }`}
+      >
+        <span className="sr-only">Domestic</span>
+        <span aria-hidden>D</span>
+      </button>
+      <span className="text-neutral-300 select-none">|</span>
+      <button
+        role="tab"
+        aria-selected={value === 'C'}
+        onClick={() => onChange?.('C')}
+        className={`px-2.5 py-1 text-sm leading-none ${
+          value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
+        }`}
+      >
+        <span className="sr-only">Commercial</span>
+        <span aria-hidden>C</span>
+      </button>
+    </div>
+  );
+}
 function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
