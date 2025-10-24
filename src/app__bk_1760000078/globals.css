@@ -1,6 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Optional: light reset for full-bleed layout */
-html, body, #__next { height: 100%; }
