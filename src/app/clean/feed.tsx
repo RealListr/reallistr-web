@@ -377,6 +377,7 @@ function ListingCard({ L }: { L: Listing }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const cardMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!cardMenuRef.current) return;
@@ -392,10 +393,15 @@ function ListingCard({ L }: { L: Listing }) {
       <header className="flex items-center gap-3 p-5">
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-                  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </div>
+
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
           <div className="min-w-0">
@@ -416,35 +422,52 @@ function ListingCard({ L }: { L: Listing }) {
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
         {/* Right-side ghost mini actions */}
-<div className="absolute right-2 top-2 flex flex-col gap-2">
-  {/* Like (heart) */}
-  <GhostIconButton label="Like">
-    <IconHeart />
-  </GhostIconButton>
+        <div className="absolute right-2 top-2 flex flex-col gap-2">
+          {/* Like (heart) */}
+          <GhostIconButton label="Like">
+            <IconHeart />
+          </GhostIconButton>
 
-  {/* Per-card CONNECT (icon-only) */}
-  {/* ... your existing Connect dropdown block ... */}
-
-  {/* Info + Map */}
-  <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-  <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-
-  {/* Share */}
-  <GhostIconButton label="Share"><IconShare /></GhostIconButton>
-
-  {/* Comments (NEW) — icon-only, no bulky chip */}
-  <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}>
-    <IconComment />
-  </GhostIconButton>
-</div>
-
+          {/* Per-card CONNECT (icon-only) */}
+          <div className="relative" ref={cardMenuRef}>
+            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => !v)}>
+              <IconGridDots />
+            </GhostIconButton>
+            {menuOpen && (
+              <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconUsers /> <span className="text-sm">Agents</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconCard /> <span className="text-sm">Finance</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconShield /> <span className="text-sm">Insurance</span>
+                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
+                  <IconBolt /> <span className="text-sm">Energy</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Info + Map */}
-          <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-          <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Info">
+            <Ic.Info className="w-[22px] h-[22px] text-white" />
+          </GhostIconButton>
+          <GhostIconButton label="Map">
+            <Ic.Pin className="w-[22px] h-[22px] text-white" />
+          </GhostIconButton>
 
           {/* Share */}
-          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+          <GhostIconButton label="Share">
+            <IconShare />
+          </GhostIconButton>
+
+          {/* Comments (icon-only, opens floating sheet) */}
+          <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}>
+            <IconComment />
+          </GhostIconButton>
         </div>
       </div>
 
@@ -457,6 +480,7 @@ function ListingCard({ L }: { L: Listing }) {
             <p className="text-sm text-neutral-600 mt-2">
               Elegant 2-bed in JLT with south light and EV charging.
             </p>
+          </div>
 
           {/* Calendar + OPEN */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
@@ -481,10 +505,15 @@ function ListingCard({ L }: { L: Listing }) {
       </footer>
 
       {/* Floating comments window (per card) */}
-      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
+      <CommentsPanel
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        listingTitle={L.address}
+      />
     </article>
   );
 }
+
 
 /* ========================= Extras ========================= */
 
