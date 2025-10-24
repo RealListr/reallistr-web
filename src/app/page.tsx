@@ -1,9 +1,6 @@
-// server component (no "use client" here)
+// Server redirect to stable feed while we triage the client error on "/"
+import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-import FeedClean from './clean/feed';
-
 export default function Page() {
-  return <FeedClean />;
+  redirect('/clean');
 }
