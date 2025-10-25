@@ -1,10 +1,10 @@
-import dynamic from 'next/dynamic';
+import NextDynamic from 'next/dynamic';
 
-// ensure this route is dynamic and not statically pre-rendered
+// keep the route dynamic so the server never evaluates feed.tsx
 export const dynamic = 'force-dynamic';
 
-// Do NOT SSR this client chunk; avoids server touching feed.tsx
-const ClientClean = dynamic(() => import('./ClientClean'), { ssr: false });
+// DO NOT SSR the client chunk
+const ClientClean = NextDynamic(() => import('./ClientClean'), { ssr: false });
 
 export default function Page() {
   return <ClientClean />;
