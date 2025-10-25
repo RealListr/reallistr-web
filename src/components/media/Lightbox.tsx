@@ -1,46 +1,63 @@
 'use client';
 import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { useMediaStore } from '@/lib/media-store';
-import InlineVideo from './InlineVideo';
-'use client';
-import Lightbox from './Lightbox';
-export default function LightboxMount(){ return <Lightbox/>; }
 
 export default function Lightbox() {
-  const { open, items, at, close, next, prev } = useMediaStore();
+  const { open, items, index, close, next, prev } = useMediaStore();
 
-  // body scroll lock
   useEffect(() => {
-    if (!open) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prevOverflow; };
-  }, [open]);
+    function onKey(e: KeyboardEvent) {
+      if (!open) return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, close, next, prev]);
 
-  if (!open) return null;
-  const m = items[at];
+  if (!open || !items.length) return null;
+  const it = items[index];
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center">
-      <button
-        className="absolute right-4 top-4 text-white/80 hover:text-white text-xl"
-        onClick={close}
-        aria-label="Close"
-      >✕</button>
+  return (
+    <div className="fixed inset-0 z-[100]">
+      <div className="absolute inset-0 bg-black/70" onClick={close} />
+      <div className="absolute inset-0 grid place-items-center p-4">
+        <div className="relative max-w-5xl w-full">
+          <button
+            onClick={close}
+            className="absolute -top-10 right-0 text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10"
+            aria-label="Close"
+          >
+            Close
+          </button>
 
-      <button className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-2xl" onClick={prev} aria-label="Previous">‹</button>
-      <button className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white text-2xl" onClick={next} aria-label="Next">›</button>
+          <div className="relative rounded-xl overflow-hidden bg-black">
+            {it.kind === 'image' ? (
+              <img src={it.src} alt={it.alt || ''} className="w-full h-auto max-h-[75vh] object-contain" />
+            ) : (
+              <video
+                src={it.src}
+                className="w-full h-auto max-h-[75vh] object-contain"
+                controls
+                autoPlay
+                playsInline
+              />
+            )}
+          </div>
 
-      <div className="w-[92vw] max-w-5xl">
-        {m.kind === 'image' ? (
-          <img src={m.src} alt={m.alt ?? ''} className="w-full h-auto rounded-xl" />
-        ) : (
-          <InlineVideo src={m.src} poster={m.thumb} className="w-full h-[68vh]" autoPlay muted />
-        )}
-        {m.alt ? <div className="text-white/80 mt-3 text-center text-sm">{m.alt}</div> : null}
+          {items.length > 1 && (
+            <div className="absolute inset-y-0 -left-12 hidden md:flex items-center">
+              <button onClick={prev} className="text-white/90 hover:text-white">‹</button>
+            </div>
+          )}
+          {items.length > 1 && (
+            <div className="absolute inset-y-0 -right-12 hidden md:flex items-center">
+              <button onClick={next} className="text-white/90 hover:text-white">›</button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
