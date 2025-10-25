@@ -1,11 +1,11 @@
-'use client';
-export const dynamic = 'force-dynamic';
-
 import dynamic from 'next/dynamic';
 
-// Prevent server from evaluating feed.tsx entirely
-const FeedClean = dynamic(() => import('./feed'), { ssr: false });
+// ensure this route is dynamic and not statically pre-rendered
+export const dynamic = 'force-dynamic';
+
+// Do NOT SSR this client chunk; avoids server touching feed.tsx
+const ClientClean = dynamic(() => import('./ClientClean'), { ssr: false });
 
 export default function Page() {
-  return <FeedClean />;
+  return <ClientClean />;
 }
