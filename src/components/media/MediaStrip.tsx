@@ -1,71 +1,67 @@
 'use client';
-import React, { useMemo, useState } from 'react';
-import type { MediaAsset, Plan } from './types';
-import { planCaps } from './types';
-import Lightbox from './Lightbox';
+import React, { useMemo } from 'react';
+import type { MediaItem, PlanTier } from '@/types/media';
+import { PLAN_LIMITS } from '@/lib/plans';
+import InlineVideo from './InlineVideo';
+import { useMediaStore } from '@/lib/media-store';
 
-export default function MediaStrip({
-  assets,
-  plan = 'active',
-}: {
-  assets: MediaAsset[];
-  plan?: Plan;
-}) {
-  const caps = planCaps[plan];
-  const limited = useMemo(() => {
-    // Respect caps but keep order
-    let images = 0, videos = 0;
-    const out: MediaAsset[] = [];
-    for (const a of assets) {
-      if (a.kind === 'image') {
-        if (images < caps.images) { out.push(a); images++; }
-      } else if (a.kind === 'video') {
-        if (videos < caps.videos) { out.push(a); videos++; }
-      }
+type Props = {
+  items: MediaItem[];               // full list on the listing
+  plan: PlanTier;                   // 'lite' | 'active' | 'pro'
+  className?: string;
+};
+
+export default function MediaStrip({ items, plan, className = '' }: Props) {
+  const limits = PLAN_LIMITS[plan];
+  const openAt = useMediaStore(s => s.openAt);
+
+  // Enforce plan caps (front-end only — back-end should also enforce on upload)
+  const gated = useMemo(() => {
+    let i = 0, v = 0, c = 0;
+    const out: MediaItem[] = [];
+    for (const m of items) {
+      if (m.kind === 'image' && i < limits.images) { out.push(m); i++; continue; }
+      if (m.kind === 'video' && v < limits.videos) { out.push(m); v++; continue; }
+      if (m.kind === 'cut'   && c < limits.cuts)   { out.push(m); c++; continue; }
     }
     return out;
-  }, [assets, caps]);
+  }, [items, limits]);
 
-  const [open, setOpen] = useState(false);
-  const [index, setIndex] = useState(0);
-
-  if (!limited || limited.length === 0) return null;
-
-  // Tiny counter badge. If plan allows lightbox, clicking on image area should open it.
+  // Inline strip — same element used on Lite/Active/Pro; click opens lightbox when allowed
   return (
-    <>
-      {/* counter badge (top-left by default) */}
-      <div
-        className="absolute left-2 top-2 z-10 select-none text-[11px] px-2 py-[2px] rounded-full bg-white/85 border border-white/70 shadow-sm"
-        title={`${limited.length} media item${limited.length > 1 ? 's' : ''}`}
-      >
-        1 / {limited.length}
+    <div className={`relative w-full overflow-hidden rounded-2xl ${className}`}>
+      <div className="flex gap-2 snap-x overflow-x-auto p-1">
+        {gated.map((m, idx) => {
+          const common = "snap-start shrink-0 rounded-xl bg-neutral-100 overflow-hidden cursor-pointer";
+          const onClick = limits.lightbox ? () => openAt(gated, idx) : undefined;
+
+          if (m.kind === 'image') {
+            return (
+              <img
+                key={m.id}
+                src={m.thumb ?? m.src}
+                alt={m.alt ?? ''}
+                className={`${common} w-[82vw] sm:w-[520px] h-[52vw] sm:h-[320px] object-cover`}
+                onClick={onClick}
+              />
+            );
+          }
+
+          // videos + cuts use the same visual (cuts are just short portrait clips)
+          const portrait = m.kind === 'cut';
+          return (
+            <div key={m.id} className={common} onClick={onClick}>
+              <InlineVideo
+                src={m.src}
+                poster={m.thumb}
+                className={portrait
+                  ? "w-[42vw] sm:w-[240px] h-[72vw] sm:h-[420px]"
+                  : "w-[82vw] sm:w-[520px] h-[52vw] sm:h-[320px]"}
+              />
+            </div>
+          );
+        })}
       </div>
-
-      {/* invisible overlay to open lightbox on image tap (Active/Pro only) */}
-      {caps.lightbox && (
-        <button
-          aria-label="Open gallery"
-          className="absolute inset-0 z-10"
-          onClick={(e) => {
-            // Only open if first asset is an image; videos remain inline for now
-            if (limited[0]?.kind === 'image') {
-              setIndex(0);
-              setOpen(true);
-            }
-            e.stopPropagation();
-          }}
-        />
-      )}
-
-      {/* floating gallery */}
-      <Lightbox
-        open={open}
-        onClose={() => setOpen(false)}
-        assets={limited.filter(a => a.kind === 'image')}
-        index={index}
-        setIndex={setIndex}
-      />
-    </>
+    </div>
   );
 }
