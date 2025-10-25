@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
-import MediaStrip from '../../components/media/MediaStrip'; // <-- add at top with other imports
+import MediaStrip from '../../components/media/MediaStrip';
 
 /* ========================= Types & Mock Data ========================= */
 
@@ -14,14 +14,19 @@ type Listing = {
   agent?: string;
   agency?: string;
   grassType?: 'None' | 'Real' | 'Artificial';
+  photos?: string[];
+  videos?: string[];
+  shorts?: string[];
 };
+
+type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
 
 const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
   id: String(i + 1),
   img: `https://images.unsplash.com/photo-${
     [
-      '1500530855697-b586d89ba3ee', // grass
-      '1482192596544-9eb780fc7f66', // desert road
+      '1500530855697-b586d89ba3ee',
+      '1482192596544-9eb780fc7f66',
       '1508921912186-1d1a45ebb3c1',
       '1488330890490-c291ecf62571',
       '1501183638710-841dd1904471',
@@ -33,6 +38,10 @@ const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
   agent: 'Aisha Patel',
   agency: 'Luxe Realty',
   grassType: (['Artificial', 'Real', 'None'] as const)[i % 3],
+  // optional extras for later:
+  photos: [],
+  videos: [],
+  shorts: [],
 }));
 
 const SHORTS = Array.from({ length: 6 }).map((_, i) => ({
@@ -252,11 +261,8 @@ function CommentsPanel({
 
   return (
     <div className={`fixed inset-0 z-50 ${open?'pointer-events-auto':'pointer-events-none'}`}>
-      {/* Backdrop */}
       <div className={`absolute inset-0 bg-black/30 transition-opacity ${open?'opacity-100':'opacity-0'}`} onClick={onClose} />
-      {/* Slide-in sheet (floating window) */}
       <div className={`absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-xl border-l border-neutral-200 transition-transform duration-200 ${open?'translate-x-0':'translate-x-full'}`}>
-        {/* Header */}
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-neutral-200">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="min-w-0">
@@ -271,11 +277,7 @@ function CommentsPanel({
             </button>
           </div>
         </div>
-
-        {/* Composer */}
         <Composer />
-
-        {/* Thread */}
         <div className="px-4 pb-24">
           {DEMO.map(c => <CommentItem key={c.id} c={c} depth={0} />)}
         </div>
@@ -376,8 +378,6 @@ function CommentItem({ c, depth }:{ c: Comment; depth:number }) {
 
 function ListingCard({ L }: { L: Listing }) {
   const CAL_SIZE = 50;
-
-  // Per-card connect (icon-only) + comments panel state
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const cardMenuRef = useRef<HTMLDivElement>(null);
@@ -391,18 +391,21 @@ function ListingCard({ L }: { L: Listing }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
+  // Build media payload for MediaStrip
+  const media: MediaItem[] = [
+    ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
+    ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
+    ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
+    ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
+  ];
+
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header: agent/agency; Follow under agency */}
+      {/* Header */}
       <header className="flex items-center gap-3 p-5">
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
-            <path
-              d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
+            <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
 
@@ -411,69 +414,48 @@ function ListingCard({ L }: { L: Listing }) {
           <div className="min-w-0">
             <p className="font-semibold leading-tight truncate">{L.agent}</p>
             <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
-            <button
-              className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50"
-              aria-label="Follow"
-            >
+            <button className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50" aria-label="Follow">
               + Follow
             </button>
           </div>
         </div>
       </header>
 
-      {/* Media */}
+      {/* Media (hero) */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
-          {/* Like (heart) */}
-          <GhostIconButton label="Like">
-            <IconHeart />
-          </GhostIconButton>
+          <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
 
-          {/* Per-card CONNECT (icon-only) */}
           <div className="relative" ref={cardMenuRef}>
             <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => !v)}>
               <IconGridDots />
             </GhostIconButton>
             {menuOpen && (
               <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconUsers /> <span className="text-sm">Agents</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconCard /> <span className="text-sm">Finance</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconShield /> <span className="text-sm">Insurance</span>
-                </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-                  <IconBolt /> <span className="text-sm">Energy</span>
-                </button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconUsers /> <span className="text-sm">Agents</span></button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconCard /> <span className="text-sm">Finance</span></button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconShield /> <span className="text-sm">Insurance</span></button>
+                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconBolt /> <span className="text-sm">Energy</span></button>
               </div>
             )}
           </div>
 
-          {/* Info + Map */}
-          <GhostIconButton label="Info">
-            <Ic.Info className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
-          <GhostIconButton label="Map">
-            <Ic.Pin className="w-[22px] h-[22px] text-white" />
-          </GhostIconButton>
-
-          {/* Share */}
-          <GhostIconButton label="Share">
-            <IconShare />
-          </GhostIconButton>
-
-          {/* Comments (icon-only, opens floating sheet) */}
-          <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}>
-            <IconComment />
-          </GhostIconButton>
+          <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+          <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}><IconComment /></GhostIconButton>
         </div>
       </div>
+
+      {/* Media strip goes directly under the hero */}
+      {media.length > 0 && (
+        <div className="px-5 pt-4">
+          <MediaStrip items={media} />
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
@@ -486,16 +468,14 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-          {/* Calendar + OPEN */}
           <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={50} />
-            <div style={{ width: 50 }} className="text-[11px] text-center tracking-wide text-neutral-700">
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
+            <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
               OPEN
             </div>
           </div>
         </div>
 
-        {/* Features */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-4">
           <span className="inline-flex items-center gap-1.5"><Ic.Bed /> 4</span>
           <span className="inline-flex items-center gap-1.5"><Ic.Bath /> 2</span>
@@ -508,26 +488,10 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </footer>
 
-      {/* Floating comments window (per card) */}
-      <CommentsPanel
-        open={commentsOpen}
-        onClose={() => setCommentsOpen(false)}
-        listingTitle={L.address}
-      />
+      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
     </article>
   );
 }
-{/* existing hero image */}
-<img src={L.img} className="w-full h-full object-cover" alt="" />
-
-{/* non-invasive media controls (counter + lightbox for Active/Pro) */}
-<MediaStrip
-  plan="active" // change per listing: 'lite' | 'active' | 'pro'
-  assets={[
-    { kind: 'image', src: L.img, alt: L.address },
-    // you can add more images/videos later from your data source
-  ]}
-/>
 
 /* ========================= Extras ========================= */
 
@@ -539,14 +503,9 @@ function ShortsRow() {
       </div>
       <div className="flex gap-4 overflow-x-auto no-scrollbar pr-1">
         {SHORTS.map((s) => (
-          <div
-            key={s.id}
-            className="relative w-[170px] min-w-[170px] rounded-xl overflow-hidden bg-neutral-200 shadow-sm"
-          >
+          <div key={s.id} className="relative w-[170px] min-w-[170px] rounded-xl overflow-hidden bg-neutral-200 shadow-sm">
             <img src={s.cover} className="w-full h-[260px] object-cover" alt="" />
-            <div className="absolute bottom-1 right-1 text-[11px] px-1.5 py-0.5 rounded bg-black/70 text-white">
-              {s.dur}s
-            </div>
+            <div className="absolute bottom-1 right-1 text-[11px] px-1.5 py-0.5 rounded bg-black/70 text-white">{s.dur}s</div>
             <div className="p-2 text-xs text-neutral-800 line-clamp-2">{s.title}</div>
           </div>
         ))}
@@ -574,10 +533,7 @@ function AgentsRail() {
 function HouseAd() {
   return (
     <section className="my-6">
-      <a
-        href="/agents"
-        className="block rounded-2xl overflow-hidden border border-neutral-200 bg-white shadow-sm"
-      >
+      <a href="/agents" className="block rounded-2xl overflow-hidden border border-neutral-200 bg-white shadow-sm">
         <div className="p-3 text-xs text-neutral-600">Sponsored • RealListr</div>
         <img
           src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1600&auto=format&fit=crop"
@@ -609,9 +565,7 @@ function ToggleDC({
         role="tab"
         aria-selected={value === 'D'}
         onClick={() => onChange?.('D')}
-        className={`px-2.5 py-1 text-sm leading-none ${
-          value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
-        }`}
+        className={`px-2.5 py-1 text-sm leading-none ${value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'}`}
       >
         <span className="sr-only">Domestic</span>
         <span aria-hidden>D</span>
@@ -621,9 +575,7 @@ function ToggleDC({
         role="tab"
         aria-selected={value === 'C'}
         onClick={() => onChange?.('C')}
-        className={`px-2.5 py-1 text-sm leading-none ${
-          value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'
-        }`}
+        className={`px-2.5 py-1 text-sm leading-none ${value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'}`}
       >
         <span className="sr-only">Commercial</span>
         <span aria-hidden>C</span>
@@ -645,10 +597,7 @@ export default function FeedClean() {
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
           <ConnectMenu />
-          <button
-            aria-label="Search"
-            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-          >
+          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
             <Ic.Search />
           </button>
         </div>

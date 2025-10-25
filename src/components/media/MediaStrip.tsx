@@ -5,6 +5,29 @@ import { PLAN_LIMITS } from '@/lib/plans';
 import InlineVideo from './InlineVideo';
 import { useMediaStore } from '@/lib/media-store';
 
+export default function MediaStrip({ items }: { items: {kind:'image'|'video', src:string, alt?:string}[] }) {
+  const openLightbox = useMediaStore(s => s.openLightbox);
+
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {items.map((m, i) => (
+        <button
+          key={i}
+          onClick={() => openLightbox(items, i)}
+          className="group relative rounded-lg overflow-hidden"
+          aria-label={m.alt || 'Open media'}
+        >
+          {m.kind === 'image' ? (
+            <img src={m.src} alt={m.alt || ''} className="w-full h-24 object-cover" />
+          ) : (
+            <video src={m.src} className="w-full h-24 object-cover" muted playsInline loop />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type Props = {
   items: MediaItem[];               // full list on the listing
   plan: PlanTier;                   // 'lite' | 'active' | 'pro'
