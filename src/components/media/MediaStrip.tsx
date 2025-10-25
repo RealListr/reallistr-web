@@ -1,89 +1,88 @@
 'use client';
-import React, { useMemo } from 'react';
-import type { MediaItem, PlanTier } from '@/types/media';
-import { PLAN_LIMITS } from '@/lib/plans';
-import InlineVideo from './InlineVideo';
-import { useMediaStore } from '@/lib/media-store';
 
-export default function MediaStrip({ items }: { items: {kind:'image'|'video', src:string, alt?:string}[] }) {
-  const openLightbox = useMediaStore(s => s.openLightbox);
+import React from 'react';
 
-  return (
-    <div className="grid grid-cols-4 gap-2">
-      {items.map((m, i) => (
-        <button
-          key={i}
-          onClick={() => openLightbox(items, i)}
-          className="group relative rounded-lg overflow-hidden"
-          aria-label={m.alt || 'Open media'}
-        >
-          {m.kind === 'image' ? (
-            <img src={m.src} alt={m.alt || ''} className="w-full h-24 object-cover" />
-          ) : (
-            <video src={m.src} className="w-full h-24 object-cover" muted playsInline loop />
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
+export type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
+export type Plan = 'lite' | 'active' | 'pro';
+
+const PLAN_LIMITS: Record<Plan, { thumbs: number; interactive: boolean }> = {
+  lite:   { thumbs: 1,  interactive: false },
+  active: { thumbs: 5,  interactive: true  },
+  pro:    { thumbs: 12, interactive: true  },
+};
 
 type Props = {
-  items: MediaItem[];               // full list on the listing
-  plan: PlanTier;                   // 'lite' | 'active' | 'pro'
+  items: MediaItem[];
+  plan?: Plan;
   className?: string;
 };
 
-export default function MediaStrip({ items, plan, className = '' }: Props) {
+/**
+ * Compact media strip (counter + small thumbs).
+ * Click behavior is no-op if a lightbox store isn't wired yet.
+ */
+export default function MediaStrip({ items, plan = 'active', className = '' }: Props) {
   const limits = PLAN_LIMITS[plan];
-  const openAt = useMediaStore(s => s.openAt);
+  const total = items.length;
+  const shown = items.slice(0, limits.thumbs);
 
-  // Enforce plan caps (front-end only — back-end should also enforce on upload)
-  const gated = useMemo(() => {
-    let i = 0, v = 0, c = 0;
-    const out: MediaItem[] = [];
-    for (const m of items) {
-      if (m.kind === 'image' && i < limits.images) { out.push(m); i++; continue; }
-      if (m.kind === 'video' && v < limits.videos) { out.push(m); v++; continue; }
-      if (m.kind === 'cut'   && c < limits.cuts)   { out.push(m); c++; continue; }
+  // Lazy-read optional lightbox store if present to avoid hard dependency
+  let openAt: ((i: number, list: MediaItem[]) => void) | undefined;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const store = require('../../lib/media-store');
+    if (store?.useMediaStore) {
+      const useMediaStore = store.useMediaStore as any;
+      openAt = useMediaStore.getState?.().openAt || useMediaStore().openAt;
     }
-    return out;
-  }, [items, limits]);
+  } catch {
+    // no store mounted — keep it graceful
+  }
 
-  // Inline strip — same element used on Lite/Active/Pro; click opens lightbox when allowed
+  const handleOpen = (i: number) => {
+    if (openAt) openAt(i, items);
+  };
+
   return (
-    <div className={`relative w-full overflow-hidden rounded-2xl ${className}`}>
-      <div className="flex gap-2 snap-x overflow-x-auto p-1">
-        {gated.map((m, idx) => {
-          const common = "snap-start shrink-0 rounded-xl bg-neutral-100 overflow-hidden cursor-pointer";
-          const onClick = limits.lightbox ? () => openAt(gated, idx) : undefined;
+    <div className={`flex items-center gap-2 ${className}`}>
+      {/* Counter pill */}
+      <div
+        className="px-2.5 py-1 text-xs rounded-full border border-neutral-200 bg-white text-neutral-700"
+        aria-label={`${total} media item${total === 1 ? '' : 's'}`}
+        title={`${total} media`}
+      >
+        {total} media
+      </div>
 
-          if (m.kind === 'image') {
-            return (
-              <img
-                key={m.id}
-                src={m.thumb ?? m.src}
-                alt={m.alt ?? ''}
-                className={`${common} w-[82vw] sm:w-[520px] h-[52vw] sm:h-[320px] object-cover`}
-                onClick={onClick}
-              />
-            );
-          }
-
-          // videos + cuts use the same visual (cuts are just short portrait clips)
-          const portrait = m.kind === 'cut';
-          return (
-            <div key={m.id} className={common} onClick={onClick}>
-              <InlineVideo
+      {/* Thumbs */}
+      <div className="flex items-center gap-1.5">
+        {shown.map((m, i) => (
+          <button
+            key={`${m.kind}-${i}-${m.src}`}
+            type="button"
+            onClick={() => handleOpen(i)}
+            className="w-12 h-12 rounded-md overflow-hidden border border-neutral-200 bg-neutral-100"
+            aria-label={m.alt || (m.kind === 'video' ? 'Video' : 'Photo')}
+            title={m.alt || (m.kind === 'video' ? 'Video' : 'Photo')}
+          >
+            {m.kind === 'image' ? (
+              <img src={m.src} alt={m.alt || ''} className="w-full h-full object-cover" />
+            ) : (
+              <video
                 src={m.src}
-                poster={m.thumb}
-                className={portrait
-                  ? "w-[42vw] sm:w-[240px] h-[72vw] sm:h-[420px]"
-                  : "w-[82vw] sm:w-[520px] h-[52vw] sm:h-[320px]"}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
               />
-            </div>
-          );
-        })}
+            )}
+          </button>
+        ))}
+        {total > shown.length && (
+          <div className="w-12 h-12 grid place-items-center text-[11px] rounded-md border border-neutral-200 bg-white text-neutral-600">
+            +{total - shown.length}
+          </div>
+        )}
       </div>
     </div>
   );
