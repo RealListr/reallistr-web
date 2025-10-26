@@ -1,12 +1,12 @@
 'use client';
-import FeedClean from './feed-shim';
+import dynamic from 'next/dynamic';
 
-// Resilient pick: works with default OR named exports from ./feed
-// -ignore
-const FeedComp:any = (FeedModule as any).FeedClean
-  || (FeedModule as any).default
-  || (FeedModule as any).Feed
-  || (Object.values(FeedModule).find(v => typeof v === 'function'));
+// Load whichever export exists from ./feed (named or default), on the client only
+const FeedClean = dynamic(async () => {
+  const m: any = await import('./feed');
+  return (m.FeedClean ?? m.default ?? m.Feed ?? Object.values(m).find((v:any)=>typeof v==='function')) as any;
+}, { ssr: false });
+
 export default function ClientClean() {
-  return <FeedComp />;
+  return <FeedClean />;
 }
