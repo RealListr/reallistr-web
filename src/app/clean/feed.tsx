@@ -397,6 +397,10 @@ function ListingCard({ L }: { L: Listing }) {
     ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
   ];
 
+  // De-dupe and only show overlay if there's a gallery (2+ items)
+  const mediaUnique = Array.from(new Map(media.map(m => [m.src, m])).values());
+  const hasGallery = mediaUnique.length > 1;
+
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
       {/* Header */}
@@ -419,14 +423,16 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-      {/* Media (hero) */
+      {/* Media (hero) */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
-        {/* MEDIA OVERLAY (bottom-left); hides when only one asset */}
-        <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
-          <MediaStrip items={media} plan="active" variant="overlay" hideIfSingle />
-        </div>
+        {/* MEDIA OVERLAY (bottom-left) — shown only when gallery has 2+ items */}
+        {hasGallery && (
+          <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
+            <MediaStrip items={mediaUnique} plan="active" variant="overlay" />
+          </div>
+        )}
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
@@ -453,7 +459,7 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </div>
 
-      /* Footer */}
+      {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0">
@@ -486,150 +492,5 @@ function ListingCard({ L }: { L: Listing }) {
 
       <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
     </article>
-  );
-}
-
-/* ========================= Extras ========================= */
-
-function ShortsRow() {
-  return (
-    <section className="my-6">
-      <div className="flex items-end justify-between mb-2">
-        <h3 className="text-sm font-semibold text-neutral-800">Shorts</h3>
-      </div>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pr-1">
-        {SHORTS.map((s) => (
-          <div key={s.id} className="relative w-[170px] min-w-[170px] rounded-xl overflow-hidden bg-neutral-200 shadow-sm">
-            <img src={s.cover} className="w-full h-[260px] object-cover" alt="" />
-            <div className="absolute bottom-1 right-1 text-[11px] px-1.5 py-0.5 rounded bg-black/70 text-white">{s.dur}s</div>
-            <div className="p-2 text-xs text-neutral-800 line-clamp-2">{s.title}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AgentsRail() {
-  return (
-    <section className="my-6">
-      <div className="mb-3 text-sm font-semibold text-neutral-800">Agents & Agencies</div>
-      <div className="flex items-center gap-5">
-        {AGENTS.map((a) => (
-          <div key={a.id} className="flex flex-col items-center gap-2">
-            <div className="w-14 h-14 rounded-full border border-neutral-200 bg-white shadow-sm" />
-            <span className="text-xs text-neutral-600">{a.name}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function HouseAd() {
-  return (
-    <section className="my-6">
-      <a href="/agents" className="block rounded-2xl overflow-hidden border border-neutral-200 bg-white shadow-sm">
-        <div className="p-3 text-xs text-neutral-600">Sponsored • RealListr</div>
-        <img
-          src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1600&auto=format&fit=crop"
-          className="w-full h-[220px] object-cover"
-          alt=""
-        />
-      </a>
-    </section>
-  );
-}
-
-/* ========================= Page ========================= */
-
-function ToggleDC({
-  value = 'D',
-  onChange,
-}: {
-  value?: 'D' | 'C';
-  onChange?: (v: 'D' | 'C') => void;
-}) {
-  return (
-    <div
-      className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden"
-      role="tablist"
-      aria-label="Choose Domestic or Commercial"
-      title={value === 'D' ? 'Domestic' : 'Commercial'}
-    >
-      <button
-        role="tab"
-        aria-selected={value === 'D'}
-        onClick={() => onChange?.('D')}
-        className={`px-2.5 py-1 text-sm leading-none ${value === 'D' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'}`}
-      >
-        <span className="sr-only">Domestic</span>
-        <span aria-hidden>D</span>
-      </button>
-      <span className="text-neutral-300 select-none">|</span>
-      <button
-        role="tab"
-        aria-selected={value === 'C'}
-        onClick={() => onChange?.('C')}
-        className={`px-2.5 py-1 text-sm leading-none ${value === 'C' ? 'bg-neutral-100 font-medium' : 'hover:bg-neutral-50'}`}
-      >
-        <span className="sr-only">Commercial</span>
-        <span aria-hidden>C</span>
-      </button>
-    </div>
-  );
-}
-
-export default function FeedClean() {
-  const INTERVAL = 6;
-  const [mode, setMode] = useState<'D' | 'C'>('D');
-
-  return (
-    <main className="mx-auto max-w-4xl p-6">
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ToggleDC value={mode} onChange={setMode} />
-          <ConnectMenu />
-          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
-            <Ic.Search />
-          </button>
-        </div>
-      </div>
-
-      {/* Top circular rail */}
-      <section className="mb-6">
-        <div className="flex items-center gap-4 sm:gap-6">
-          {['Parina', 'Downtown', 'Marina', 'The Springs', 'Al Barsha'].map((s) => (
-            <div key={s} className="flex flex-col items-center gap-2">
-              <div className="w-14 h-14 rounded-full border border-neutral-200 bg-white shadow-sm" />
-              <span className="text-xs text-neutral-600">{s}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Feed */}
-      <div className="space-y-6">
-        {LISTINGS.map((L, idx) => {
-          const block: React.ReactNode[] = [<ListingCard key={L.id} L={L} />];
-
-          const shouldInsert = (idx + 1) % INTERVAL === 0;
-          if (shouldInsert) {
-            block.push(<ShortsRow key={`shorts-${idx}`} />);
-            block.push(<AgentsRail key={`agents-${idx}`} />);
-            block.push(<HouseAd key={`ad-${idx}`} />);
-          }
-
-          return (
-            <div key={`blk-${L.id}`} className="space-y-6">
-              {block}
-            </div>
-          );
-        })}
-      </div>
-    </main>
   );
 }
