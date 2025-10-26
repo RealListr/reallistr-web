@@ -8,5 +8,5 @@ const FeedComp:any = (FeedModule as any).FeedClean
   || (FeedModule as any).Feed
   || (Object.values(FeedModule).find(v => typeof v === 'function'));
 export default function ClientClean() {
-  return <FeedClean />;
+  return <FeedComp />;
 }

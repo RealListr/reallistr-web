@@ -1,5 +1,5 @@
 'use client';
-import * as FeedModule from './feed';
+import FeedClean from './feed-shim';
 
 // Resilient pick: works with default OR named exports from ./feed
 // -ignore
