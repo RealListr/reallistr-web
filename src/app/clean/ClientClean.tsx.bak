@@ -1,5 +1,5 @@
 'use client';
-import FeedClean from './FeedClean';
+import FeedClean from './feed';
 export default function ClientClean() {
   return <FeedClean />;
 }
