@@ -1,89 +1,59 @@
 'use client';
-
 import React from 'react';
-import { useMediaStore } from '@/lib/media-store';
+import { useMediaStore, type MediaItem } from '../../lib/media-store';
+import LightboxMount from './LightboxMount';
+import InlineVideo from './InlineVideo';
 
-export type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
-
-type Props = {
-  items: MediaItem[];
-  plan?: 'lite' | 'active' | 'pro';
-  /** "inline" renders the old horizontal strip, "overlay" renders a tiny pill+thumb */
-  variant?: 'inline' | 'overlay';
-  /** hides the UI when there’s just one asset (default true) */
-  hideIfSingle?: boolean;
-  className?: string;
-};
-
-const PLAN_LIMITS: Record<NonNullable<Props['plan']>, { thumbs: number }> = {
-  lite:   { thumbs: 0  },
-  active: { thumbs: 6  },
-  pro:    { thumbs: 10 },
-};
+const PLAN_LIMITS = { lite: 1, active: 12, pro: 48 } as const;
+type Plan = keyof typeof PLAN_LIMITS;
 
 export default function MediaStrip({
   items,
   plan = 'active',
-  variant = 'overlay',
-  hideIfSingle = true,
   className = '',
-}: Props) {
+}: {
+  items: MediaItem[];
+  plan?: Plan;
+  className?: string;
+}) {
+  const limits = PLAN_LIMITS[plan];
   const openAt = useMediaStore((s) => s.openAt);
-  const count = items?.length ?? 0;
 
-  if (!count) return null;
-  if (hideIfSingle && count <= 1) return null;
+  const visible = items.slice(0, limits);
+  const extra = items.length - visible.length;
 
-  if (variant === 'overlay') {
-    const first = items[0];
-    return (
-      <button
-        onClick={() => openAt?.(0, items)}
-        className={`group flex items-center gap-2 rounded-full bg-black/65 text-white
-                    border border-white/15 backdrop-blur px-2.5 py-1.5
-                    hover:bg-black/75 transition ${className}`}
-        aria-label={`Open gallery (${count} media)`}
-      >
-        <div className="relative w-8 h-8 rounded-md overflow-hidden ring-1 ring-white/20">
-          <img
-            src={first.src}
-            alt={first.alt ?? 'media'}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-          {first.kind === 'video' && (
-            <span className="absolute inset-0 grid place-items-center text-[10px] bg-black/35">▶︎</span>
+  return (
+    <>
+      {/* Lightbox singleton (safe to render multiple times) */}
+      <LightboxMount />
+
+      <div className={`flex items-center gap-2 ${className}`}>
+        {/* count pill */}
+        <span className="text-xs px-2 py-1 rounded-full border border-neutral-200 bg-white text-neutral-700">
+          {items.length} media
+        </span>
+
+        {/* thumbs row */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {visible.map((it, i) => (
+            <button
+              key={i}
+              onClick={() => openAt(i, visible)}
+              className="w-14 h-14 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 shrink-0 hover:opacity-90"
+              title={it.alt ?? it.src}
+            >
+              {it.kind === 'image' ? (
+                <img src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" />
+              ) : (
+                <InlineVideo src={it.src} className="w-full h-full object-cover" />
+              )}
+            </button>
+          ))}
+          {extra > 0 && (
+            <div className="text-[11px] text-neutral-600 px-1 select-none">+{extra} more</div>
           )}
         </div>
-        <span className="text-xs font-medium tabular-nums">{count} media</span>
-      </button>
-    );
-  }
-
-  // Fallback: original inline strip (rarely used now)
-  const limit = PLAN_LIMITS[plan].thumbs;
-  const thumbs = items.slice(0, limit);
-  return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {thumbs.map((m, i) => (
-        <button
-          key={`${m.src}-${i}`}
-          onClick={() => openAt?.(i, items)}
-          className="w-16 h-14 rounded-lg overflow-hidden bg-neutral-200 ring-1 ring-black/5"
-          aria-label={`Open media ${i + 1} of ${count}`}
-        >
-          <img src={m.src} alt={m.alt ?? 'media'} className="w-full h-full object-cover" loading="lazy" />
-        </button>
-      ))}
-      {count > thumbs.length && (
-        <button
-          onClick={() => openAt?.(thumbs.length, items)}
-          className="text-xs px-2 py-1 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50"
-          aria-label="Open gallery"
-        >
-          +{count - thumbs.length}
-        </button>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

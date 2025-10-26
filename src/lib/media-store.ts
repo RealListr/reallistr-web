@@ -3,28 +3,28 @@ import { create } from 'zustand';
 
 export type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
 
-type State = {
-  open: boolean;
+type MediaState = {
   items: MediaItem[];
-  index: number;
-  openLightbox: (items: MediaItem[], index: number) => void;
-  close: () => void;
+  index: number | null;
+  openAt: (index: number, items: MediaItem[]) => void;
   next: () => void;
   prev: () => void;
+  close: () => void;
 };
 
-export const useMediaStore = create<State>((set, get) => ({
-  open: false,
+export const useMediaStore = create<MediaState>((set, get) => ({
   items: [],
-  index: 0,
-  openLightbox: (items, index) => set({ open: true, items, index }),
-  close: () => set({ open: false }),
+  index: null,
+  openAt: (index, items) => set({ items, index }),
   next: () => {
-    const { items, index } = get();
-    if (items.length) set({ index: (index + 1) % items.length });
+    const { index, items } = get();
+    if (index === null || !items.length) return;
+    set({ index: (index + 1) % items.length });
   },
   prev: () => {
-    const { items, index } = get();
-    if (items.length) set({ index: (index - 1 + items.length) % items.length });
+    const { index, items } = get();
+    if (index === null || !items.length) return;
+    set({ index: (index - 1 + items.length) % items.length });
   },
+  close: () => set({ index: null }),
 }));

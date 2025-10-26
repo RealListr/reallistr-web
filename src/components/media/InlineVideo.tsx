@@ -1,25 +1,16 @@
 'use client';
 import React from 'react';
 
-export default function InlineVideo({
-  src,
-  className = '',
-  controls = false,
-}: {
-  src: string;
-  className?: string;
-  controls?: boolean;
-}) {
+export default function InlineVideo({ src, className = '' }: { src: string; className?: string }) {
   return (
     <video
-      src={src}
       className={className}
-      muted
+      src={src}
       playsInline
-      loop
-      controls={controls}
+      muted
+      controls
       preload="metadata"
-      aria-label="Listing video"
+      style={{ backgroundColor: '#000' }}
     />
   );
 }
