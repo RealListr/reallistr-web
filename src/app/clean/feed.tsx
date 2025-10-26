@@ -433,7 +433,7 @@ function ListingCard({ L }: { L: Listing }) {
           <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
 
           <div className="relative" ref={cardMenuRef}>
-            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => vercel --prod --force)}>
+            <GhostIconButton label="Connect" onClick={() => setMenuOpen(v => !v)}>
               <IconGridDots />
             </GhostIconButton>
             {menuOpen && (
