@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Ic } from '../../components/ghost/GhostIcons';
-import MediaStrip from '../../components/media/MediaStrip';
+import MediaStrip, { type MediaItem } from '../../components/media/MediaStrip';
 
 /* ========================= Types & Mock Data ========================= */
 
@@ -18,8 +18,6 @@ type Listing = {
   videos?: string[];
   shorts?: string[];
 };
-
-type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
 
 const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
   id: String(i + 1),
@@ -421,16 +419,21 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-      {/* Media (hero) */}
+      {/* Media (hero) */
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
+
+        {/* MEDIA OVERLAY (bottom-left); hides when only one asset */}
+        <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
+          <MediaStrip items={media} plan="active" variant="overlay" hideIfSingle />
+        </div>
 
         {/* Right-side ghost mini actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
 
           <div className="relative" ref={cardMenuRef}>
-            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => !v)}>
+            <GhostIconButton label="Connect" onClick={() => setMenuOpen((v) => vercel --prod --force)}>
               <IconGridDots />
             </GhostIconButton>
             {menuOpen && (
@@ -450,14 +453,7 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </div>
 
-      {/* Media strip goes directly under the hero */}
-      {media.length > 0 && (
-        <div className="px-5 pt-4">
-          <MediaStrip items={media} />
-        </div>
-      )}
-
-      {/* Footer */}
+      /* Footer */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="flex items-start justify-between gap-6">
           <div className="min-w-0">
