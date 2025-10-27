@@ -199,7 +199,7 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
     >
       <div
         ref={ref}
-        className="relative w-[96vw] h-[calc(100vh-3.5rem)] sm:w-auto sm:h-[86vh] sm:max-w-[70vw] sm:max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
+        className="relative w-[96vw] h-[88vh] sm:w-auto sm:h-[86vh] sm:max-w-[70vw] sm:max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
         tabIndex={0}
@@ -215,7 +215,7 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
 
         {/* Main media */}
         <div className="relative bg-black w-full h-full sm:pb-0">
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center justify-center w-full h-full">
             {item.kind === 'video' ? (
               <video src={item.src} poster={item.poster} controls playsInline className="max-w-full max-h-full object-contain" />
             ) : (
