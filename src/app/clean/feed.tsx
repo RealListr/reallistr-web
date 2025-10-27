@@ -246,6 +246,9 @@ function ListingCard({ L }: { L: Listing }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const cardMenuRef = useRef<HTMLDivElement>(null);
+  const [lbOpen, setLbOpen] = useState(false);
+  const [lbIndex, setLbIndex] = useState(0);
+
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -288,50 +291,60 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-      {/* Media (hero) */}
-      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden rounded-xl">
-        <img src={L.img} className="w-full h-full object-cover" alt="" />
+          {/* Media (hero) */}
+      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
+        <img src={L.img} className="w-full h-full object-cover transition-transform duration-200 will-change-transform hover:scale-[1.01]" alt="" />
 
-        {/* MEDIA OVERLAY (bottom-left) — shown only when gallery has 2+ items */}
-{hasGallery && (
-  <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
-    <MediaOverlay
-      items={mediaUnique.map((m: any) => ({
-        kind: m.kind ?? "image",
-        src: m.src,
-        alt: m.alt ?? "",
-      }))}
-    />
-  </div>
-)}
+        {/* Build unique media list. First is hero image; extras come from photos/videos/shorts */}
+        {/* (We keep the arrays simple: { kind: 'image'|'video', src, alt? }) */}
+        {(() => {
+          type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
+          const media: MediaItem[] = [
+            ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
+            ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
+            ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
+            ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
+          ];
+          const mediaUnique: MediaItem[] = Array.from(new Map(media.map(m => [m.src, m])).values());
+          const hasGallery = mediaUnique.length > 1;
 
-
-        {/* Right-side ghost mini actions (anchored overlay, no drift) */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="pointer-events-auto absolute right-2 top-2 flex flex-col gap-2 z-10" ref={cardMenuRef}>
-            <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
-
-            <div className="relative">
-              <GhostIconButton label="Connect" onClick={() => setMenuOpen(v => !v)}>
-                <IconGridDots />
-              </GhostIconButton>
-              {menuOpen && (
-                <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
-                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Users /> <span className="text-sm">Agents</span></button>
-                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Card /> <span className="text-sm">Finance</span></button>
-                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Shield /> <span className="text-sm">Insurance</span></button>
-                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Bolt /> <span className="text-sm">Energy</span></button>
-                </div>
+          return (
+            <>
+              {/* MEDIA CHIP — bottom-left; only if gallery (2+) */}
+              {hasGallery && (
+                <button
+                  onClick={() => { setLbOpen(true); setLbIndex(0); }}
+                  className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 rounded-xl bg-black/65 text-white backdrop-blur px-3 py-1.5 border border-white/20 shadow-sm hover:bg-black/75 transition"
+                  aria-label={`Open gallery (${mediaUnique.length} items)`}
+                >
+                  <span className="text-[13px] font-medium">{mediaUnique.length} media</span>
+                </button>
               )}
-            </div>
 
-            <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-            <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-            <GhostIconButton label="Share"><IconShare /></GhostIconButton>
-            <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}><IconComment /></GhostIconButton>
-          </div>
+              {/* LIGHTBOX */}
+              {lbOpen && (
+                <Lightbox
+                  items={mediaUnique}
+                  index={lbIndex}
+                  onClose={() => setLbOpen(false)}
+                  onIndex={(i) => setLbIndex(i)}
+                />
+              )}
+            </>
+          );
+        })()}
+        
+        {/* Right-side ghost mini actions (unchanged) */}
+        <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
+          <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
+          <GhostIconButton label="Connect"><IconGridDots /></GhostIconButton>
+          <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+          <GhostIconButton label="Comments"><IconComment /></GhostIconButton>
         </div>
       </div>
+
 
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
@@ -366,6 +379,117 @@ function ListingCard({ L }: { L: Listing }) {
 
       <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
     </article>
+  );
+}
+function Lightbox({
+  items,
+  index,
+  onIndex,
+  onClose,
+}: {
+  items: { kind: 'image' | 'video'; src: string; alt?: string }[];
+  index: number;
+  onIndex: (i: number) => void;
+  onClose: () => void;
+}) {
+  // clamp helper
+  const clamp = (n: number) => (n + items.length) % items.length;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onIndex(clamp(index + 1));
+      if (e.key === 'ArrowLeft') onIndex(clamp(index - 1));
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [index, onClose, onIndex]);
+
+  const item = items[index];
+
+  return (
+    <div className="fixed inset-0 z-[60]">
+      {/* backdrop */}
+      <button
+        className="absolute inset-0 bg-black/80"
+        aria-label="Close"
+        onClick={onClose}
+      />
+
+      {/* content */}
+      <div className="absolute inset-0 grid place-items-center p-3">
+        <div className="relative max-w-[92vw] max-h-[86vh] w-[min(1000px,92vw)]">
+          <button
+            onClick={onClose}
+            className="absolute -top-10 right-0 text-white/80 hover:text-white"
+            aria-label="Close lightbox"
+          >
+            <svg viewBox="0 0 24 24" className="w-8 h-8"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+
+          {/* main media */}
+          <div className="relative rounded-xl overflow-hidden bg-black/30 border border-white/10 shadow-2xl">
+            {item.kind === 'image' ? (
+              <img
+                src={item.src}
+                alt={item.alt ?? ''}
+                className="max-h-[70vh] w-auto h-auto object-contain"
+              />
+            ) : (
+              <video
+                src={item.src}
+                className="max-h-[70vh] w-auto h-auto"
+                controls
+                playsInline
+              />
+            )}
+          </div>
+
+          {/* nav arrows */}
+          {items.length > 1 && (
+            <>
+              <button
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-14 text-white/80 hover:text-white"
+                onClick={() => onIndex(clamp(index - 1))}
+                aria-label="Previous"
+              >
+                <svg viewBox="0 0 24 24" className="w-9 h-9"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+              </button>
+              <button
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-14 text-white/80 hover:text-white"
+                onClick={() => onIndex(clamp(index + 1))}
+                aria-label="Next"
+              >
+                <svg viewBox="0 0 24 24" className="w-9 h-9"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+              </button>
+            </>
+          )}
+
+          {/* thumbnails */}
+          {items.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
+              {items.map((it, i) => (
+                <button
+                  key={it.src}
+                  onClick={() => onIndex(i)}
+                  className={`shrink-0 rounded-lg overflow-hidden border ${i === index ? 'border-white' : 'border-white/20 opacity-70 hover:opacity-100'}`}
+                  aria-label={`Go to item ${i + 1}`}
+                  title={`Item ${i + 1}`}
+                >
+                  {it.kind === 'image' ? (
+                    <img src={it.src} alt="" className="w-16 h-16 object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 grid place-items-center bg-black/40">
+                      <svg viewBox="0 0 24 24" className="w-6 h-6 text-white"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
