@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-/* ========================= Minimal icon set (inline) ========================= */
+/* ────────────────────────────── Icons (inline) ────────────────────────────── */
 const Ic = {
   Info: (p:{className?:string}) => (
     <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
@@ -23,14 +23,20 @@ const Ic = {
   Charger: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="m11 22 3-8H11l2-8-6 9h4l-2 7Z" fill="currentColor"/></svg>,
   Grass: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M3 20h18M6 20v-3m2 3v-4m2 4v-3m2 3v-5m2 5v-3m2 3v-4m2 4v-3" stroke="currentColor" strokeWidth="1.3"/></svg>,
   Search: () => <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/></svg>,
+  Dots: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>,
+  Heart: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/></svg>,
+  Share: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/></svg>,
+  Comment: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/></svg>,
 };
-// extras used in Connect menu
-Ic.Users = Ic.Users ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" fill="currentColor"/></svg>);
-Ic.Card  = Ic.Card  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" fill="currentColor"/></svg>);
-Ic.Shield= Ic.Shield?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" fill="currentColor"/></svg>);
-Ic.Bolt  = Ic.Bolt  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M11 21 19 10h-5l3-8-8 11h5Z" fill="currentColor"/></svg>);
 
-/* ========================= Types & Mock Data ========================= */
+/* ─────────────────────────────── Demo Data ──────────────────────────────── */
+type MediaItem = {
+  kind: 'image' | 'video';
+  src: string;
+  alt?: string;
+  poster?: string; // for videos
+};
+
 type Listing = {
   id: string;
   img: string;
@@ -61,17 +67,14 @@ const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   agent: 'Aisha Patel',
   agency: 'Luxe Realty',
   grassType: (['Artificial', 'Real', 'None'] as const)[i % 3],
-  photos: i % 2 === 0
-    ? [
-        'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=801&auto=format&fit=crop',
-      ]
-    : [],
-  videos: [],
-  shorts: [],
+  photos: [
+    'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=1200&auto=format&fit=crop',
+  ],
+  videos: [], // e.g. ['https://cdn.example.com/clip.mp4']
 }));
 
-/* ========================= Small ghost/mono actions ========================= */
+/* ───────────────────────────── Utilities/atoms ───────────────────────────── */
 function GhostIconButton({
   label, children, onClick, className = '',
 }: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
@@ -87,187 +90,198 @@ function GhostIconButton({
   );
 }
 
-function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-    <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z" />
-  </svg>);
-}
-function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-    <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z" />
-  </svg>);
-}
-function IconComment({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-    <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
-    <circle cx="9" cy="10.5" r="1.2" /><circle cx="12" cy="10.5" r="1.2" /><circle cx="15" cy="10.5" r="1.2" />
-  </svg>);
-}
-function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-    <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" /><circle cx="19" cy="5" r="2" />
-    <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
-    <circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
-  </svg>);
-}
-
-/* ========================= Connect menu ========================= */
-function ConnectMenu() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, []);
+function CalendarMini({
+  day = 'Thu', date = '23', time = '11:15–11:45', size = 50, className = '',
+}: { day?: string; date?: string; time?: string; size?: number; className?: string; }) {
   return (
-    <div className="relative" ref={ref}>
-      <button
-        aria-label="Connect"
-        onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-      >
-        <IconGridDots className="w-5 h-5" />
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30" role="menu">
-          <div className="px-2 py-1 text-[12px] text-neutral-500">Connect</div>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Users /> <span className="text-sm">Agents</span></button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Card /> <span className="text-sm">Finance</span></button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Shield /> <span className="text-sm">Insurance</span></button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Bolt /> <span className="text-sm">Energy</span></button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ========================= Comments (sheet) ========================= */
-type Comment = { id: string; name: string; suburb?: string; isAgent?: boolean; time: string; body: string; likes: number; replies?: Comment[]; };
-const DEMO: Comment[] = [
-  { id:'c1', name:'Mina K.', suburb:'JLT', time:'2h', body:'How noisy is it at night near the highway?', likes:6,
-    replies:[{ id:'c1r1', name:'Aisha Patel', suburb:'Luxe Realty', isAgent:true, time:'1h', body:'After 9pm it’s pretty quiet; double glazing in bedrooms.', likes:12 }]}
-];
-
-function CommentsPanel({ open, onClose, listingTitle }:{ open:boolean; onClose:()=>void; listingTitle:string; }) {
-  useEffect(() => { const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape') onClose(); }; document.addEventListener('keydown', onKey); return ()=>document.removeEventListener('keydown', onKey); }, [onClose]);
-  return (
-    <div className={`fixed inset-0 z-50 ${open?'pointer-events-auto':'pointer-events-none'}`}>
-      <div className={`absolute inset-0 bg-black/30 transition-opacity ${open?'opacity-100':'opacity-0'}`} onClick={onClose} />
-      <div className={`absolute right-0 top-0 h-full w-full sm:w-[480px] bg-white shadow-xl border-l border-neutral-200 transition-transform duration-200 ${open?'translate-x-0':'translate-x-full'}`}>
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-neutral-200">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="min-w-0">
-              <div className="text-xs text-neutral-500 truncate">{listingTitle}</div>
-              <div className="flex items-center gap-2">
-                <div className="text-base font-semibold">Discussion</div>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200">24</span>
-              </div>
-            </div>
-            <button onClick={onClose} className="w-8 h-8 grid place-items-center rounded-full border border-neutral-200 hover:bg-neutral-50">
-              <svg viewBox="0 0 24 24" className="w-5 h-5"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-            </button>
-          </div>
-        </div>
-        <div className="px-4 pb-24">
-          {DEMO.map(c => <CommentItem key={c.id} c={c} depth={0} />)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CommentItem({ c }:{ c: Comment; depth:number }) {
-  const [showReplies, setShowReplies] = useState(true);
-  return (
-    <div className="py-3">
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-full bg-neutral-100 border border-neutral-200" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-medium truncate">{c.name}</span>
-            {c.suburb && <span className="text-neutral-500 truncate">• {c.suburb}</span>}
-            {c.isAgent && (<span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-200">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5"><path d="M12 2 4 5v6c0 5 3.6 9.7 8 11 4.4-1.3 8-6 8-11V5Z" fill="currentColor"/></svg> Agent
-            </span>)}
-            <span className="text-neutral-400 text-xs ml-auto">{c.time}</span>
-          </div>
-          <div className="mt-1 text-[15px] leading-5 text-neutral-900">{c.body}</div>
-          <div className="mt-2 flex items-center gap-3 text-xs text-neutral-600">
-            <button className="inline-flex items-center gap-1 hover:underline"><svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 21s-6.7-4.03-9.29-6.61A6 6 0 0 1 11.3 5.1l.7.7.7-.7A6 6 0 0 1 21.3 14.4C18.7 16.97 12 21 12 21Z" fill="currentColor"/></svg> {c.likes}</button>
-            <button className="hover:underline" onClick={()=>setShowReplies(v=>!v)}>{showReplies?'Hide replies':'View replies'}</button>
-          </div>
-          {c.replies && showReplies && <div className="mt-2 pl-4 border-l border-neutral-200">{c.replies.map(r => <CommentItem key={r.id} c={r} depth={1} />)}</div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ========================= Media overlay (bottom-left) ========================= */
-type OverlayItem = { kind: 'image'|'video'; src: string; alt?: string };
-
-function MediaOverlay({ items }: { items: { kind:'image'|'video'; src:string; alt?:string }[] }) {
-  const thumbs = items.slice(0, 4);
-  return (
-    <button
-      type="button"
-      aria-label={`Open gallery (${items.length} items)`}
-      className="flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-2.5 py-1.5 border border-neutral-200 shadow-sm
-                 hover:bg-white transition-colors"
-      // onClick={openLightbox} // (future)
+    <div
+      className={`grid place-items-center rounded-xl bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
+      style={{ width: size, height: size }}
+      aria-label={`Inspection ${day} ${date}, ${time}`} title={`Inspection ${day} ${date}, ${time}`}
     >
-      <div className="flex -space-x-1">
-        {thumbs.map((m, i) => (
-          <img
-            key={m.src}
-            src={m.src}
-            alt={m.alt ?? ''}
-            loading="lazy"
-            decoding="async"
-            className="w-7 h-7 rounded-md object-cover border border-white
-                       transition-transform duration-150 ease-out hover:scale-105"
-            style={{ zIndex: thumbs.length - i }}
-          />
-        ))}
-      </div>
-      <span className="text-xs text-neutral-700">{items.length} media</span>
-    </button>
+      <div className="text-[10px] -mt-0.5 font-medium text-red-600">{day}</div>
+      <div className="text-[14px] -mt-0.5 font-bold text-neutral-900">{date}</div>
+      <div className="text-[8px] -mt-0.5 text-neutral-500">{time}</div>
+    </div>
   );
 }
 
+/* ───────────────────────────── Lightbox (modal) ──────────────────────────── */
+function useFocusTrap(enabled: boolean, containerRef: React.RefObject<HTMLElement>) {
+  useLayoutEffect(() => {
+    if (!enabled || !containerRef.current) return;
+    const el = containerRef.current;
+    const previous = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(el.querySelectorAll<HTMLElement>(
+        'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])'
+      )).filter(n => !n.hasAttribute('disabled') && !n.getAttribute('aria-hidden'));
 
-/* ========================= Listing Card ========================= */
-function ListingCard({ L }: { L: Listing }) {
-  const CAL_SIZE = 50;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const cardMenuRef = useRef<HTMLDivElement>(null);
-  const [lbOpen, setLbOpen] = useState(false);
-  const [lbIndex, setLbIndex] = useState(0);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+    };
 
+    const first = focusables()[0];
+    first?.focus();
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      previous?.focus();
+    };
+  }, [enabled, containerRef]);
+}
 
+type LightboxProps = {
+  items: MediaItem[];
+  index: number;
+  onClose: () => void;
+  setIndex: (i:number)=>void;
+};
+function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref);
+
+  // keyboard: ←/→/Esc
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!cardMenuRef.current) return;
-      if (!cardMenuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    }
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, []);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') setIndex(Math.min(items.length - 1, index + 1));
+      if (e.key === 'ArrowLeft') setIndex(Math.max(0, index - 1));
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [index, items.length, onClose, setIndex]);
 
-  // Build media payload (image + optional arrays)
-  const media: OverlayItem[] = [
-    ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
-    ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
-    ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
-    ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
+  // swipe
+  const startX = useRef(0);
+  const delta = useRef(0);
+  const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
+  const onTouchMove = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
+  const onTouchEnd = () => {
+    const THRESH = 60;
+    if (delta.current > THRESH) setIndex(Math.max(0, index - 1));
+    if (delta.current < -THRESH) setIndex(Math.min(items.length - 1, index + 1));
+    delta.current = 0;
+  };
+
+  const item = items[index];
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      role="dialog" aria-modal="true" aria-label="Media viewer"
+      onClick={onClose}
+    >
+      <div
+        ref={ref}
+        className="relative max-w-[90vw] md:max-w-[70vw] max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
+        onClick={e => e.stopPropagation()}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+        tabIndex={0}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-10 h-10 grid place-items-center rounded-full bg-white text-neutral-700 shadow"
+          aria-label="Close"
+        >
+          <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+
+        {/* Main media */}
+        <div className="relative bg-black">
+          {item.kind === 'video' ? (
+            <video
+              src={item.src}
+              poster={item.poster}
+              controls
+              playsInline
+              className="max-h-[72vh] md:max-h-[76vh] max-w-full"
+            />
+          ) : (
+            <ImgBlur src={item.src} alt={item.alt ?? 'Listing media'} className="max-h-[72vh] md:max-h-[76vh] max-w-full" />
+          )}
+        </div>
+
+        {/* Thumbs */}
+        <div className="flex gap-2 p-3 bg-black/30">
+          {items.map((it, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              className={`relative w-24 h-20 rounded-xl overflow-hidden border ${i===index?'border-white':'border-transparent'} focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70`}
+              aria-label={`Open media ${i+1} of ${items.length}`}
+            >
+              {it.kind === 'video' ? (
+                <div className="relative w-full h-full bg-black">
+                  <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
+                  <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">Video</span>
+                </div>
+              ) : (
+                <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Nav chevrons */}
+        {index>0 && (
+          <button
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+            onClick={() => setIndex(Math.max(0, index - 1))}
+            aria-label="Previous media"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+          </button>
+        )}
+        {index<items.length-1 && (
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+            onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
+            aria-label="Next media"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── Image with blur-up ──────────────────────────── */
+function ImgBlur({
+  src, alt, className='', lazy=false,
+}: { src:string; alt:string; className?:string; lazy?:boolean }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading={lazy ? 'lazy' : 'eager'}
+      onLoad={() => setLoaded(true)}
+      className={`${className} transition-[filter,opacity,transform] duration-500 ${loaded?'opacity-100 filter-none':'opacity-90 blur-[12px]'} will-change-transform`}
+    />
+  );
+}
+
+/* ───────────────────────────── Listing Card ──────────────────────────────── */
+function ListingCard({ L }: { L: Listing }) {
+  const [open, setOpen] = useState(false);
+  const [idx, setIdx] = useState(0);
+
+  // Build media items (de-duped). “1 media pill” never shown (only if 2+ assets)
+  const raw: MediaItem[] = [
+    ...(L.img ? [{ kind:'image' as const, src: L.img, alt: L.address }] : []),
+    ...((L.photos ?? []).map((p) => ({ kind:'image' as const, src: p, alt: L.address }))),
+    ...((L.videos ?? []).map((v) => ({ kind:'video' as const, src: v }))),
   ];
-  const mediaUnique = Array.from(new Map(media.map(m => [m.src, m])).values());
-  const hasGallery = mediaUnique.length > 1;
+  const media = Array.from(new Map(raw.map(m => [m.src, m])).values());
+  const hasGallery = media.length > 1;
 
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -291,60 +305,37 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-          {/* Media (hero) */}
-      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
-        <img src={L.img} className="w-full h-full object-cover transition-transform duration-200 will-change-transform hover:scale-[1.01]" alt="" />
+      {/* Media (hero) */}
+      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
+        <button
+          onClick={() => { setIdx(0); setOpen(true); }}
+          className="block w-full h-full"
+          aria-label="Open media"
+        >
+          <ImgBlur src={L.img} alt={L.address} className="w-full h-full object-cover hover:scale-[1.01]" />
+        </button>
 
-        {/* Build unique media list. First is hero image; extras come from photos/videos/shorts */}
-        {/* (We keep the arrays simple: { kind: 'image'|'video', src, alt? }) */}
-        {(() => {
-          type MediaItem = { kind: 'image' | 'video'; src: string; alt?: string };
-          const media: MediaItem[] = [
-            ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
-            ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
-            ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
-            ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
-          ];
-          const mediaUnique: MediaItem[] = Array.from(new Map(media.map(m => [m.src, m])).values());
-          const hasGallery = mediaUnique.length > 1;
+        {/* Overlay (bottom-left) — only when 2+ assets */}
+        {hasGallery && (
+          <button
+            onClick={() => { setIdx(0); setOpen(true); }}
+            className="absolute left-4 bottom-4 rounded-2xl bg-black/70 text-white text-sm px-3 py-2 shadow-lg border border-white/10 hover:bg-black/80"
+            aria-label={`Open gallery with ${media.length} media`}
+          >
+            {media.length} media
+          </button>
+        )}
 
-          return (
-            <>
-              {/* MEDIA CHIP — bottom-left; only if gallery (2+) */}
-              {hasGallery && (
-                <button
-                  onClick={() => { setLbOpen(true); setLbIndex(0); }}
-                  className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 rounded-xl bg-black/65 text-white backdrop-blur px-3 py-1.5 border border-white/20 shadow-sm hover:bg-black/75 transition"
-                  aria-label={`Open gallery (${mediaUnique.length} items)`}
-                >
-                  <span className="text-[13px] font-medium">{mediaUnique.length} media</span>
-                </button>
-              )}
-
-              {/* LIGHTBOX */}
-              {lbOpen && (
-                <Lightbox
-                  items={mediaUnique}
-                  index={lbIndex}
-                  onClose={() => setLbOpen(false)}
-                  onIndex={(i) => setLbIndex(i)}
-                />
-              )}
-            </>
-          );
-        })()}
-        
-        {/* Right-side ghost mini actions (unchanged) */}
+        {/* Right-side ghost mini actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
-          <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
-          <GhostIconButton label="Connect"><IconGridDots /></GhostIconButton>
+          <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
+          <GhostIconButton label="Connect"><Ic.Dots /></GhostIconButton>
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
-          <GhostIconButton label="Comments"><IconComment /></GhostIconButton>
+          <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
+          <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
         </div>
       </div>
-
 
       {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
@@ -357,12 +348,12 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
-          <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
-          <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
-            OPEN
+          <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
+            <CalendarMini day="Thu" date="23" time="11:15–11:45" />
+            <div className="w-[50px] text-[11px] text-center tracking-wide text-neutral-700">
+              OPEN
+            </div>
           </div>
-        </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-4">
@@ -377,139 +368,19 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </footer>
 
-      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
+      {open && (
+        <Lightbox
+          items={media}
+          index={idx}
+          setIndex={setIdx}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </article>
   );
 }
-function Lightbox({
-  items,
-  index,
-  onIndex,
-  onClose,
-}: {
-  items: { kind: 'image' | 'video'; src: string; alt?: string }[];
-  index: number;
-  onIndex: (i: number) => void;
-  onClose: () => void;
-}) {
-  // clamp helper
-  const clamp = (n: number) => (n + items.length) % items.length;
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') onIndex(clamp(index + 1));
-      if (e.key === 'ArrowLeft') onIndex(clamp(index - 1));
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [index, onClose, onIndex]);
-
-  const item = items[index];
-
-  return (
-    <div className="fixed inset-0 z-[60]">
-      {/* backdrop */}
-      <button
-        className="absolute inset-0 bg-black/80"
-        aria-label="Close"
-        onClick={onClose}
-      />
-
-      {/* content */}
-      <div className="absolute inset-0 grid place-items-center p-3">
-        <div className="relative max-w-[92vw] max-h-[86vh] w-[min(1000px,92vw)]">
-          <button
-            onClick={onClose}
-            className="absolute -top-10 right-0 text-white/80 hover:text-white"
-            aria-label="Close lightbox"
-          >
-            <svg viewBox="0 0 24 24" className="w-8 h-8"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-          </button>
-
-          {/* main media */}
-          <div className="relative rounded-xl overflow-hidden bg-black/30 border border-white/10 shadow-2xl">
-            {item.kind === 'image' ? (
-              <img
-                src={item.src}
-                alt={item.alt ?? ''}
-                className="max-h-[70vh] w-auto h-auto object-contain"
-              />
-            ) : (
-              <video
-                src={item.src}
-                className="max-h-[70vh] w-auto h-auto"
-                controls
-                playsInline
-              />
-            )}
-          </div>
-
-          {/* nav arrows */}
-          {items.length > 1 && (
-            <>
-              <button
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-14 text-white/80 hover:text-white"
-                onClick={() => onIndex(clamp(index - 1))}
-                aria-label="Previous"
-              >
-                <svg viewBox="0 0 24 24" className="w-9 h-9"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
-              </button>
-              <button
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-14 text-white/80 hover:text-white"
-                onClick={() => onIndex(clamp(index + 1))}
-                aria-label="Next"
-              >
-                <svg viewBox="0 0 24 24" className="w-9 h-9"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
-              </button>
-            </>
-          )}
-
-          {/* thumbnails */}
-          {items.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
-              {items.map((it, i) => (
-                <button
-                  key={it.src}
-                  onClick={() => onIndex(i)}
-                  className={`shrink-0 rounded-lg overflow-hidden border ${i === index ? 'border-white' : 'border-white/20 opacity-70 hover:opacity-100'}`}
-                  aria-label={`Go to item ${i + 1}`}
-                  title={`Item ${i + 1}`}
-                >
-                  {it.kind === 'image' ? (
-                    <img src={it.src} alt="" className="w-16 h-16 object-cover" />
-                  ) : (
-                    <div className="w-16 h-16 grid place-items-center bg-black/40">
-                      <svg viewBox="0 0 24 24" className="w-6 h-6 text-white"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ========================= Misc UI ========================= */
-function CalendarMini({
-  day = 'Thu', date = '23', time = '11:15–11:45', size = 40, className = '',
-}: { day?: string; date?: string; time?: string; size?: number; className?: string; }) {
-  return (
-    <div
-      className={`grid place-items-center rounded-lg bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
-      style={{ width: size, height: size }}
-      aria-label={`Inspection ${day} ${date}, ${time}`} title={`Inspection ${day} ${date}, ${time}`}
-    >
-      <div className="text-[10px] -mt-0.5 font-medium text-red-600">{day}</div>
-      <div className="text-[14px] -mt-0.5 font-bold text-neutral-900">{date}</div>
-      <div className="text-[8px] -mt-0.5 text-neutral-500">{time}</div>
-    </div>
-  );
-}
-
+/* ───────────────────────────── Page scaffolding ───────────────────────────── */
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden" role="tablist" aria-label="Choose Domestic or Commercial" title={value==='D'?'Domestic':'Commercial'}>
@@ -520,7 +391,6 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
-/* ========================= Page ========================= */
 export default function FeedClean() {
   const [mode, setMode] = useState<'D'|'C'>('D');
   return (
@@ -530,7 +400,6 @@ export default function FeedClean() {
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
-          <ConnectMenu />
           <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
             <Ic.Search />
           </button>
