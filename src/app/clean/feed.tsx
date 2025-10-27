@@ -112,6 +112,47 @@ type LightboxProps = {
   onClose: () => void;
   setIndex: (i: number) => void;
 };
+// ---- focus trap (safe no-op if container isn't ready) ----
+function useFocusTrap(enabled: boolean, containerRef: React.RefObject<HTMLElement>) {
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const prev = document.activeElement as HTMLElement | null;
+    const selector =
+      'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])';
+    const getFocusables = () =>
+      Array.from(el.querySelectorAll<HTMLElement>(selector)).filter(
+        (n) => !n.hasAttribute('disabled') && n.tabIndex !== -1
+      );
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const f = getFocusables();
+      if (!f.length) return;
+      const first = f[0],
+        last = f[f.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey && active === first) {
+        last.focus();
+        e.preventDefault();
+      } else if (!e.shiftKey && active === last) {
+        first.focus();
+        e.preventDefault();
+      }
+    };
+
+    // move focus inside
+    getFocusables()[0]?.focus();
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      prev?.focus?.();
+    };
+  }, [enabled, containerRef]);
+}
 
 function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
   const ref = useRef<HTMLDivElement>(null);
