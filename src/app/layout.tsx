@@ -4,6 +4,8 @@ export const metadata = {
   title: 'RealListr',
   description: 'RealListr Platform',
 };
+{/* header title row ... */}
+<div className="mt-3 h-px bg-neutral-200/80" />
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
