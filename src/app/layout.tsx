@@ -1,16 +1,23 @@
-import './globals.css';
+import "./globals.css";
+import type { Metadata } from "next";
+import { Header } from "../components/Header";
+import { TabBar } from "../components/TabBar";
+import React from "react";
 
-export const metadata = {
-  title: 'RealListr',
-  description: 'RealListr Platform',
+export const metadata: Metadata = {
+  title: "RealListr",
 };
-{/* header title row ... */}
-<div className="mt-3 h-px bg-neutral-200/80" />
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-neutral-50 text-neutral-900 antialiased">{children}</body>
+      <body className="min-h-screen bg-white text-neutral-900">
+        <div className="mx-auto max-w-4xl">
+          <Header />
+          <main className="pb-20">{children}</main>
+        </div>
+        <TabBar />
+      </body>
     </html>
   );
 }
