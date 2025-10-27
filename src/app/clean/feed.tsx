@@ -106,53 +106,16 @@ function CalendarMini({
   );
 }
 
-/* ───────────────────────────── Lightbox (modal) ──────────────────────────── */
-function useFocusTrap(enabled: boolean, containerRef: React.RefObject<HTMLElement>) {
-  useLayoutEffect(() => {
-    if (!enabled || !containerRef.current) return;
-    const el = containerRef.current;
-    const previous = document.activeElement as HTMLElement | null;
-    const focusables = () =>
-      Array.from(el.querySelectorAll<HTMLElement>(
-        'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])'
-      )).filter(n => !n.hasAttribute('disabled') && !n.getAttribute('aria-hidden'));
-
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const f = focusables();
-      if (f.length === 0) return;
-      const first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
-      else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
-    };
-
-    const first = focusables()[0];
-    first?.focus();
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      previous?.focus();
-    };
-  }, [enabled, containerRef]);
-}
-
 type LightboxProps = {
   items: MediaItem[];
   index: number;
   onClose: () => void;
-  setIndex: (i:number)=>void;
+  setIndex: (i: number) => void;
 };
 
 function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(true, ref);
-
-  // Lock page scroll while open
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
   // keyboard: ←/→/Esc
   useEffect(() => {
@@ -165,14 +128,14 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
     return () => document.removeEventListener('keydown', onKey);
   }, [index, items.length, onClose, setIndex]);
 
-  // swipe
+  // swipe (mobile)
   const startX = useRef(0);
   const delta = useRef(0);
   const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
-  const onTouchMove  = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
-  const onTouchEnd   = () => {
+  const onTouchMove = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
+  const onTouchEnd = () => {
     const THRESH = 60;
-    if (delta.current >  THRESH) setIndex(Math.max(0, index - 1));
+    if (delta.current > THRESH) setIndex(Math.max(0, index - 1));
     if (delta.current < -THRESH) setIndex(Math.min(items.length - 1, index + 1));
     delta.current = 0;
   };
@@ -181,96 +144,112 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"
-      role="dialog" aria-modal="true" aria-label="Media viewer"
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Media viewer"
       onClick={onClose}
     >
-      {/* Close button pinned to overlay corner */}
-      <button
-        aria-label="Close"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        className="absolute top-3 right-3 sm:top-6 sm:right-6 grid place-items-center
-                   w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md
-                   border border-white/60 text-neutral-900"
-      >
-        <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden>
-          <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
-
-      {/* Modal content wrapper (clicks inside DO NOT close) */}
       <div
-        className="relative mx-auto h-full w-full max-w-[980px] px-4 sm:px-6 flex items-center justify-center"
+        ref={ref}
+        // Mobile: fill most of the viewport; Desktop: size to content caps
+        className="relative w-[96vw] h-[calc(100vh-3.5rem)] sm:w-auto sm:h-auto sm:max-w-[70vw] sm:max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        tabIndex={0}
       >
-        <div
-          ref={ref}
-          className="relative w-full max-w-[90vw] md:max-w-[70vw] max-h-[86vh]
-                     bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
-          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-          tabIndex={0}
+        {/* Close button — inside on mobile, offset outside on desktop */}
+        <button
+          onClick={onClose}
+          className="absolute z-20 top-3 right-3 sm:-top-3 sm:-right-3 w-10 h-10 grid place-items-center rounded-full bg-white text-neutral-700 shadow"
+          aria-label="Close"
         >
-          {/* Main media */}
-          <div className="relative bg-black">
+          <svg viewBox="0 0 24 24" className="w-6 h-6">
+            <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
+
+        {/* Main media area */}
+        <div className="relative bg-black w-full h-full sm:pb-0">
+          {/* On mobile we reserve space for the thumbnail rail by turning it into an overlay (see below).
+              The media itself always object-contain so nothing is cropped or hidden. */}
+          <div className="absolute inset-0 flex items-center justify-center">
             {item.kind === 'video' ? (
               <video
                 src={item.src}
                 poster={item.poster}
                 controls
                 playsInline
-                className="max-h-[72vh] md:max-h-[76vh] max-w-full"
+                className="max-w-full max-h-full object-contain"
               />
             ) : (
               <ImgBlur
                 src={item.src}
                 alt={item.alt ?? 'Listing media'}
-                className="max-h-[72vh] md:max-h-[76vh] max-w-full"
+                className="max-w-full max-h-full object-contain"
               />
             )}
           </div>
 
-          {/* Thumbs */}
-          <div className="flex gap-2 p-3 bg-black/30">
-            {items.map((it, i) => (
-              <button
-                key={i}
-                onClick={() => setIndex(i)}
-                className={`relative w-24 h-20 rounded-xl overflow-hidden border ${
-                  i===index ? 'border-white' : 'border-transparent'
-                } focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70`}
-                aria-label={`Open media ${i+1} of ${items.length}`}
-              >
-                {it.kind === 'video' ? (
-                  <div className="relative w-full h-full bg-black">
-                    <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
-                    <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">Video</span>
-                  </div>
-                ) : (
-                  <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
-                )}
-              </button>
-            ))}
-          </div>
-
           {/* Nav chevrons */}
-          {index>0 && (
+          {index > 0 && (
             <button
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+              className="absolute z-20 left-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
               onClick={() => setIndex(Math.max(0, index - 1))}
               aria-label="Previous media"
             >
-              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+              <svg viewBox="0 0 24 24" className="w-6 h-6">
+                <path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+              </svg>
             </button>
           )}
-          {index<items.length-1 && (
+          {index < items.length - 1 && (
             <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+              className="absolute z-20 right-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
               onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
               aria-label="Next media"
             >
-              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+              <svg viewBox="0 0 24 24" className="w-6 h-6">
+                <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+              </svg>
             </button>
           )}
+
+          {/* Thumbnails rail — overlay/sticky at the bottom with safe-area padding */}
+          <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-auto">
+            <div className="bg-gradient-to-t from-black/80 to-black/0 pt-8" />
+            <div
+              className="flex gap-2 px-3 pb-[max(12px,env(safe-area-inset-bottom))] overflow-x-auto bg-black/60 backdrop-blur-sm"
+              role="listbox"
+              aria-label="Media thumbnails"
+            >
+              {items.map((it, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIndex(i)}
+                  className={`relative w-24 h-20 rounded-xl overflow-hidden border ${
+                    i === index ? 'border-white' : 'border-transparent'
+                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 shrink-0`}
+                  aria-label={`Open media ${i + 1} of ${items.length}`}
+                  role="option"
+                  aria-selected={i === index}
+                >
+                  {it.kind === 'video' ? (
+                    <div className="relative w-full h-full bg-black">
+                      <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
+                      <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">
+                        Video
+                      </span>
+                    </div>
+                  ) : (
+                    <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
