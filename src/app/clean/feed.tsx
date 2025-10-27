@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
+import Link from 'next/link';
 import ConnectMenu from '@/components/ConnectMenu';
+import AgentsLink from '@/components/AgentsLink';
 
 /* ────────────────────────────── Icons (inline) ────────────────────────────── */
 const Ic = {
@@ -80,6 +81,22 @@ function GhostIconButton({
   );
 }
 
+/** Link-styled ghost button (so we don't nest a <button> inside <Link>) */
+function GhostLinkButton({
+  label, href, children, className = '',
+}: { label: string; href: string; children: React.ReactNode; className?: string; }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className={`p-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-black/30 ${className}`}
+      style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.45))' }}
+    >
+      <span className="inline-flex">{children}</span>
+    </Link>
+  );
+}
+
 /* ───────────────────────────── Listing Card ──────────────────────────────── */
 function ListingCard({ L }: { L: Listing }) {
   return (
@@ -115,6 +132,11 @@ function ListingCard({ L }: { L: Listing }) {
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
+
+          {/* Agents link (passes propertyId) */}
+          <GhostLinkButton label="Agents" href={`/agents?propertyId=${L.id}`} className="self-start">
+            <span className="text-white text-[18px]" role="img" aria-label="Handshake">🤝</span>
+          </GhostLinkButton>
         </div>
       </div>
 
@@ -148,6 +170,7 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
 /* ───────────────────────────── Page ───────────────────────────── */
 export default function FeedClean() {
   const [mode, setMode] = useState<'D'|'C'>('D');
+
   return (
     <main className="mx-auto max-w-4xl p-6">
       {/* Top bar */}
@@ -156,7 +179,12 @@ export default function FeedClean() {
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
           <ConnectMenu />
-          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
+          {/* Agents centre link (top-right) */}
+          <AgentsLink className="p-2 rounded-full hover:bg-neutral-100" />
+          <button
+            aria-label="Search"
+            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+          >
             <Ic.Search />
           </button>
         </div>
@@ -169,4 +197,4 @@ export default function FeedClean() {
     </main>
   );
 }
-// force-redeploy Mon Oct 27 10:26:37 UTC 2025
+// force-redeploy
