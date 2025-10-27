@@ -210,26 +210,35 @@ function CommentItem({ c }:{ c: Comment; depth:number }) {
 /* ========================= Media overlay (bottom-left) ========================= */
 type OverlayItem = { kind: 'image'|'video'; src: string; alt?: string };
 
-function MediaOverlay({ items }: { items: OverlayItem[] }) {
-  // Parent decides to render this only when items.length >= 2
+function MediaOverlay({ items }: { items: { kind:'image'|'video'; src:string; alt?:string }[] }) {
   const thumbs = items.slice(0, 4);
   return (
-    <div className="flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-2.5 py-1.5 border border-neutral-200 shadow-sm">
+    <button
+      type="button"
+      aria-label={`Open gallery (${items.length} items)`}
+      className="flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-2.5 py-1.5 border border-neutral-200 shadow-sm
+                 hover:bg-white transition-colors"
+      // onClick={openLightbox} // (future)
+    >
       <div className="flex -space-x-1">
         {thumbs.map((m, i) => (
           <img
             key={m.src}
             src={m.src}
             alt={m.alt ?? ''}
-            className="w-7 h-7 rounded-md object-cover border border-white"
+            loading="lazy"
+            decoding="async"
+            className="w-7 h-7 rounded-md object-cover border border-white
+                       transition-transform duration-150 ease-out hover:scale-105"
             style={{ zIndex: thumbs.length - i }}
           />
         ))}
       </div>
       <span className="text-xs text-neutral-700">{items.length} media</span>
-    </div>
+    </button>
   );
 }
+
 
 /* ========================= Listing Card ========================= */
 function ListingCard({ L }: { L: Listing }) {
@@ -283,12 +292,19 @@ function ListingCard({ L }: { L: Listing }) {
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden rounded-xl">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
 
-        {/* MEDIA OVERLAY — bottom-left (only when 2+ items) */}
-        {hasGallery && (
-          <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 z-10">
-            <MediaOverlay items={mediaUnique} />
-          </div>
-        )}
+        {/* MEDIA OVERLAY (bottom-left) — shown only when gallery has 2+ items */}
+{hasGallery && (
+  <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
+    <MediaOverlay
+      items={mediaUnique.map((m: any) => ({
+        kind: m.kind ?? "image",
+        src: m.src,
+        alt: m.alt ?? "",
+      }))}
+    />
+  </div>
+)}
+
 
         {/* Right-side ghost mini actions (anchored overlay, no drift) */}
         <div className="pointer-events-none absolute inset-0">
