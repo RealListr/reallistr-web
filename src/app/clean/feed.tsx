@@ -1,4 +1,3 @@
-cat > src/app/clean/feed.tsx <<'TSX'
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
