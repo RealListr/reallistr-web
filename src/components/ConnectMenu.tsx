@@ -13,7 +13,7 @@ export default function ConnectMenu({
       <button aria-label="Connect" onClick={()=>setOpen(v=>!v)}
         className={compact?'p-2 rounded-md bg-black/60 text-white hover:bg-black/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60'
                           :'w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50'}>
-        <svg viewBox="0 0 24 24" className={compact?'w-[22px] h-[22px]':'w-5 h-5'} fill="currentColor">
+        <svg viewBox="0 0 24 24" className={compact?'w-[22px] h-[22px]':'w-5 h-5'} fill="currentColor" aria-hidden>
           <circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/>
           <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
           <circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/>
