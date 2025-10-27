@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 /* ────────────────────────────── Icons (inline) ────────────────────────────── */
 const Ic = {
@@ -34,9 +35,8 @@ type MediaItem = {
   kind: 'image' | 'video';
   src: string;
   alt?: string;
-  poster?: string; // for videos
+  poster?: string;
 };
-
 type Listing = {
   id: string;
   img: string;
@@ -71,7 +71,7 @@ const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
     'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop',
     'https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?q=80&w=1200&auto=format&fit=crop',
   ],
-  videos: [], // e.g. ['https://cdn.example.com/clip.mp4']
+  videos: [],
 }));
 
 /* ───────────────────────────── Utilities/atoms ───────────────────────────── */
@@ -106,198 +106,6 @@ function CalendarMini({
   );
 }
 
-type LightboxProps = {
-  items: MediaItem[];
-  index: number;
-  onClose: () => void;
-  setIndex: (i: number) => void;
-};
-// ---- focus trap (safe no-op if container isn't ready) ----
-function useFocusTrap(enabled: boolean, containerRef: React.RefObject<HTMLElement>) {
-  useLayoutEffect(() => {
-    if (!enabled) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const prev = document.activeElement as HTMLElement | null;
-    const selector =
-      'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])';
-    const getFocusables = () =>
-      Array.from(el.querySelectorAll<HTMLElement>(selector)).filter(
-        (n) => !n.hasAttribute('disabled') && n.tabIndex !== -1
-      );
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const f = getFocusables();
-      if (!f.length) return;
-      const first = f[0],
-        last = f[f.length - 1];
-      const active = document.activeElement as HTMLElement | null;
-
-      if (e.shiftKey && active === first) {
-        last.focus();
-        e.preventDefault();
-      } else if (!e.shiftKey && active === last) {
-        first.focus();
-        e.preventDefault();
-      }
-    };
-
-    // move focus inside
-    getFocusables()[0]?.focus();
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      prev?.focus?.();
-    };
-  }, [enabled, containerRef]);
-}
-
-function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFocusTrap(true, ref);
-
-  // keyboard: ←/→/Esc
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') setIndex(Math.min(items.length - 1, index + 1));
-      if (e.key === 'ArrowLeft') setIndex(Math.max(0, index - 1));
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [index, items.length, onClose, setIndex]);
-
-  // swipe (mobile)
-  const startX = useRef(0);
-  const delta = useRef(0);
-  const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
-  const onTouchMove = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
-  const onTouchEnd = () => {
-    const THRESH = 60;
-    if (delta.current > THRESH) setIndex(Math.max(0, index - 1));
-    if (delta.current < -THRESH) setIndex(Math.min(items.length - 1, index + 1));
-    delta.current = 0;
-  };
-
-  const item = items[index];
-
-  return (
-    <div
-      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Media viewer"
-      onClick={onClose}
-    >
-      <div
-        ref={ref}
-        // Mobile: fill most of the viewport; Desktop: size to content caps
-        className="relative w-[96vw] h-[calc(100vh-3.5rem)] sm:w-auto sm:h-auto sm:max-w-[70vw] sm:max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        tabIndex={0}
-      >
-        {/* Close button — inside on mobile, offset outside on desktop */}
-        <button
-          onClick={onClose}
-          className="absolute z-20 top-3 right-3 sm:-top-3 sm:-right-3 w-10 h-10 grid place-items-center rounded-full bg-white text-neutral-700 shadow"
-          aria-label="Close"
-        >
-          <svg viewBox="0 0 24 24" className="w-6 h-6">
-            <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-
-        {/* Main media area */}
-        <div className="relative bg-black w-full h-full sm:pb-0">
-          {/* On mobile we reserve space for the thumbnail rail by turning it into an overlay (see below).
-              The media itself always object-contain so nothing is cropped or hidden. */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            {item.kind === 'video' ? (
-              <video
-                src={item.src}
-                poster={item.poster}
-                controls
-                playsInline
-                className="max-w-full max-h-full object-contain"
-              />
-            ) : (
-              <ImgBlur
-                src={item.src}
-                alt={item.alt ?? 'Listing media'}
-                className="max-w-full max-h-full object-contain"
-              />
-            )}
-          </div>
-
-          {/* Nav chevrons */}
-          {index > 0 && (
-            <button
-              className="absolute z-20 left-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
-              onClick={() => setIndex(Math.max(0, index - 1))}
-              aria-label="Previous media"
-            >
-              <svg viewBox="0 0 24 24" className="w-6 h-6">
-                <path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            </button>
-          )}
-          {index < items.length - 1 && (
-            <button
-              className="absolute z-20 right-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
-              onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
-              aria-label="Next media"
-            >
-              <svg viewBox="0 0 24 24" className="w-6 h-6">
-                <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-            </button>
-          )}
-
-          {/* Thumbnails rail — overlay/sticky at the bottom with safe-area padding */}
-          <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-auto">
-            <div className="bg-gradient-to-t from-black/80 to-black/0 pt-8" />
-            <div
-              className="flex gap-2 px-3 pb-[max(12px,env(safe-area-inset-bottom))] overflow-x-auto bg-black/60 backdrop-blur-sm"
-              role="listbox"
-              aria-label="Media thumbnails"
-            >
-              {items.map((it, i) => (
-                <button
-                  key={i}
-                  onClick={() => setIndex(i)}
-                  className={`relative w-24 h-20 rounded-xl overflow-hidden border ${
-                    i === index ? 'border-white' : 'border-transparent'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 shrink-0`}
-                  aria-label={`Open media ${i + 1} of ${items.length}`}
-                  role="option"
-                  aria-selected={i === index}
-                >
-                  {it.kind === 'video' ? (
-                    <div className="relative w-full h-full bg-black">
-                      <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
-                      <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">
-                        Video
-                      </span>
-                    </div>
-                  ) : (
-                    <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 /* ─────────────────────────── Image with blur-up ──────────────────────────── */
 function ImgBlur({
   src, alt, className='', lazy=false,
@@ -314,12 +122,164 @@ function ImgBlur({
   );
 }
 
+/* ───────────────────────────── Focus Trap ───────────────────────────── */
+function useFocusTrap(enabled: boolean, containerRef: React.RefObject<HTMLElement>) {
+  useLayoutEffect(() => {
+    if (!enabled) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const prev = document.activeElement as HTMLElement | null;
+    const selector = 'a,button,input,textarea,select,[tabindex]:not([tabindex="-1"])';
+    const getFocusables = () =>
+      Array.from(el.querySelectorAll<HTMLElement>(selector)).filter(
+        (n) => !n.hasAttribute('disabled') && n.tabIndex !== -1
+      );
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const f = getFocusables();
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey && active === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && active === last) { first.focus(); e.preventDefault(); }
+    };
+
+    getFocusables()[0]?.focus();
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus?.(); };
+  }, [enabled, containerRef]);
+}
+
+/* ───────────────────────────── Lightbox (portal) ───────────────────────────── */
+type LightboxProps = {
+  items: MediaItem[];
+  index: number;
+  onClose: () => void;
+  setIndex: (i:number)=>void;
+};
+
+function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  useFocusTrap(true, ref);
+
+  // keys
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') setIndex(Math.min(items.length - 1, index + 1));
+      if (e.key === 'ArrowLeft') setIndex(Math.max(0, index - 1));
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [index, items.length, onClose, setIndex]);
+
+  // swipe
+  const startX = useRef(0);
+  const delta = useRef(0);
+  const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
+  const onTouchMove = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
+  const onTouchEnd = () => {
+    const THRESH = 60;
+    if (delta.current > THRESH) setIndex(Math.max(0, index - 1));
+    if (delta.current < -THRESH) setIndex(Math.min(items.length - 1, index + 1));
+    delta.current = 0;
+  };
+
+  const item = items[index];
+  if (!item) return null;
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+      role="dialog" aria-modal="true" aria-label="Media viewer"
+      onClick={onClose}
+    >
+      <div
+        ref={ref}
+        className="relative w-[96vw] h-[calc(100vh-3.5rem)] sm:w-auto sm:h-auto sm:max-w-[70vw] sm:max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+        tabIndex={0}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute z-20 top-3 right-3 sm:-top-3 sm:-right-3 w-10 h-10 grid place-items-center rounded-full bg-white text-neutral-700 shadow"
+          aria-label="Close"
+        >
+          <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+
+        {/* Main media */}
+        <div className="relative bg-black w-full h-full sm:pb-0">
+          <div className="absolute inset-0 flex items-center justify-center">
+            {item.kind === 'video' ? (
+              <video src={item.src} poster={item.poster} controls playsInline className="max-w-full max-h-full object-contain" />
+            ) : (
+              <ImgBlur src={item.src} alt={item.alt ?? 'Listing media'} className="max-w/full max-h/full object-contain" />
+            )}
+          </div>
+
+          {/* Chevrons */}
+          {index>0 && (
+            <button
+              className="absolute z-20 left-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
+              onClick={() => setIndex(Math.max(0, index - 1))}
+              aria-label="Previous media"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+            </button>
+          )}
+          {index<items.length-1 && (
+            <button
+              className="absolute z-20 right-2 top-1/2 -translate-y-1/2 w-11 h-11 grid place-items-center rounded-full bg-white/95"
+              onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
+              aria-label="Next media"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+            </button>
+          )}
+
+          {/* Thumbnails rail */}
+          <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-auto">
+            <div className="bg-gradient-to-t from-black/80 to-black/0 pt-8" />
+            <div className="flex gap-2 px-3 pb-[max(12px,env(safe-area-inset-bottom))] overflow-x-auto bg-black/60 backdrop-blur-sm"
+                 role="listbox" aria-label="Media thumbnails">
+              {items.map((it, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIndex(i)}
+                  className={`relative w-24 h-20 rounded-xl overflow-hidden border ${i===index?'border-white':'border-transparent'} focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 shrink-0`}
+                  aria-label={`Open media ${i+1} of ${items.length}`}
+                  role="option" aria-selected={i===index}
+                >
+                  {it.kind === 'video'
+                    ? <div className="relative w-full h-full bg-black">
+                        <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
+                        <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">Video</span>
+                      </div>
+                    : <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
+                  }
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modal, document.body);
+}
+
 /* ───────────────────────────── Listing Card ──────────────────────────────── */
 function ListingCard({ L }: { L: Listing }) {
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
 
-  // Build media items (de-duped). “1 media pill” never shown (only if 2+ assets)
   const raw: MediaItem[] = [
     ...(L.img ? [{ kind:'image' as const, src: L.img, alt: L.address }] : []),
     ...((L.photos ?? []).map((p) => ({ kind:'image' as const, src: p, alt: L.address }))),
@@ -350,7 +310,7 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </header>
 
-      {/* Media (hero) */}
+      {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <button
           onClick={() => { setIdx(0); setOpen(true); }}
@@ -360,7 +320,7 @@ function ListingCard({ L }: { L: Listing }) {
           <ImgBlur src={L.img} alt={L.address} className="w-full h-full object-cover hover:scale-[1.01]" />
         </button>
 
-        {/* Overlay (bottom-left) — only when 2+ assets */}
+        {/* Media count pill */}
         {hasGallery && (
           <button
             onClick={() => { setIdx(0); setOpen(true); }}
@@ -425,7 +385,7 @@ function ListingCard({ L }: { L: Listing }) {
   );
 }
 
-/* ───────────────────────────── Page scaffolding ───────────────────────────── */
+/* ───────────────────────────── Page scaffold ───────────────────────────── */
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden" role="tablist" aria-label="Choose Domestic or Commercial" title={value==='D'?'Domestic':'Commercial'}>
