@@ -2,10 +2,9 @@
 
 export function Header() {
   return (
-    <header className="mx-auto max-w-4xl px-4 pt-6">
-      <h1 className="text-3xl font-bold">RealListr</h1>
-      {/* thin rail */}
-      <div className="mt-3 h-px bg-neutral-200/80" />
+    <header style={{ maxWidth: 896, margin: "0 auto", padding: "24px 16px 0" }}>
+      <h1 style={{ fontSize: 30, fontWeight: 700, lineHeight: "34px" }}>RealListr</h1>
+      <hr style={{ marginTop: 12, height: 1, border: 0, background: "rgba(0,0,0,0.12)" }} />
     </header>
   );
 }
