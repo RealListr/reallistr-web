@@ -1,8 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* (optional) minimal sane defaults */
+@import "tailwindcss";
+/* (optional) a couple of sensible defaults */
 :root { color-scheme: light; }
 html, body { height: 100%; }
-body { background: #f7f7f7; color: #0a0a0a; }
