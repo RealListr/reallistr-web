@@ -142,9 +142,17 @@ type LightboxProps = {
   onClose: () => void;
   setIndex: (i:number)=>void;
 };
+
 function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
   const ref = useRef<HTMLDivElement>(null);
   useFocusTrap(true, ref);
+
+  // Lock page scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   // keyboard: ←/→/Esc
   useEffect(() => {
@@ -161,10 +169,10 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
   const startX = useRef(0);
   const delta = useRef(0);
   const onTouchStart = (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; };
-  const onTouchMove = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
-  const onTouchEnd = () => {
+  const onTouchMove  = (e: React.TouchEvent) => { delta.current = e.touches[0].clientX - startX.current; };
+  const onTouchEnd   = () => {
     const THRESH = 60;
-    if (delta.current > THRESH) setIndex(Math.max(0, index - 1));
+    if (delta.current >  THRESH) setIndex(Math.max(0, index - 1));
     if (delta.current < -THRESH) setIndex(Math.min(items.length - 1, index + 1));
     delta.current = 0;
   };
@@ -173,85 +181,102 @@ function Lightbox({ items, index, onClose, setIndex }: LightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"
       role="dialog" aria-modal="true" aria-label="Media viewer"
       onClick={onClose}
     >
-      <div
-        ref={ref}
-        className="relative max-w-[90vw] md:max-w-[70vw] max-h-[86vh] bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
-        onClick={e => e.stopPropagation()}
-        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
-        tabIndex={0}
+      {/* Close button pinned to overlay corner */}
+      <button
+        aria-label="Close"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        className="absolute top-3 right-3 sm:top-6 sm:right-6 grid place-items-center
+                   w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md
+                   border border-white/60 text-neutral-900"
       >
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-10 h-10 grid place-items-center rounded-full bg-white text-neutral-700 shadow"
-          aria-label="Close"
-        >
-          <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-        </button>
+        <svg viewBox="0 0 24 24" className="w-6 h-6" aria-hidden>
+          <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </button>
 
-        {/* Main media */}
-        <div className="relative bg-black">
-          {item.kind === 'video' ? (
-            <video
-              src={item.src}
-              poster={item.poster}
-              controls
-              playsInline
-              className="max-h-[72vh] md:max-h-[76vh] max-w-full"
-            />
-          ) : (
-            <ImgBlur src={item.src} alt={item.alt ?? 'Listing media'} className="max-h-[72vh] md:max-h-[76vh] max-w-full" />
+      {/* Modal content wrapper (clicks inside DO NOT close) */}
+      <div
+        className="relative mx-auto h-full w-full max-w-[980px] px-4 sm:px-6 flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          ref={ref}
+          className="relative w-full max-w-[90vw] md:max-w-[70vw] max-h-[86vh]
+                     bg-neutral-900/30 rounded-2xl overflow-hidden shadow-2xl"
+          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+          tabIndex={0}
+        >
+          {/* Main media */}
+          <div className="relative bg-black">
+            {item.kind === 'video' ? (
+              <video
+                src={item.src}
+                poster={item.poster}
+                controls
+                playsInline
+                className="max-h-[72vh] md:max-h-[76vh] max-w-full"
+              />
+            ) : (
+              <ImgBlur
+                src={item.src}
+                alt={item.alt ?? 'Listing media'}
+                className="max-h-[72vh] md:max-h-[76vh] max-w-full"
+              />
+            )}
+          </div>
+
+          {/* Thumbs */}
+          <div className="flex gap-2 p-3 bg-black/30">
+            {items.map((it, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                className={`relative w-24 h-20 rounded-xl overflow-hidden border ${
+                  i===index ? 'border-white' : 'border-transparent'
+                } focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70`}
+                aria-label={`Open media ${i+1} of ${items.length}`}
+              >
+                {it.kind === 'video' ? (
+                  <div className="relative w-full h-full bg-black">
+                    <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
+                    <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">Video</span>
+                  </div>
+                ) : (
+                  <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Nav chevrons */}
+          {index>0 && (
+            <button
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+              onClick={() => setIndex(Math.max(0, index - 1))}
+              aria-label="Previous media"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+            </button>
+          )}
+          {index<items.length-1 && (
+            <button
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
+              onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
+              aria-label="Next media"
+            >
+              <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+            </button>
           )}
         </div>
-
-        {/* Thumbs */}
-        <div className="flex gap-2 p-3 bg-black/30">
-          {items.map((it, i) => (
-            <button
-              key={i}
-              onClick={() => setIndex(i)}
-              className={`relative w-24 h-20 rounded-xl overflow-hidden border ${i===index?'border-white':'border-transparent'} focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70`}
-              aria-label={`Open media ${i+1} of ${items.length}`}
-            >
-              {it.kind === 'video' ? (
-                <div className="relative w-full h-full bg-black">
-                  <video src={it.src} poster={it.poster} className="w-full h-full object-cover" muted />
-                  <span className="absolute bottom-1 right-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-white">Video</span>
-                </div>
-              ) : (
-                <ImgBlur src={it.src} alt={it.alt ?? ''} className="w-full h-full object-cover" lazy />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Nav chevrons */}
-        {index>0 && (
-          <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
-            onClick={() => setIndex(Math.max(0, index - 1))}
-            aria-label="Previous media"
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="M15 6 9 12l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
-          </button>
-        )}
-        {index<items.length-1 && (
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 grid place-items-center rounded-full bg-white/90"
-            onClick={() => setIndex(Math.min(items.length - 1, index + 1))}
-            aria-label="Next media"
-          >
-            <svg viewBox="0 0 24 24" className="w-6 h-6"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
-          </button>
-        )}
       </div>
     </div>
   );
 }
+
 
 /* ─────────────────────────── Image with blur-up ──────────────────────────── */
 function ImgBlur({
