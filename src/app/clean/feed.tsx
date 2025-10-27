@@ -24,6 +24,11 @@ const Ic = {
   Grass: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M3 20h18M6 20v-3m2 3v-4m2 4v-3m2 3v-5m2 5v-3m2 3v-4m2 4v-3" stroke="currentColor" strokeWidth="1.3"/></svg>,
   Search: () => <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/></svg>,
 };
+// extras used in Connect menu
+Ic.Users = Ic.Users ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" fill="currentColor"/></svg>);
+Ic.Card  = Ic.Card  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" fill="currentColor"/></svg>);
+Ic.Shield= Ic.Shield?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" fill="currentColor"/></svg>);
+Ic.Bolt  = Ic.Bolt  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M11 21 19 10h-5l3-8-8 11h5Z" fill="currentColor"/></svg>);
 
 /* ========================= Types & Mock Data ========================= */
 type Listing = {
@@ -39,7 +44,7 @@ type Listing = {
   shorts?: string[];
 };
 
-const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
+const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   id: String(i + 1),
   img: `https://images.unsplash.com/photo-${
     [
@@ -56,12 +61,17 @@ const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
   agent: 'Aisha Patel',
   agency: 'Luxe Realty',
   grassType: (['Artificial', 'Real', 'None'] as const)[i % 3],
-  photos: [],
+  photos: i % 2 === 0
+    ? [
+        'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=800&auto=format&fit=crop',
+        'https://images.unsplash.com/photo-1523217582562-09d0def993a6?q=80&w=801&auto=format&fit=crop',
+      ]
+    : [],
   videos: [],
   shorts: [],
 }));
 
-/* ========================= Small ghost/mono icons ========================= */
+/* ========================= Small ghost/mono actions ========================= */
 function GhostIconButton({
   label, children, onClick, className = '',
 }: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
@@ -101,24 +111,7 @@ function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
   </svg>);
 }
 
-/** iOS-style compact calendar */
-function CalendarMini({
-  day = 'Thu', date = '23', time = '11:15–11:45', size = 40, className = '',
-}: { day?: string; date?: string; time?: string; size?: number; className?: string; }) {
-  return (
-    <div
-      className={`grid place-items-center rounded-lg bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
-      style={{ width: size, height: size }}
-      aria-label={`Inspection ${day} ${date}, ${time}`} title={`Inspection ${day} ${date}, ${time}`}
-    >
-      <div className="text-[10px] -mt-0.5 font-medium text-red-600">{day}</div>
-      <div className="text-[14px] -mt-0.5 font-bold text-neutral-900">{date}</div>
-      <div className="text-[8px] -mt-0.5 text-neutral-500">{time}</div>
-    </div>
-  );
-}
-
-/* ========================= Top Connect (dropdown) ========================= */
+/* ========================= Connect menu ========================= */
 function ConnectMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -151,11 +144,6 @@ function ConnectMenu() {
     </div>
   );
 }
-// Add minimal variants used above
-Ic.Users = Ic.Users ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" fill="currentColor"/></svg>);
-Ic.Card  = Ic.Card  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" fill="currentColor"/></svg>);
-Ic.Shield= Ic.Shield?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" fill="currentColor"/></svg>);
-Ic.Bolt  = Ic.Bolt  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M11 21 19 10h-5l3-8-8 11h5Z" fill="currentColor"/></svg>);
 
 /* ========================= Comments (sheet) ========================= */
 type Comment = { id: string; name: string; suburb?: string; isAgent?: boolean; time: string; body: string; likes: number; replies?: Comment[]; };
@@ -219,6 +207,30 @@ function CommentItem({ c }:{ c: Comment; depth:number }) {
   );
 }
 
+/* ========================= Media overlay (bottom-left) ========================= */
+type OverlayItem = { kind: 'image'|'video'; src: string; alt?: string };
+
+function MediaOverlay({ items }: { items: OverlayItem[] }) {
+  // Parent decides to render this only when items.length >= 2
+  const thumbs = items.slice(0, 4);
+  return (
+    <div className="flex items-center gap-2 rounded-full bg-white/90 backdrop-blur px-2.5 py-1.5 border border-neutral-200 shadow-sm">
+      <div className="flex -space-x-1">
+        {thumbs.map((m, i) => (
+          <img
+            key={m.src}
+            src={m.src}
+            alt={m.alt ?? ''}
+            className="w-7 h-7 rounded-md object-cover border border-white"
+            style={{ zIndex: thumbs.length - i }}
+          />
+        ))}
+      </div>
+      <span className="text-xs text-neutral-700">{items.length} media</span>
+    </div>
+  );
+}
+
 /* ========================= Listing Card ========================= */
 function ListingCard({ L }: { L: Listing }) {
   const CAL_SIZE = 50;
@@ -235,12 +247,15 @@ function ListingCard({ L }: { L: Listing }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  // Build media payload (we're not rendering the bottom-left overlay anymore)
-  const media = [
-    ...(L.img ? [{ src: L.img }] : []),
-    ...((L.photos ?? []).map((p) => ({ src: p }))),
+  // Build media payload (image + optional arrays)
+  const media: OverlayItem[] = [
+    ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
+    ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
+    ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
+    ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
   ];
-  const hasGallery = media.length > 1;
+  const mediaUnique = Array.from(new Map(media.map(m => [m.src, m])).values());
+  const hasGallery = mediaUnique.length > 1;
 
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -265,9 +280,41 @@ function ListingCard({ L }: { L: Listing }) {
       </header>
 
       {/* Media (hero) */}
-      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
+      <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden rounded-xl">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
-        {/* Overlay removed entirely (prevents '1 media' pill) */}
+
+        {/* MEDIA OVERLAY — bottom-left (only when 2+ items) */}
+        {hasGallery && (
+          <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4 z-10">
+            <MediaOverlay items={mediaUnique} />
+          </div>
+        )}
+
+        {/* Right-side ghost mini actions (anchored overlay, no drift) */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-auto absolute right-2 top-2 flex flex-col gap-2 z-10" ref={cardMenuRef}>
+            <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
+
+            <div className="relative">
+              <GhostIconButton label="Connect" onClick={() => setMenuOpen(v => !v)}>
+                <IconGridDots />
+              </GhostIconButton>
+              {menuOpen && (
+                <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Users /> <span className="text-sm">Agents</span></button>
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Card /> <span className="text-sm">Finance</span></button>
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Shield /> <span className="text-sm">Insurance</span></button>
+                  <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Bolt /> <span className="text-sm">Energy</span></button>
+                </div>
+              )}
+            </div>
+
+            <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+            <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+            <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+            <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}><IconComment /></GhostIconButton>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}
@@ -281,12 +328,12 @@ function ListingCard({ L }: { L: Listing }) {
             </p>
           </div>
 
-          <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
-            <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
-            <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
-              OPEN
-            </div>
+        <div className="shrink-0 flex flex-col items-end gap-1 -mt-2">
+          <CalendarMini day="Thu" date="23" time="11:15–11:45" size={CAL_SIZE} />
+          <div style={{ width: CAL_SIZE }} className="text-[11px] text-center tracking-wide text-neutral-700">
+            OPEN
           </div>
+        </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-neutral-700 mt-4">
@@ -301,22 +348,28 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </footer>
 
-      {/* Right-side ghost mini actions */}
-      <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
-        <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
-        <div className="relative" >
-          <GhostIconButton label="Connect"><IconGridDots /></GhostIconButton>
-        </div>
-        <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-        <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-        <GhostIconButton label="Share"><IconShare /></GhostIconButton>
-        <GhostIconButton label="Comments"><IconComment /></GhostIconButton>
-      </div>
+      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
     </article>
   );
 }
 
-/* ========================= Page ========================= */
+/* ========================= Misc UI ========================= */
+function CalendarMini({
+  day = 'Thu', date = '23', time = '11:15–11:45', size = 40, className = '',
+}: { day?: string; date?: string; time?: string; size?: number; className?: string; }) {
+  return (
+    <div
+      className={`grid place-items-center rounded-lg bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
+      style={{ width: size, height: size }}
+      aria-label={`Inspection ${day} ${date}, ${time}`} title={`Inspection ${day} ${date}, ${time}`}
+    >
+      <div className="text-[10px] -mt-0.5 font-medium text-red-600">{day}</div>
+      <div className="text-[14px] -mt-0.5 font-bold text-neutral-900">{date}</div>
+      <div className="text-[8px] -mt-0.5 text-neutral-500">{time}</div>
+    </div>
+  );
+}
+
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden" role="tablist" aria-label="Choose Domestic or Commercial" title={value==='D'?'Domestic':'Commercial'}>
@@ -327,6 +380,7 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
+/* ========================= Page ========================= */
 export default function FeedClean() {
   const [mode, setMode] = useState<'D'|'C'>('D');
   return (
