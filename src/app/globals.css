@@ -11,3 +11,34 @@ button[aria-label="More"]:hover, .connects-btn:hover, .icon-button:hover,
 button[aria-label="More"]:active, .connects-btn:active, .icon-button:active {
   background: transparent !important;
 }
+
+/* RealListr full-bleed safety offsets */
+:root{
+  --rl-header-h: 72px;   /* header + rail height */
+  --rl-tabbar-h: 64px;   /* bottom bar height */
+}
+
+/* Any fixed/absolute full-screen map or canvas should live between header & tab bar */
+.leaflet-container,
+.mapboxgl-map,
+.maplibregl-map,
+.rl-fullbleed {
+  position: fixed !important;
+  top: var(--rl-header-h) !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: calc(100vh - var(--rl-header-h) - var(--rl-tabbar-h)) !important;
+  max-height: calc(100vh - var(--rl-header-h) - var(--rl-tabbar-h)) !important;
+}
+
+/* If your map wrapper is fixed, nudge it too */
+.leaflet-pane,
+.mapboxgl-canvas,
+.maplibregl-canvas {
+  top: 0 !important; /* let the parent handle the offset */
+}
+
+/* Keep scrollable pages from hiding under the bottom bar */
+main, .rl-main {
+  padding-bottom: var(--rl-tabbar-h);
+}
