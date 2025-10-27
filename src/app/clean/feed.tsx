@@ -1,11 +1,32 @@
+cat > src/app/clean/feed.tsx <<'TSX'
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Ic } from '../../components/ghost/GhostIcons';
-import MediaStrip, { type MediaItem } from '../../components/media/MediaStrip';
+
+/* ========================= Minimal icon set (inline) ========================= */
+const Ic = {
+  Info: (p:{className?:string}) => (
+    <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
+      <circle cx="12" cy="12" r="10" opacity=".1"/><path d="M12 11v6m0-10h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  ),
+  Pin: (p:{className?:string}) => (
+    <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
+      <path d="M12 22s8-7.16 8-13a8 8 0 1 0-16 0c0 5.84 8 13 8 13Zm0-9a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/>
+    </svg>
+  ),
+  Bed: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M4 7h9a3 3 0 0 1 3 3v1h4v6h-2v-2H6v2H4V7Z" fill="currentColor"/></svg>,
+  Bath: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3Zm2-5a3 3 0 0 1 6 0v3H7V7Z" fill="currentColor"/></svg>,
+  Car: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 16l1-3 2-6h8l2 6 1 3v3h-2v-2H7v2H5v-3Z" fill="currentColor"/><circle cx="8" cy="18" r="1.2"/><circle cx="16" cy="18" r="1.2"/></svg>,
+  Home: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M3 11 12 3l9 8v9h-6v-6H9v6H3v-9Z" fill="currentColor"/></svg>,
+  Land: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M3 19h18l-4-5-5 3-3-4-6 6Z" fill="currentColor"/></svg>,
+  Solar: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0-6v3m0 14v3M4 12H1m22 0h-3M4.2 4.2l2.1 2.1m11.4 11.4 2.1 2.1M4.2 19.8l2.1-2.1m11.4-11.4 2.1-2.1" stroke="currentColor" strokeWidth="1.4" fill="none"/></svg>,
+  Charger: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="m11 22 3-8H11l2-8-6 9h4l-2 7Z" fill="currentColor"/></svg>,
+  Grass: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M3 20h18M6 20v-3m2 3v-4m2 4v-3m2 3v-5m2 5v-3m2 3v-4m2 4v-3" stroke="currentColor" strokeWidth="1.3"/></svg>,
+  Search: () => <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/></svg>,
+};
 
 /* ========================= Types & Mock Data ========================= */
-
 type Listing = {
   id: string;
   img: string;
@@ -36,40 +57,15 @@ const LISTINGS: Listing[] = Array.from({ length: 12 }).map((_, i) => ({
   agent: 'Aisha Patel',
   agency: 'Luxe Realty',
   grassType: (['Artificial', 'Real', 'None'] as const)[i % 3],
-  // optional extras for later:
   photos: [],
   videos: [],
   shorts: [],
 }));
 
-const SHORTS = Array.from({ length: 6 }).map((_, i) => ({
-  id: `s${i}`,
-  cover: `https://picsum.photos/seed/short${i}/320/560`,
-  title: `Tour #${i + 1}`,
-  dur: 12 + i,
-}));
-
-const AGENTS = [
-  { id: 'a1', name: 'Aisha Patel' },
-  { id: 'a2', name: 'Mina Khan' },
-  { id: 'ag1', name: 'Luxe Realty' },
-  { id: 'ag2', name: 'Harbor Estates' },
-  { id: 'ag3', name: 'Urban Nest' },
-];
-
 /* ========================= Small ghost/mono icons ========================= */
-
 function GhostIconButton({
-  label,
-  children,
-  onClick,
-  className = '',
-}: {
-  label: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-}) {
+  label, children, onClick, className = '',
+}: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
   return (
     <button
       aria-label={label}
@@ -83,90 +79,38 @@ function GhostIconButton({
 }
 
 function IconHeart({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z" />
-    </svg>
-  );
+  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+    <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z" />
+  </svg>);
 }
-
 function IconShare({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z" />
-    </svg>
-  );
+  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+    <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z" />
+  </svg>);
 }
-
 function IconComment({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
-      <circle cx="9" cy="10.5" r="1.2" />
-      <circle cx="12" cy="10.5" r="1.2" />
-      <circle cx="15" cy="10.5" r="1.2" />
-    </svg>
-  );
+  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+    <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+    <circle cx="9" cy="10.5" r="1.2" /><circle cx="12" cy="10.5" r="1.2" /><circle cx="15" cy="10.5" r="1.2" />
+  </svg>);
 }
-
 function IconGridDots({ className = 'w-[22px] h-[22px] text-white' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" /><circle cx="19" cy="5" r="2" />
-      <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
-      <circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
-    </svg>
-  );
-}
-function IconUsers({ className = 'w-4 h-4' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" />
-    </svg>
-  );
-}
-function IconCard({ className = 'w-4 h-4' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" />
-    </svg>
-  );
-}
-function IconShield({ className = 'w-4 h-4' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" />
-    </svg>
-  );
-}
-function IconBolt({ className = 'w-4 h-4' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M11 21 19 10h-5l3-8-8 11h5Z" />
-    </svg>
-  );
+  return (<svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+    <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" /><circle cx="19" cy="5" r="2" />
+    <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+    <circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" /><circle cx="19" cy="19" r="2" />
+  </svg>);
 }
 
 /** iOS-style compact calendar */
 function CalendarMini({
-  day = 'Thu',
-  date = '23',
-  time = '11:15–11:45',
-  size = 40,
-  className = '',
-}: {
-  day?: string;
-  date?: string;
-  time?: string;
-  size?: number;
-  className?: string;
-}) {
+  day = 'Thu', date = '23', time = '11:15–11:45', size = 40, className = '',
+}: { day?: string; date?: string; time?: string; size?: number; className?: string; }) {
   return (
     <div
       className={`grid place-items-center rounded-lg bg-white border border-neutral-200 shadow-sm text-center leading-none ${className}`}
       style={{ width: size, height: size }}
-      aria-label={`Inspection ${day} ${date}, ${time}`}
-      title={`Inspection ${day} ${date}, ${time}`}
+      aria-label={`Inspection ${day} ${date}, ${time}`} title={`Inspection ${day} ${date}, ${time}`}
     >
       <div className="text-[10px] -mt-0.5 font-medium text-red-600">{day}</div>
       <div className="text-[14px] -mt-0.5 font-bold text-neutral-900">{date}</div>
@@ -176,7 +120,6 @@ function CalendarMini({
 }
 
 /* ========================= Top Connect (dropdown) ========================= */
-
 function ConnectMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -200,63 +143,30 @@ function ConnectMenu() {
       {open && (
         <div className="absolute right-0 mt-2 w-60 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30" role="menu">
           <div className="px-2 py-1 text-[12px] text-neutral-500">Connect</div>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-            <IconUsers /> <span className="text-sm">Agents</span>
-          </button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-            <IconCard /> <span className="text-sm">Finance</span>
-          </button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-            <IconShield /> <span className="text-sm">Insurance</span>
-          </button>
-          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50">
-            <IconBolt /> <span className="text-sm">Energy</span>
-          </button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Users /> <span className="text-sm">Agents</span></button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Card /> <span className="text-sm">Finance</span></button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Shield /> <span className="text-sm">Insurance</span></button>
+          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><Ic.Bolt /> <span className="text-sm">Energy</span></button>
         </div>
       )}
     </div>
   );
 }
+// Add minimal variants used above
+Ic.Users = Ic.Users ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 1a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8 1c-2.33 0-7 1.17-7 3v2h7v-2c0-.71.24-1.37.65-1.94A8.2 8.2 0 0 1 8 14Z" fill="currentColor"/></svg>);
+Ic.Card  = Ic.Card  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2H2Zm0 4h20v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z" fill="currentColor"/></svg>);
+Ic.Shield= Ic.Shield?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 2 4 5v6c0 5 3.58 9.74 8 11 4.42-1.26 8-6 8-11V5Z" fill="currentColor"/></svg>);
+Ic.Bolt  = Ic.Bolt  ?? (() => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M11 21 19 10h-5l3-8-8 11h5Z" fill="currentColor"/></svg>);
 
-/* ========================= Floating Comments (sheet) ========================= */
-
-type Comment = {
-  id: string;
-  name: string;
-  suburb?: string;
-  isAgent?: boolean;
-  isPinned?: boolean;
-  time: string;
-  body: string;
-  likes: number;
-  replies?: Comment[];
-};
-
+/* ========================= Comments (sheet) ========================= */
+type Comment = { id: string; name: string; suburb?: string; isAgent?: boolean; time: string; body: string; likes: number; replies?: Comment[]; };
 const DEMO: Comment[] = [
-  {
-    id:'c1', name:'Mina K.', suburb:'JLT', time:'2h', body:'How noisy is it at night near the highway?',
-    likes:6, replies:[
-      { id:'c1r1', name:'Aisha Patel', suburb:'Luxe Realty', isAgent:true, time:'1h', body:'After 9pm it’s pretty quiet; double glazing in bedrooms.', likes:12 }
-    ]
-  },
-  { id:'c2', name:'Samir', suburb:'Marina', time:'3h', body:'Body corp fees estimate?', likes:2 }
+  { id:'c1', name:'Mina K.', suburb:'JLT', time:'2h', body:'How noisy is it at night near the highway?', likes:6,
+    replies:[{ id:'c1r1', name:'Aisha Patel', suburb:'Luxe Realty', isAgent:true, time:'1h', body:'After 9pm it’s pretty quiet; double glazing in bedrooms.', likes:12 }]}
 ];
 
-function CommentsPanel({
-  open,
-  onClose,
-  listingTitle,
-}: {
-  open: boolean;
-  onClose: () => void;
-  listingTitle: string;
-}) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent){ if(e.key==='Escape') onClose(); }
-    document.addEventListener('keydown', onKey);
-    return ()=>document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
+function CommentsPanel({ open, onClose, listingTitle }:{ open:boolean; onClose:()=>void; listingTitle:string; }) {
+  useEffect(() => { const onKey=(e:KeyboardEvent)=>{ if(e.key==='Escape') onClose(); }; document.addEventListener('keydown', onKey); return ()=>document.removeEventListener('keydown', onKey); }, [onClose]);
   return (
     <div className={`fixed inset-0 z-50 ${open?'pointer-events-auto':'pointer-events-none'}`}>
       <div className={`absolute inset-0 bg-black/30 transition-opacity ${open?'opacity-100':'opacity-0'}`} onClick={onClose} />
@@ -275,7 +185,6 @@ function CommentsPanel({
             </button>
           </div>
         </div>
-        <Composer />
         <div className="px-4 pb-24">
           {DEMO.map(c => <CommentItem key={c.id} c={c} depth={0} />)}
         </div>
@@ -284,53 +193,7 @@ function CommentsPanel({
   );
 }
 
-function Composer() {
-  const [text, setText] = useState('');
-  const canPost = text.trim().length > 0;
-  return (
-    <div className="px-4 py-3 border-b border-neutral-200">
-      <div className="flex gap-2 mb-2">
-        {['Noise','Fees','Schools','Transport'].map(t=>(
-          <button key={t} className="text-xs px-2 py-1 rounded-full border border-neutral-200 bg-white hover:bg-neutral-50">{t}</button>
-        ))}
-      </div>
-      <div className="flex items-end gap-2">
-        <div className="w-9 h-9 rounded-full bg-neutral-100 border border-neutral-200 shrink-0" />
-        <div className="flex-1">
-          <textarea
-            rows={1}
-            placeholder="Reply to this listing…"
-            value={text}
-            onChange={e=>setText(e.target.value)}
-            className="w-full resize-none outline-none text-sm bg-white placeholder:text-neutral-400"
-          />
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-2">
-              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Add image">
-                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M20 5H4a2 2 0 0 0-2 2v10h20V7a2 2 0 0 0-2-2Zm0 12H4v-2l4-4 3 3 5-5 4 4v4Z"/><circle cx="8" cy="9" r="1.5" fill="currentColor"/></svg>
-              </button>
-              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Attach doc">
-                <svg viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16h16V8Z"/><path fill="currentColor" d="M14 2v6h6"/></svg>
-              </button>
-              <button className="w-8 h-8 grid place-items-center rounded-md hover:bg-neutral-50" aria-label="Emoji">
-                <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".08"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/><path d="M8 14c.9 1.2 2.1 2 4 2s3.1-.8 4-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              </button>
-            </div>
-            <button
-              disabled={!canPost}
-              className={`text-sm rounded-full px-3 py-1 border ${canPost?'bg-neutral-900 text-white border-neutral-900 hover:opacity-90':'bg-neutral-100 text-neutral-400 border-neutral-200 cursor-not-allowed'}`}
-            >
-              Post
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="mt-2 text-xs text-neutral-500">Anyone can reply • Replies may be quoted</div>
-    </div>
-  );
-}
-
-function CommentItem({ c, depth }:{ c: Comment; depth:number }) {
+function CommentItem({ c }:{ c: Comment; depth:number }) {
   const [showReplies, setShowReplies] = useState(true);
   return (
     <div className="py-3">
@@ -340,32 +203,17 @@ function CommentItem({ c, depth }:{ c: Comment; depth:number }) {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium truncate">{c.name}</span>
             {c.suburb && <span className="text-neutral-500 truncate">• {c.suburb}</span>}
-            {c.isAgent && (
-              <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-200">
-                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5"><path d="M12 2 4 5v6c0 5 3.6 9.7 8 11 4.4-1.3 8-6 8-11V5Z" fill="currentColor"/></svg>
-                Agent
-              </span>
-            )}
+            {c.isAgent && (<span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border border-neutral-200">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5"><path d="M12 2 4 5v6c0 5 3.6 9.7 8 11 4.4-1.3 8-6 8-11V5Z" fill="currentColor"/></svg> Agent
+            </span>)}
             <span className="text-neutral-400 text-xs ml-auto">{c.time}</span>
           </div>
           <div className="mt-1 text-[15px] leading-5 text-neutral-900">{c.body}</div>
           <div className="mt-2 flex items-center gap-3 text-xs text-neutral-600">
             <button className="inline-flex items-center gap-1 hover:underline"><svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M12 21s-6.7-4.03-9.29-6.61A6 6 0 0 1 11.3 5.1l.7.7.7-.7A6 6 0 0 1 21.3 14.4C18.7 16.97 12 21 12 21Z" fill="currentColor"/></svg> {c.likes}</button>
-            <button className="inline-flex items-center gap-1 hover:underline"><svg viewBox="0 0 24 24" className="w-4 h-4"><path fill="currentColor" d="M14 9V5l7 7-7 7v-4H8a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h6Z"/></svg> Reply</button>
-            <button className="hover:underline">Report</button>
+            <button className="hover:underline" onClick={()=>setShowReplies(v=>!v)}>{showReplies?'Hide replies':'View replies'}</button>
           </div>
-          {c.replies && c.replies.length>0 && (
-            <div className="mt-3">
-              <button onClick={()=>setShowReplies(v=>!v)} className="text-xs text-neutral-600 hover:underline">
-                {showReplies ? `Hide replies (${c.replies.length})` : `View replies (${c.replies.length})`}
-              </button>
-              {showReplies && (
-                <div className="mt-2 pl-4 border-l border-neutral-200">
-                  {c.replies.map(r => <CommentItem key={r.id} c={r} depth={depth+1} />)}
-                </div>
-              )}
-            </div>
-          )}
+          {c.replies && showReplies && <div className="mt-2 pl-4 border-l border-neutral-200">{c.replies.map(r => <CommentItem key={r.id} c={r} depth={1} />)}</div>}
         </div>
       </div>
     </div>
@@ -373,7 +221,6 @@ function CommentItem({ c, depth }:{ c: Comment; depth:number }) {
 }
 
 /* ========================= Listing Card ========================= */
-
 function ListingCard({ L }: { L: Listing }) {
   const CAL_SIZE = 50;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -389,17 +236,12 @@ function ListingCard({ L }: { L: Listing }) {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  // Build media payload for MediaStrip
-  const media: MediaItem[] = [
-    ...(L.img ? [{ kind: 'image' as const, src: L.img, alt: L.address }] : []),
-    ...((L.photos ?? []).map((p) => ({ kind: 'image' as const, src: p }))),
-    ...((L.videos ?? []).map((v) => ({ kind: 'video' as const, src: v }))),
-    ...((L.shorts ?? []).map((s) => ({ kind: 'video' as const, src: s }))),
+  // Build media payload (we're not rendering the bottom-left overlay anymore)
+  const media = [
+    ...(L.img ? [{ src: L.img }] : []),
+    ...((L.photos ?? []).map((p) => ({ src: p }))),
   ];
-
-  // De-dupe and only show overlay if there's a gallery (2+ items)
-  const mediaUnique = Array.from(new Map(media.map(m => [m.src, m])).values());
-  const hasGallery = mediaUnique.length > 1;
+  const hasGallery = media.length > 1;
 
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -426,37 +268,7 @@ function ListingCard({ L }: { L: Listing }) {
       {/* Media (hero) */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[380px] overflow-hidden">
         <img src={L.img} className="w-full h-full object-cover" alt="" />
-
-        {/* MEDIA OVERLAY (bottom-left) — shown only when gallery has 2+ items */}
-        {hasGallery && (
-          <div className="absolute left-3 bottom-3 sm:left-4 sm:bottom-4">
-            <MediaStrip items={mediaUnique} plan="active" variant="overlay" />
-          </div>
-        )}
-
-        {/* Right-side ghost mini actions */}
-        <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
-          <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
-
-          <div className="relative" ref={cardMenuRef}>
-            <GhostIconButton label="Connect" onClick={() => setMenuOpen(v => !v)}>
-              <IconGridDots />
-            </GhostIconButton>
-            {menuOpen && (
-              <div className="absolute right-10 top-0 w-56 rounded-xl border border-neutral-200 bg-white shadow-lg p-2 z-30">
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconUsers /> <span className="text-sm">Agents</span></button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconCard /> <span className="text-sm">Finance</span></button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconShield /> <span className="text-sm">Insurance</span></button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-50"><IconBolt /> <span className="text-sm">Energy</span></button>
-              </div>
-            )}
-          </div>
-
-          <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-          <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
-          <GhostIconButton label="Share"><IconShare /></GhostIconButton>
-          <GhostIconButton label="Comments" onClick={() => setCommentsOpen(true)}><IconComment /></GhostIconButton>
-        </div>
+        {/* Overlay removed entirely (prevents '1 media' pill) */}
       </div>
 
       {/* Footer */}
@@ -490,7 +302,53 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </footer>
 
-      <CommentsPanel open={commentsOpen} onClose={() => setCommentsOpen(false)} listingTitle={L.address} />
+      {/* Right-side ghost mini actions */}
+      <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
+        <GhostIconButton label="Like"><IconHeart /></GhostIconButton>
+        <div className="relative" >
+          <GhostIconButton label="Connect"><IconGridDots /></GhostIconButton>
+        </div>
+        <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+        <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
+        <GhostIconButton label="Share"><IconShare /></GhostIconButton>
+        <GhostIconButton label="Comments"><IconComment /></GhostIconButton>
+      </div>
     </article>
   );
 }
+
+/* ========================= Page ========================= */
+function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
+  return (
+    <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden" role="tablist" aria-label="Choose Domestic or Commercial" title={value==='D'?'Domestic':'Commercial'}>
+      <button role="tab" aria-selected={value==='D'} onClick={()=>onChange?.('D')} className={`px-2.5 py-1 text-sm leading-none ${value==='D'?'bg-neutral-100 font-medium':'hover:bg-neutral-50'}`}><span className="sr-only">Domestic</span><span aria-hidden>D</span></button>
+      <span className="text-neutral-300 select-none">|</span>
+      <button role="tab" aria-selected={value==='C'} onClick={()=>onChange?.('C')} className={`px-2.5 py-1 text-sm leading-none ${value==='C'?'bg-neutral-100 font-medium':'hover:bg-neutral-50'}`}><span className="sr-only">Commercial</span><span aria-hidden>C</span></button>
+    </div>
+  );
+}
+
+export default function FeedClean() {
+  const [mode, setMode] = useState<'D'|'C'>('D');
+  return (
+    <main className="mx-auto max-w-4xl p-6">
+      {/* Top bar */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <ToggleDC value={mode} onChange={setMode} />
+          <ConnectMenu />
+          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
+            <Ic.Search />
+          </button>
+        </div>
+      </div>
+
+      {/* Feed */}
+      <div className="space-y-6">
+        {LISTINGS.map((L) => <ListingCard key={L.id} L={L} />)}
+      </div>
+    </main>
+  );
+}
+TSX
