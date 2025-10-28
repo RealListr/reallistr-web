@@ -5,7 +5,6 @@ import ConnectMenu from '@/components/ConnectMenu';
 import AgentsLink from '@/components/AgentsLink';
 import AgentsModal from '@/components/AgentsModal';
 
-/* ───────── Icons ───────── */
 const Ic = {
   Info: (p:{className?:string}) => (
     <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
@@ -28,12 +27,7 @@ const Ic = {
   ),
 };
 
-/* ───────── Demo Data (same visuals you had) ───────── */
-type Listing = {
-  id: string; img: string; price: string; address: string;
-  agent?: string; agency?: string;
-};
-
+type Listing = { id: string; img: string; price: string; address: string; agent?: string; agency?: string; };
 const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   id: String(i + 1),
   img: `https://images.unsplash.com/photo-${
@@ -45,7 +39,6 @@ const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   agency: 'Luxe Realty',
 }));
 
-/* ───────── Utilities ───────── */
 function GhostIconButton({
   label, children, onClick, className = '',
 }: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
@@ -61,11 +54,9 @@ function GhostIconButton({
   );
 }
 
-/* ───────── Listing Card ───────── */
 function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: string)=>void; }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
-      {/* Header */}
       <header className="flex items-center gap-3 p-5">
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
@@ -84,11 +75,8 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
         </div>
       </header>
 
-      {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
-
-        {/* Right-side mini actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
           <ConnectMenu compact className="self-start" />
@@ -96,7 +84,6 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
-
           {/* Agents: ghost icon (no yellow) + modal trigger */}
           <GhostIconButton label="Agents" onClick={() => onOpenAgents(L.id)} className="self-start text-white">
             <Ic.GhostHandshake />
@@ -104,7 +91,6 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="min-w-0">
           <p className="text-2xl font-bold">{L.price}</p>
@@ -118,7 +104,6 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
   );
 }
 
-/* ───────── Page ───────── */
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -139,7 +124,6 @@ export default function FeedClean() {
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -147,23 +131,18 @@ export default function FeedClean() {
           <ConnectMenu />
           {/* top-right: open modal */}
           <AgentsLink onClick={() => openAgents()} className="p-2 rounded-full hover:bg-neutral-100" />
-          <button
-            aria-label="Search"
-            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-          >
+          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
             <Ic.Search />
           </button>
         </div>
       </div>
 
-      {/* Feed */}
       <div className="space-y-6">
         {LISTINGS.map((L) => (
           <ListingCard key={L.id} L={L} onOpenAgents={openAgents} />
         ))}
       </div>
 
-      {/* Floating Agents Centre */}
       <AgentsModal open={agentsOpen} onClose={closeAgents} propertyId={agentsPropertyId} />
     </main>
   );

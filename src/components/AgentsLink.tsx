@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 'use client';
 
 export default function AgentsLink({
@@ -16,7 +14,7 @@ export default function AgentsLink({
       onClick={onClick}
       className={`p-2 rounded-full hover:bg-neutral-100 ${className}`}
     >
-      {/* Ghost users icon (stroke only, no fill) */}
+      {/* Ghost users icon (stroke only) */}
       <svg
         viewBox="0 0 24 24"
         className="h-5 w-5"
@@ -35,4 +33,3 @@ export default function AgentsLink({
     </button>
   );
 }
-

@@ -46,11 +46,7 @@ export default function AgentsModal({
               </p>
             )}
           </div>
-          <button
-            className="p-2 rounded-full hover:bg-neutral-100"
-            aria-label="Close"
-            onClick={onClose}
-          >
+          <button className="p-2 rounded-full hover:bg-neutral-100" aria-label="Close" onClick={onClose}>
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
