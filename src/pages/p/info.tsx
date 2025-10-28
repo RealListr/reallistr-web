@@ -3,7 +3,7 @@
 import React from 'react';
 import ConnectMenu from '@/components/ConnectMenu';
 
-/* ───────── Icons (no Agents icon) ───────── */
+/* ───────── Icons ───────── */
 const Ic = {
   Info: (p:{className?:string}) => (
     <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
@@ -19,21 +19,53 @@ const Ic = {
   Heart: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/></svg>,
   Share: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/></svg>,
   Comment: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/></svg>,
+  Bed: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M4 7h9a3 3 0 0 1 3 3v1h4v6h-2v-2H6v2H4V7Z" fill="currentColor"/></svg>,
+  Bath: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3Zm2-5a3 3 0 0 1 6 0v3H7V7Z" fill="currentColor"/></svg>,
+  Car: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 16l1-3 2-6h8l2 6 1 3v3h-2v-2H7v2H5v-3Z" fill="currentColor"/><circle cx="8" cy="18" r="1.2"/><circle cx="16" cy="18" r="1.2"/></svg>,
+  Calendar: () => <svg viewBox="0 0 24 24" className="w-6 h-6"><rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/><path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
 };
 
-type Listing = { id: string; img: string; price: string; address: string; agent?: string; agency?: string; };
+type Listing = {
+  id: string;
+  img: string;
+  price: string;
+  address: string;
+  specs: { beds: number; baths: number; cars: number };
+  photos: string[];
+};
 
-const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
-  id: String(i + 1),
-  img: `https://images.unsplash.com/photo-${
-    ['1500530855697-b586d89ba3ee','1482192596544-9eb780fc7f66','1508921912186-1d1a45ebb3c1','1488330890490-c291ecf62571','1501183638710-841dd1904471','1494526585095-c41746248156'][i%6]
-  }?q=80&w=1600&auto=format&fit=crop`,
-  price: 'AED 4,250,000',
-  address: 'One JLT, Jumeirah Lake Towers',
-  agent: 'Aisha Patel',
-  agency: 'Luxe Realty',
-}));
+const P = (id: string) => `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
+const T = (id: string) => `https://images.unsplash.com/photo-${id}?q=60&w=400&auto=format&fit=crop`;
 
+const LISTINGS: Listing[] = [
+  {
+    id: '1',
+    img: P('1500530855697-b586d89ba3ee'),
+    price: 'AED 4,250,000',
+    address: 'One JLT, Jumeirah Lake Towers',
+    specs: { beds: 2, baths: 2, cars: 1 },
+    photos: [
+      T('1500530855697-b586d89ba3ee'),
+      T('1482192596544-9eb780fc7f66'),
+      T('1508921912186-1d1a45ebb3c1'),
+      T('1488330890490-c291ecf62571'),
+    ],
+  },
+  {
+    id: '2',
+    img: P('1482192596544-9eb780fc7f66'),
+    price: 'AED 3,150,000',
+    address: 'Marina Gate, Dubai Marina',
+    specs: { beds: 1, baths: 1, cars: 1 },
+    photos: [
+      T('1501183638710-841dd1904471'),
+      T('1494526585095-c41746248156'),
+      T('1482192596544-9eb780fc7f66'),
+    ],
+  },
+];
+
+/* helpers */
 function GhostIconButton({
   label, children, onClick, className = '',
 }: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
@@ -49,6 +81,29 @@ function GhostIconButton({
   );
 }
 
+function SpecsRow({ beds, baths, cars }:{beds:number;baths:number;cars:number}) {
+  return (
+    <div className="mt-3 flex items-center gap-4 text-[13px] text-neutral-700">
+      <span className="inline-flex items-center gap-1.5"><Ic.Bed/> {beds} Beds</span>
+      <span className="inline-flex items-center gap-1.5"><Ic.Bath/> {baths} Baths</span>
+      <span className="inline-flex items-center gap-1.5"><Ic.Car/> {cars} Parking</span>
+    </div>
+  );
+}
+
+function MediaRail({ photos }:{photos:string[]}) {
+  if (!photos?.length) return null;
+  return (
+    <div className="px-5 pb-4">
+      <div className="mt-3 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {photos.map((src,i)=>(
+          <img key={i} src={src} alt="" className="h-20 w-28 rounded-lg object-cover border border-neutral-200 shrink-0"/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -59,26 +114,22 @@ function ListingCard({ L }: { L: Listing }) {
             <path d="M7 6h7l3 3v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200 shrink-0" />
-          <div className="min-w-0">
-            <p className="font-semibold leading-tight truncate">{L.agent}</p>
-            <p className="text-sm text-neutral-600 leading-tight truncate">{L.agency}</p>
-            <button className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50">
-              + Follow
-            </button>
-          </div>
+        <div className="min-w-0">
+          <p className="font-semibold leading-tight truncate">Aisha Patel</p>
+          <p className="text-sm text-neutral-600 leading-tight truncate">Luxe Realty</p>
+          <button className="mt-1 text-[11px] rounded-full px-2 py-[2px] border border-neutral-200 bg-white hover:bg-neutral-50">
+            + Follow
+          </button>
         </div>
       </header>
 
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
-
-        {/* Right-side mini actions (no Agents) */}
+        {/* Right-side actions */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
-          <ConnectMenu compact className="self-start" />
+          <ConnectMenu className="self-start" />
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
@@ -86,7 +137,7 @@ function ListingCard({ L }: { L: Listing }) {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer + Specs */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="min-w-0">
           <p className="text-2xl font-bold">{L.price}</p>
@@ -94,8 +145,12 @@ function ListingCard({ L }: { L: Listing }) {
           <p className="text-sm text-neutral-600 mt-2">
             Elegant 2-bed in JLT with south light and EV charging.
           </p>
+          <SpecsRow {...L.specs}/>
         </div>
       </footer>
+
+      {/* Media rail */}
+      <MediaRail photos={L.photos}/>
     </article>
   );
 }
@@ -110,6 +165,19 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
+/* Floating calendar button (bottom-right) */
+function CalendarFAB() {
+  return (
+    <a
+      href="/calendar"
+      className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-white/90 border border-neutral-200 shadow-lg grid place-items-center hover:bg-white"
+      aria-label="Calendar"
+    >
+      <Ic.Calendar />
+    </a>
+  );
+}
+
 export default function FeedClean() {
   const [mode, setMode] = React.useState<'D'|'C'>('D');
 
@@ -121,10 +189,7 @@ export default function FeedClean() {
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
           <ConnectMenu />
-          <button
-            aria-label="Search"
-            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-          >
+          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
             <Ic.Search />
           </button>
         </div>
@@ -134,6 +199,8 @@ export default function FeedClean() {
       <div className="space-y-6">
         {LISTINGS.map((L) => <ListingCard key={L.id} L={L} />)}
       </div>
+
+      <CalendarFAB />
     </main>
   );
 }
