@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import ConnectMenu from '@/components/ConnectMenu';
 
-/* ---- Icons (no Agents) ---- */
+/* ---- Icons ---- */
 const Ic = {
   Info: (p:{className?:string}) => (
     <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
@@ -15,24 +15,58 @@ const Ic = {
       <path d="M12 22s8-7.16 8-13a8 8 0 1 0-16 0c0 5.84 8 13 8 13Zm0-9a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/>
     </svg>
   ),
-  Search: () => <svg viewBox="0 0 24 24" className="w-5 h-5"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/></svg>,
-  Heart: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/></svg>,
-  Share: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/></svg>,
-  Comment: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/></svg>,
-  Calendar: () => (
+  Search: () => (
     <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
-      <rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/>
-      <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/>
+      <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/>
+    </svg>
+  ),
+  Heart: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/>
+    </svg>
+  ),
+  Share: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/>
+    </svg>
+  ),
+  Comment: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/>
+      <circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/>
+    </svg>
+  ),
+  /* simple 3x3 dots for the Connect trigger (pure glyph; background handled by button) */
+  Dots: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <circle cx="6" cy="6" r="1.4"/><circle cx="12" cy="6" r="1.4"/><circle cx="18" cy="6" r="1.4"/>
+      <circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/>
+      <circle cx="6" cy="18" r="1.4"/><circle cx="12" cy="18" r="1.4"/><circle cx="18" cy="18" r="1.4"/>
     </svg>
   ),
 };
 
-type Listing = { id: string; img: string; price: string; address: string; agent?: string; agency?: string; };
+type Listing = {
+  id: string;
+  img: string;
+  price: string;
+  address: string;
+  agent?: string;
+  agency?: string;
+};
 
 const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   id: String(i + 1),
   img: `https://images.unsplash.com/photo-${
-    ['1500530855697-b586d89ba3ee','1482192596544-9eb780fc7f66','1508921912186-1d1a45ebb3c1','1488330890490-c291ecf62571','1501183638710-841dd1904471','1494526585095-c41746248156'][i%6]
+    [
+      '1500530855697-b586d89ba3ee',
+      '1482192596544-9eb780fc7f66',
+      '1508921912186-1d1a45ebb3c1',
+      '1488330890490-c291ecf62571',
+      '1501183638710-841dd1904471',
+      '1494526585095-c41746248156',
+    ][i % 6]
   }?q=80&w=1600&auto=format&fit=crop`,
   price: 'AED 4,250,000',
   address: 'One JLT, Jumeirah Lake Towers',
@@ -55,6 +89,29 @@ function GhostIconButton({
   );
 }
 
+/* ── APPROVED CALENDAR BADGE ───────────────────────────────────────────── */
+function CalendarBadge({
+  dow = 'Thu', day = '23', time = '11:15–11:45', status = 'OPEN',
+}: { dow?: string; day?: string; time?: string; status?: string }) {
+  return (
+    <a
+      href="/calendar"
+      className="absolute bottom-3 right-3 z-[60] flex items-end gap-2 rounded-2xl border border-neutral-200 bg-white px-2.5 py-2 shadow-lg"
+      aria-label="Calendar"
+    >
+      <div className="flex flex-col items-center leading-none">
+        <span className="text-[10px] font-medium text-neutral-500">{dow}</span>
+        <span className="text-[18px] font-bold text-neutral-900">{day}</span>
+      </div>
+      <div className="flex flex-col leading-tight">
+        <span className="text-[11px] text-neutral-500">{time}</span>
+        <span className="text-[11px] font-semibold tracking-wide text-neutral-800">{status}</span>
+      </div>
+    </a>
+  );
+}
+
+/* ── LISTING CARD ─────────────────────────────────────────────────────── */
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -81,25 +138,26 @@ function ListingCard({ L }: { L: Listing }) {
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
 
-        {/* Right-side actions (Connect REMOVED here) */}
+        {/* Right-side actions — Connect trigger = pure dots, NO background */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
+
+          {/* Make ConnectMenu trigger backgroundless (just the dots). 
+             If your ConnectMenu accepts a className for the button, these utilities wipe bg/border. */}
+          <ConnectMenu
+            compact
+            className="self-start !bg-transparent !border-0 !shadow-none !backdrop-blur-0 hover:!bg-transparent"
+            icon={<Ic.Dots />}
+          />
+
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
         </div>
 
-        {/* Calendar inside card (bottom-right) */}
-        <button
-          type="button"
-          aria-label="Calendar"
-          className="group absolute bottom-4 right-4 z-[60] grid h-11 w-11 place-items-center rounded-full border border-neutral-200 bg-white/95 shadow-md hover:bg-white"
-          onClick={() => (window.location.href = '/calendar')}
-          data-test="calendar-fab"
-        >
-          <Ic.Calendar />
-        </button>
+        {/* Approved Calendar badge (overlaps bottom-right of media) */}
+        <CalendarBadge />
       </div>
 
       {/* Footer */}
@@ -116,6 +174,7 @@ function ListingCard({ L }: { L: Listing }) {
   );
 }
 
+/* ---- D | C toggle ---- */
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -126,6 +185,7 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
+/* ---- Page ---- */
 export default function Feed() {
   const [mode, setMode] = useState<'D'|'C'>('D');
 
@@ -136,12 +196,9 @@ export default function Feed() {
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
-          {/* Connects lives here only */}
-          <ConnectMenu />
-          <button
-            aria-label="Search"
-            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
-          >
+          {/* Header Connects */}
+          <ConnectMenu className="!bg-white !border !border-neutral-200 !shadow-sm hover:!bg-neutral-50" />
+          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
             <Ic.Search />
           </button>
         </div>
