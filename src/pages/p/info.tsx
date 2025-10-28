@@ -22,7 +22,7 @@ const Ic = {
   Bed: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M4 7h9a3 3 0 0 1 3 3v1h4v6h-2v-2H6v2H4V7Z" fill="currentColor"/></svg>,
   Bath: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3Zm2-5a3 3 0 0 1 6 0v3H7V7Z" fill="currentColor"/></svg>,
   Car: () => <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M5 16l1-3 2-6h8l2 6 1 3v3h-2v-2H7v2H5v-3Z" fill="currentColor"/><circle cx="8" cy="18" r="1.2"/><circle cx="16" cy="18" r="1.2"/></svg>,
-  Calendar: () => <svg viewBox="0 0 24 24" className="w-6 h-6"><rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/><path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  Calendar: () => <svg viewBox="0 0 24 24" className="w-5 h-5"><rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/><path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
 };
 
 type Listing = {
@@ -104,6 +104,19 @@ function MediaRail({ photos }:{photos:string[]}) {
   );
 }
 
+/* Calendar button INSIDE each card (bottom-right) */
+function CardCalendarButton() {
+  return (
+    <a
+      href="/calendar"
+      className="absolute bottom-3 right-3 z-10 w-10 h-10 rounded-full bg-white/90 border border-neutral-200 shadow-md grid place-items-center hover:bg-white"
+      aria-label="Calendar"
+    >
+      <Ic.Calendar />
+    </a>
+  );
+}
+
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -126,15 +139,17 @@ function ListingCard({ L }: { L: Listing }) {
       {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
-        {/* Right-side actions */}
+        {/* Right-side actions (Connect removed here) */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
-          <ConnectMenu className="self-start" />
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
         </div>
+
+        {/* Calendar inside card */}
+        <CardCalendarButton />
       </div>
 
       {/* Footer + Specs */}
@@ -165,19 +180,6 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
-/* Floating calendar button (bottom-right) */
-function CalendarFAB() {
-  return (
-    <a
-      href="/calendar"
-      className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full bg-white/90 border border-neutral-200 shadow-lg grid place-items-center hover:bg-white"
-      aria-label="Calendar"
-    >
-      <Ic.Calendar />
-    </a>
-  );
-}
-
 export default function FeedClean() {
   const [mode, setMode] = React.useState<'D'|'C'>('D');
 
@@ -188,8 +190,12 @@ export default function FeedClean() {
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
+          {/* Connects in the middle */}
           <ConnectMenu />
-          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
+          <button
+            aria-label="Search"
+            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+          >
             <Ic.Search />
           </button>
         </div>
@@ -199,8 +205,6 @@ export default function FeedClean() {
       <div className="space-y-6">
         {LISTINGS.map((L) => <ListingCard key={L.id} L={L} />)}
       </div>
-
-      <CalendarFAB />
     </main>
   );
 }
