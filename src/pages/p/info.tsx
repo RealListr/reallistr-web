@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import ConnectMenu from '@/components/ConnectMenu';
-import AgentsLink from '@/components/AgentsLink';
-import AgentsModal from '@/components/AgentsModal';
 
+/* ───────── Icons (no Agents icon) ───────── */
 const Ic = {
   Info: (p:{className?:string}) => (
     <svg viewBox="0 0 24 24" className={p.className??'w-5 h-5'} fill="currentColor" aria-hidden>
@@ -20,14 +19,10 @@ const Ic = {
   Heart: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/></svg>,
   Share: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/></svg>,
   Comment: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/></svg>,
-  GhostHandshake: () => (
-    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M8 13l3 3a3 3 0 0 0 4.24 0l2.26-2.26M10 11l2 2m-6.5 1.5L3 12l3-3 4 4" />
-    </svg>
-  ),
 };
 
 type Listing = { id: string; img: string; price: string; address: string; agent?: string; agency?: string; };
+
 const LISTINGS: Listing[] = Array.from({ length: 6 }).map((_, i) => ({
   id: String(i + 1),
   img: `https://images.unsplash.com/photo-${
@@ -54,9 +49,10 @@ function GhostIconButton({
   );
 }
 
-function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: string)=>void; }) {
+function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
+      {/* Header */}
       <header className="flex items-center gap-3 p-5">
         <div className="w-10 h-10 rounded-full grid place-items-center bg-neutral-50 border border-neutral-200 shrink-0">
           <svg viewBox="0 0 24 24" className="w-5 h-5 text-neutral-600" fill="none" aria-hidden>
@@ -75,8 +71,11 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
         </div>
       </header>
 
+      {/* Media */}
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
+
+        {/* Right-side mini actions (no Agents) */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
           <ConnectMenu compact className="self-start" />
@@ -84,13 +83,10 @@ function ListingCard({ L, onOpenAgents }: { L: Listing; onOpenAgents: (id?: stri
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
-          {/* Agents: ghost icon (no yellow) + modal trigger */}
-          <GhostIconButton label="Agents" onClick={() => onOpenAgents(L.id)} className="self-start text-white">
-            <Ic.GhostHandshake />
-          </GhostIconButton>
         </div>
       </div>
 
+      {/* Footer */}
       <footer className="p-5 border-t border-neutral-100">
         <div className="min-w-0">
           <p className="text-2xl font-bold">{L.price}</p>
@@ -115,35 +111,29 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
 }
 
 export default function FeedClean() {
-  const [mode, setMode] = useState<'D'|'C'>('D');
-  const [agentsOpen, setAgentsOpen] = useState(false);
-  const [agentsPropertyId, setAgentsPropertyId] = useState<string | undefined>(undefined);
-
-  const openAgents = (id?: string) => { setAgentsPropertyId(id); setAgentsOpen(true); };
-  const closeAgents = () => setAgentsOpen(false);
+  const [mode, setMode] = React.useState<'D'|'C'>('D');
 
   return (
     <main className="mx-auto max-w-4xl p-6">
+      {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
           <ConnectMenu />
-          {/* top-right: open modal */}
-          <AgentsLink onClick={() => openAgents()} className="p-2 rounded-full hover:bg-neutral-100" />
-          <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
+          <button
+            aria-label="Search"
+            className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50"
+          >
             <Ic.Search />
           </button>
         </div>
       </div>
 
+      {/* Feed */}
       <div className="space-y-6">
-        {LISTINGS.map((L) => (
-          <ListingCard key={L.id} L={L} onOpenAgents={openAgents} />
-        ))}
+        {LISTINGS.map((L) => <ListingCard key={L.id} L={L} />)}
       </div>
-
-      <AgentsModal open={agentsOpen} onClose={closeAgents} propertyId={agentsPropertyId} />
     </main>
   );
 }
