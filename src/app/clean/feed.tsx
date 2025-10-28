@@ -19,6 +19,12 @@ const Ic = {
   Heart: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/></svg>,
   Share: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/></svg>,
   Comment: () => <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/><circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/></svg>,
+  Calendar: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+      <rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/>
+      <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  ),
 };
 
 type Listing = { id: string; img: string; price: string; address: string; agent?: string; agency?: string; };
@@ -75,15 +81,25 @@ function ListingCard({ L }: { L: Listing }) {
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
 
-        {/* Right-side actions (no Agents) */}
+        {/* Right-side actions (Connect REMOVED here) */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
-          <ConnectMenu compact className="self-start" />
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Map"><Ic.Pin className="w-[22px] h-[22px] text-white" /></GhostIconButton>
           <GhostIconButton label="Share"><Ic.Share /></GhostIconButton>
           <GhostIconButton label="Comments"><Ic.Comment /></GhostIconButton>
         </div>
+
+        {/* Calendar inside card (bottom-right) */}
+        <button
+          type="button"
+          aria-label="Calendar"
+          className="group absolute bottom-4 right-4 z-[60] grid h-11 w-11 place-items-center rounded-full border border-neutral-200 bg-white/95 shadow-md hover:bg-white"
+          onClick={() => (window.location.href = '/calendar')}
+          data-test="calendar-fab"
+        >
+          <Ic.Calendar />
+        </button>
       </div>
 
       {/* Footer */}
@@ -120,6 +136,7 @@ export default function Feed() {
         <div className="text-3xl font-extrabold tracking-tight">RealListr</div>
         <div className="flex items-center gap-2 sm:gap-3">
           <ToggleDC value={mode} onChange={setMode} />
+          {/* Connects lives here only */}
           <ConnectMenu />
           <button
             aria-label="Search"
