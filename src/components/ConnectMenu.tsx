@@ -1,14 +1,7 @@
 'use client';
-
 import { useState, useRef, useEffect } from 'react';
 
-export default function ConnectMenu({
-  className = '',
-  compact = false,
-}: {
-  className?: string;
-  compact?: boolean;
-}) {
+export default function ConnectMenu({ className = '' }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -26,14 +19,10 @@ export default function ConnectMenu({
       <button
         type="button"
         aria-label="Connect"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
+        onClick={(e) => { e.stopPropagation(); setOpen(v => !v); }}
         className="p-2 rounded-md hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/30"
       >
-        {/* 9-dot icon */}
-        <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" aria-hidden>
+        <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-black" aria-hidden>
           <g fill="currentColor">
             <circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/>
             <circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/>
