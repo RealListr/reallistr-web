@@ -3,13 +3,97 @@
 import React from 'react';
 import ConnectMenu from '@/components/ConnectMenu';
 
+/* ───────── Icons ───────── */
 const Ic = {
   Info: (p:{className?:string}) => (
-    <svg viewBox=0
+    <svg viewBox="0 0 24 24" className={p.className ?? 'w-5 h-5'} fill="currentColor" aria-hidden>
+      <circle cx="12" cy="12" r="10" opacity=".1" />
+      <path d="M12 11v6m0-10h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  ),
+  Pin: (p:{className?:string}) => (
+    <svg viewBox="0 0 24 24" className={p.className ?? 'w-5 h-5'} fill="currentColor" aria-hidden>
+      <path d="M12 22s8-7.16 8-13a8 8 0 1 0-16 0c0 5.84 8 13 8 13Zm0-9a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/>
+    </svg>
+  ),
+  Search: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" fill="none"/>
+      <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="1.8"/>
+    </svg>
+  ),
+  Heart: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M12 21s-6.716-4.03-9.293-6.607A6 6 0 0 1 11.293 5.1L12 5.8l.707-.7A6 6 0 0 1 21.293 14.4C18.716 16.97 12 21 12 21Z"/>
+    </svg>
+  ),
+  Share: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M14 9V5l7 7-7 7v-4H7a4 4 0 0 1-4-4V6h2v5a2 2 0 0 0 2 2h7Z"/>
+    </svg>
+  ),
+  Comment: () => (
+    <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="currentColor" aria-hidden>
+      <path d="M4 5h16a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4.5 3.5A1 1 0 0 1 3 19v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/>
+      <circle cx="9" cy="10.5" r="1.2"/><circle cx="12" cy="10.5" r="1.2"/><circle cx="15" cy="10.5" r="1.2"/>
+    </svg>
+  ),
+  Bed: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
+      <path d="M4 7h9a3 3 0 0 1 3 3v1h4v6h-2v-2H6v2H4V7Z" fill="currentColor"/>
+    </svg>
+  ),
+  Bath: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
+      <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3Zm2-5a3 3 0 0 1 6 0v3H7V7Z" fill="currentColor"/>
+    </svg>
+  ),
+  Car: () => (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
+      <path d="M5 16l1-3 2-6h8l2 6 1 3v3h-2v-2H7v2H5v-3Z" fill="currentColor"/>
+      <circle cx="8" cy="18" r="1.2"/><circle cx="16" cy="18" r="1.2"/>
+    </svg>
+  ),
+  Calendar: () => (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden>
+      <rect x="3" y="4" width="18" height="16" rx="2" fill="currentColor" opacity=".1"/>
+      <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+    </svg>
+  ),
+};
 
-function GhostIconButton({ label, children, onClick, className = '' }:{
-  label:string; children:React.ReactNode; onClick?:()=>void; className?:string;
-}) {
+/* ───────── Types & Data ───────── */
+type Listing = {
+  id: string;
+  img: string;
+  price: string;
+  address: string;
+  specs: { beds: number; baths: number; cars: number };
+  photos: string[];
+};
+const P = (id: string) => `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
+const T = (id: string) => `https://images.unsplash.com/photo-${id}?q=60&w=400&auto=format&fit=crop`;
+
+const LISTINGS: Listing[] = [
+  {
+    id: '1',
+    img: P('1500530855697-b586d89ba3ee'),
+    price: 'AED 4,250,000',
+    address: 'One JLT, Jumeirah Lake Towers',
+    specs: { beds: 2, baths: 2, cars: 1 },
+    photos: [
+      T('1500530855697-b586d89ba3ee'),
+      T('1482192596544-9eb780fc7f66'),
+      T('1508921912186-1d1a45ebb3c1'),
+      T('1488330890490-c291ecf62571'),
+    ],
+  },
+];
+
+/* ───────── UI helpers ───────── */
+function GhostIconButton({
+  label, children, onClick, className = '',
+}: { label: string; children: React.ReactNode; onClick?: () => void; className?: string; }) {
   return (
     <button
       aria-label={label}
@@ -45,6 +129,7 @@ function MediaRail({ photos }:{photos:string[]}) {
   );
 }
 
+/* Calendar button inside each card (bottom-right) */
 function CardCalendarButton() {
   return (
     <a
@@ -57,34 +142,7 @@ function CardCalendarButton() {
   );
 }
 
-type Listing = {
-  id: string;
-  img: string;
-  price: string;
-  address: string;
-  specs: { beds: number; baths: number; cars: number };
-  photos: string[];
-};
-
-const P = (id: string) => `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
-const T = (id: string) => `https://images.unsplash.com/photo-${id}?q=60&w=400&auto=format&fit=crop`;
-
-const LISTINGS: Listing[] = [
-  {
-    id: '1',
-    img: P('1500530855697-b586d89ba3ee'),
-    price: 'AED 4,250,000',
-    address: 'One JLT, Jumeirah Lake Towers',
-    specs: { beds: 2, baths: 2, cars: 1 },
-    photos: [
-      T('1500530855697-b586d89ba3ee'),
-      T('1482192596544-9eb780fc7f66'),
-      T('1508921912186-1d1a45ebb3c1'),
-      T('1488330890490-c291ecf62571'),
-    ],
-  },
-];
-
+/* ───────── Card ───────── */
 function ListingCard({ L }: { L: Listing }) {
   return (
     <article className="relative rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm">
@@ -108,7 +166,7 @@ function ListingCard({ L }: { L: Listing }) {
       <div className="relative bg-neutral-100 h-[300px] sm:h-[360px] md:h-[420px] overflow-hidden">
         <img src={L.img} alt={L.address} className="w-full h-full object-cover" />
 
-        {/* Right-side actions (NO Connect here) */}
+        {/* Right-side actions (Connect removed here) */}
         <div className="absolute right-1.5 sm:right-2 top-2 flex flex-col gap-2">
           <GhostIconButton label="Like"><Ic.Heart /></GhostIconButton>
           <GhostIconButton label="Info"><Ic.Info className="w-[22px] h-[22px] text-white" /></GhostIconButton>
@@ -139,6 +197,7 @@ function ListingCard({ L }: { L: Listing }) {
   );
 }
 
+/* ───────── Top bar ───────── */
 function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C')=>void; }) {
   return (
     <div className="inline-flex items-center rounded-full border border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -149,6 +208,7 @@ function ToggleDC({ value='D', onChange }:{ value?:'D'|'C'; onChange?:(v:'D'|'C'
   );
 }
 
+/* ───────── Page ───────── */
 export default function DashPage() {
   const [mode, setMode] = React.useState<'D'|'C'>('D');
   return (
@@ -161,7 +221,7 @@ export default function DashPage() {
           {/* Connects in the middle */}
           <ConnectMenu />
           <button aria-label="Search" className="w-9 h-9 rounded-full bg-white border border-neutral-200 shadow-sm grid place-items-center hover:bg-neutral-50">
-            {Ic.Search()}
+            <Ic.Search />
           </button>
         </div>
       </div>
