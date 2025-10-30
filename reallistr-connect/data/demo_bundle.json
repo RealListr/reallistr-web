@@ -1,0 +1,17 @@
+{
+  "properties": [
+    {"address": "12 Bayview Ave, Brighton VIC", "status": "published", "beds": 4, "baths": 3},
+    {"address": "88 Collins St, Melbourne VIC", "status": "draft", "beds": 2, "baths": 2},
+    {"address": "5 Seaview Rd, Dromana VIC", "status": "published", "beds": 3, "baths": 2}
+  ],
+  "leads": [
+    {"name": "Sophie Turner", "property_id": "12 Bayview Ave, Brighton VIC", "stage": "New", "last_activity_at": "2025-10-20T10:05:00Z"},
+    {"name": "Liam Chen", "property_id": "88 Collins St, Melbourne VIC", "stage": "Contacted", "last_activity_at": "2025-10-21T12:20:00Z"},
+    {"name": "Amelia Rossi", "property_id": "5 Seaview Rd, Dromana VIC", "stage": "Offer", "last_activity_at": "2025-10-22T09:15:00Z"}
+  ],
+  "campaigns": [
+    {"property_id": "12 Bayview Ave, Brighton VIC", "status": "active"},
+    {"property_id": "88 Collins St, Melbourne VIC", "status": "paused"}
+  ],
+  "subscription": {"plan": "starter", "usage_props": 3, "usage_media_gb": 3.2, "ai_credits": 10}
+}

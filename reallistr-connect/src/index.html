@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reallistr Connect</title>
+  <link rel="icon" href="./public/assets/icon-connect.svg" />
+  <link rel="stylesheet" href="./styles/base.css" />
+  <link rel="stylesheet" href="./styles/cards.css" />
+</head>
+<body>
+  <header class="topbar">
+    <img src="./public/assets/logo.svg" class="logo" alt="Reallistr" />
+    <div class="spacer"></div>
+    <select id="roleSelect">
+      <option value="principal">Principal</option>
+      <option value="agent">Agent</option>
+    </select>
+  </header>
+  <button id="btnReset" class="btn" style="margin-left:12px;">Reset Demo</button>
+
+  <aside class="sidebar">
+    <nav>
+      <a href="#/dashboard">Dashboard</a>
+      <a href="#/subscriptions">Subscriptions</a>
+      <a href="#/ads">Ads</a>
+      <a href="#/properties">Properties</a>
+      <a href="#/leads">Leads</a>
+      <a href="#/settings">Settings</a>
+    </nav>
+  </aside>
+
+  <main id="app" class="content"></main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
