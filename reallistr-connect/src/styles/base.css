@@ -199,3 +199,37 @@
 .compact-editor .row.tight{ gap:8px; align-items:center; }
 
 .smart-compact .preview-card.sticky{ position:sticky; top:16px; }
+
+/* ---- Emergency tidy for Property Editor (Option A) ---- */
+.compact-editor .specs-row,
+.compact-editor .metrics-row{ gap:12px; }
+
+.compact-editor .specs-row .xs,
+.compact-editor .specs-row .sm,
+.compact-editor .metrics-row .sm{
+  display:flex; flex-direction:column; gap:6px;
+}
+
+/* Make every control in the spec/metrics rows actually show */
+.compact-editor .specs-row input.btn,
+.compact-editor .specs-row select.btn,
+.compact-editor .metrics-row input.btn,
+.compact-editor .metrics-row select.btn{
+  display:block !important;
+  width:100% !important;
+  min-height:38px !important;
+  padding:8px 10px !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:10px !important;
+  background:#fff !important;
+  box-sizing:border-box !important;
+}
+
+/* Keep labels compact and aligned */
+.compact-editor label{ font-size:12px; color:#6b7280; line-height:1; }
+
+/* Don’t let tiny number inputs collapse */
+.compact-editor input[type="number"].btn{ min-width:80px; }
+
+/* Domain toggle spacing */
+.compact-editor .domain-toggle{ gap:8px; }
