@@ -305,3 +305,54 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* --- FINAL PROPERTY EDITOR CLEAN GRID LAYOUT --- */
+.compact-editor .row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+  gap: 12px !important;
+  align-items: end !important;
+  margin-bottom: 10px !important;
+}
+
+/* Header alignment */
+.compact-editor .head-row {
+  grid-template-columns: 1fr 160px 100px !important;
+}
+
+/* Row A (specs) - 8 columns max */
+.compact-editor .specs-row {
+  grid-template-columns: repeat(8, minmax(90px, 1fr)) !important;
+}
+
+/* Row B (metrics) - 4 even columns */
+.compact-editor .metrics-row {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* Labels and inputs */
+.compact-editor label {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  margin-bottom: 3px !important;
+}
+.compact-editor input.btn,
+.compact-editor select.btn,
+.compact-editor textarea.btn {
+  width: 100% !important;
+  min-height: 36px !important;
+  padding: 6px 10px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-sizing: border-box !important;
+}
+
+/* Force rows to stay distinct */
+.compact-editor .desc-row,
+.compact-editor .media-row,
+.compact-editor .actions {
+  margin-top: 16px !important;
+}
+
+.compact-editor .domain-toggle { gap: 8px; }
