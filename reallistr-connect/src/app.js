@@ -107,35 +107,40 @@ const TPL = {
           </div>
 
           <!-- Row A -->
-          <div class="row specs-row">
-            <div class="xs"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
-            <div class="xs"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
-            <div class="xs"><label>Car</label><input id="p_cars" class="btn" type="number" min="0"/></div>
-            <div class="xs"><label>Level</label><input id="p_level" class="btn" type="number" min="0"/></div>
-            <div class="xs"><label>Pool</label><input type="checkbox" id="p_pool"/></div>
-            <div class="xs"><label>EV</label><input type="checkbox" id="p_ev"/></div>
-            <div class="xs">
-              <label>Solar (W)</label>
-              <div class="row tight"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div>
-            </div>
-            <div class="sm">
-              <label>Grass</label>
-              <select id="p_grass" class="btn" style="width:100%">${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select>
-            </div>
-          </div>
+<div class="row specs-row">
+  <div class="field"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
+  <div class="field"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
+  <div class="field"><label>Car</label><input id="p_cars" class="btn" type="number" min="0"/></div>
+  <div class="field"><label>Level</label><input id="p_level" class="btn" type="number" min="0"/></div>
+  <div class="field"><label>Pool</label><input type="checkbox" id="p_pool"/></div>
+  <div class="field"><label>EV</label><input type="checkbox" id="p_ev"/></div>
+  <div class="field">
+    <label>Solar (W)</label>
+    <div class="row tight">
+      <input type="checkbox" id="p_solar"/>
+      <input id="p_solar_w" class="btn" type="number" min="0" placeholder="W"/>
+    </div>
+  </div>
+  <div class="field">
+    <label>Grass</label>
+    <select id="p_grass" class="btn" style="width:100%">${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select>
+  </div>
+</div>
 
-          <!-- Row B -->
-          <div class="row metrics-row">
-            <div class="sm"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="sm"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="sm"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
-            <div class="sm"><label>Listing Label</label>
-              <select id="p_label" class="btn" style="width:100%">
-                <option value="">Select a label</option>
-                ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
-              </select>
-            </div>
-          </div>
+<!-- Row B -->
+<div class="row metrics-row">
+  <div class="field"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
+  <div class="field"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
+  <div class="field"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
+  <div class="field">
+    <label>Listing Label</label>
+    <select id="p_label" class="btn" style="width:100%">
+      <option value="">Select a label</option>
+      ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
+    </select>
+  </div>
+</div>
+
 
           <!-- Description -->
           <div class="row desc-row">

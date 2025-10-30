@@ -356,3 +356,18 @@
 }
 
 .compact-editor .domain-toggle { gap: 8px; }
+
+/* --- Property Editor field blocks --- */
+.compact-editor .row{ display:grid; gap:12px; align-items:end; }
+.compact-editor .head-row{ grid-template-columns:1fr 160px 100px; }
+.compact-editor .specs-row{ grid-template-columns:repeat(8, minmax(110px,1fr)); }
+.compact-editor .metrics-row{ grid-template-columns:repeat(4, minmax(160px,1fr)); }
+
+/* each control = a field (label over control) */
+.compact-editor .field{ display:flex; flex-direction:column; }
+.compact-editor .field label{ font-size:12px; color:#6b7280; margin-bottom:4px; }
+.compact-editor .field input.btn,
+.compact-editor .field select.btn,
+.compact-editor .field textarea.btn{ width:100%; min-height:36px; }
+
+.compact-editor .row.tight{ gap:6px; }
