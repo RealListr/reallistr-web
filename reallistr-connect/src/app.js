@@ -80,15 +80,15 @@ const TPL = {
   `,
   '#/property-editor': `
     <h1 class="h1">Property Editor</h1>
-    <div class="editor-grid">
+    <div class="editor-grid smart-compact">
       <section>
-        <div class="card">
+        <div class="card compact-editor">
 
-          <!-- Header: Address + Status + Domain (D|C) -->
-          <div class="row">
-            <div style="flex:1">
+          <!-- Header -->
+          <div class="row head-row">
+            <div class="flex-1">
               <label>Address</label>
-              <input id="p_address" class="btn" style="width:100%" placeholder="123 Main St"/>
+              <input id="p_address" class="btn" placeholder="123 Main St" style="width:100%"/>
             </div>
             <div class="sm">
               <label>Status</label>
@@ -99,24 +99,24 @@ const TPL = {
             </div>
             <div class="sm">
               <label>Domain</label>
-              <div class="row">
+              <div class="row domain-toggle">
                 <button class="btn" id="domD">D</button>
                 <button class="btn" id="domC">C</button>
               </div>
             </div>
           </div>
 
-          <!-- Row A: specs (compact) -->
-          <div class="row" style="margin-top:10px">
+          <!-- Row A -->
+          <div class="row specs-row">
             <div class="xs"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
             <div class="xs"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
             <div class="xs"><label>Car</label><input id="p_cars" class="btn" type="number" min="0"/></div>
             <div class="xs"><label>Level</label><input id="p_level" class="btn" type="number" min="0"/></div>
             <div class="xs"><label>Pool</label><input type="checkbox" id="p_pool"/></div>
             <div class="xs"><label>EV</label><input type="checkbox" id="p_ev"/></div>
-            <div class="sm">
-              <label>Solar</label>
-              <div class="row"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div>
+            <div class="xs">
+              <label>Solar (W)</label>
+              <div class="row tight"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div>
             </div>
             <div class="sm">
               <label>Grass</label>
@@ -124,15 +124,12 @@ const TPL = {
             </div>
           </div>
 
-          <!-- Row B: land/build/type/label -->
-          <div class="row" style="margin-top:8px">
-            <div class="sm" style="flex:1"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="sm" style="flex:1"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="sm"><label>Property Type</label>
-              <select id="p_type" class="btn" style="width:100%"></select>
-            </div>
-            <div class="sm" style="flex:1">
-              <label>Listing Label</label>
+          <!-- Row B -->
+          <div class="row metrics-row">
+            <div class="sm"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
+            <div class="sm"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
+            <div class="sm"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
+            <div class="sm"><label>Listing Label</label>
               <select id="p_label" class="btn" style="width:100%">
                 <option value="">Select a label</option>
                 ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
@@ -140,43 +137,43 @@ const TPL = {
             </div>
           </div>
 
-          <!-- Close date (conditional) -->
-          <div class="row" id="closeWrap" style="margin-top:8px;display:none">
-            <div class="sm" style="flex:1">
-              <label>Close date</label>
-              <input id="p_close" class="btn" placeholder="dd/mm/yyyy" />
+          <!-- Description -->
+          <div class="row desc-row">
+            <div class="flex-1">
+              <label>Description</label>
+              <textarea id="p_desc" class="btn" style="width:100%;min-height:90px" placeholder="Short description..."></textarea>
             </div>
           </div>
 
-          <!-- Description -->
-          <div style="margin-top:10px">
-            <label>Description</label>
-            <textarea id="p_desc" class="btn" style="width:100%" placeholder="Short description..."></textarea>
+          <!-- Media -->
+          <div class="row media-row">
+            <div class="flex-1">
+              <label>Media</label>
+              <div class="upload-grid">
+                <div><b>Images</b> <input id="p_imgs" type="file" accept="image/*" multiple/></div>
+                <div><b>Videos</b> <input id="p_vids" type="file" accept="video/*" multiple/></div>
+                <div><b>RealCuts</b> <input id="p_cuts" type="file" accept="video/*" multiple/></div>
+              </div>
+              <div id="p_media_strip" class="hscroll media-strip"></div>
+            </div>
           </div>
-        </div>
 
-        <!-- Media -->
-        <div class="card" style="margin-top:12px">
-          <div class="h2">Media</div>
-          <div class="row" style="margin-top:4px"><b>Images</b> <input id="p_imgs" type="file" accept="image/*" multiple /></div>
-          <div class="row" style="margin-top:4px"><b>Videos</b> <input id="p_vids" type="file" accept="video/*" multiple /></div>
-          <div class="row" style="margin-top:4px"><b>RealCuts</b> <input id="p_cuts" type="file" accept="video/*" multiple /></div>
-          <div id="p_media_strip" class="hscroll" style="margin-top:8px"></div>
-        </div>
-
-        <div class="row" style="margin-top:12px">
-          <button class="btn primary" id="p_save">Save</button>
-          <button class="btn" id="p_cancel">Cancel</button>
+          <!-- Actions -->
+          <div class="row actions">
+            <button class="btn primary" id="p_save">Save</button>
+            <button class="btn" id="p_cancel">Cancel</button>
+          </div>
         </div>
       </section>
 
+      <!-- Sticky Preview -->
       <aside>
         <div id="p_preview" class="preview-card sticky"></div>
       </aside>
     </div>
-  `
-};
+    `,              // ✅ add this comma here!
 
+};
 /* ---------- router ---------- */
 const routes = Object.keys(TPL);
 const mount = async () => {
@@ -267,6 +264,7 @@ function attachControllers(path){
     byId('p_build').value = p.build_m2 ?? '';
     setDomain(p.domain||'domestic');
     byId('p_label').value = p.listing_label || '';
+const closeEl = byId('p_close'); if (closeEl) closeEl.value = fmtDMY(p.listing_close_date);
     byId('p_close').value = fmtDMY(p.listing_close_date);
     byId('p_desc').value = p.desc || '';
 

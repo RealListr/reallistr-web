@@ -1,0 +1,171 @@
+:root{--bg:#f7f8fb;--card:#fff;--ink:#0b1221;--muted:#6b7280;--line:#e5e7eb}
+
+/* Ghost icon sizing (chips + preview) */
+.gi{width:16px;height:16px;display:inline-block}
+.preview-card .gi{width:18px;height:18px}
+.gi-chip,.lbl-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+  border-radius:999px;background:#fff;font-size:13px}
+
+/* PropertyCard */
+.pc-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}
+.pc-media{aspect-ratio:16/9;background:#f3f4f6}
+.pc-media img{width:100%;height:100%;object-fit:cover;display:block}
+.pc-media--empty{display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280}
+.pc-body{padding:14px}
+.pc-row{display:flex;align-items:center;justify-content:space-between}
+.pc-row--head{gap:12px}
+.type-badge{display:inline-flex;gap:8px;align-items:center;font-weight:600}
+.pc-actions{display:flex;gap:8px;align-items:center}
+.pc-icon{background:transparent;border:none;padding:6px;border-radius:8px;cursor:pointer}
+.pc-icon:hover{background:#f3f4f6}
+.pc-address{color:#6b7280;margin-top:2px}
+.pc-specs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pc-flyout{position:absolute;background:rgba(0,0,0,.12);inset:0;padding:16px}
+.pc-card{position:relative}
+.pc-flyout-inner{margin-left:auto;width:min(420px,92%);background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+.pc-flyout-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.pc-flyout-title{font-weight:600}
+.desc-snippet{margin-top:8px;color:#374151}
+
+/* Hide legacy large map card if present (we use inline toggle now) */
+.card:has(#mapWrap){ display:none; }
+@supports not (selector(:has(*))){
+  /* Fallback for browsers without :has — the JS already hides it, but keep this harmless */
+}
+
+/* Safety: if legacy Map card slips through, keep it collapsed */
+.card:has(#mapWrap){ display:none; }
+
+/* Safety: collapse legacy big map card if still in DOM */
+.card:has(#mapWrap){ display:none; }
+/* === Smart Compact Pro layout === */
+.smart-compact { gap: 20px; align-items: start; }
+.compact-editor { background:#fff; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.compact-editor .row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.compact-editor label { font-size:13px; font-weight:600; color:#6b7280; display:block; margin-bottom:2px; }
+.compact-editor input, .compact-editor select, .compact-editor textarea {
+  height:38px; border:1px solid #e5e7eb; border-radius:8px; padding:6px 8px; font-size:14px;
+}
+.compact-editor textarea { height:auto; resize:vertical; min-height:90px; }
+.upload-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+.media-strip { margin-top:10px; display:flex; gap:8px; overflow-x:auto; }
+.media-strip .thumb { width:80px; height:60px; border-radius:8px; object-fit:cover; border:1px solid #e5e7eb; }
+.actions { justify-content:center; margin-top:16px; }
+.actions .btn { min-width:100px; }
+.domain-toggle .btn { min-width:36px; padding:4px 8px; }
+
+/* ---------- Compact Property Editor (Phase 1) ---------- */
+.smart-compact .compact-editor{padding:14px}
+.smart-compact label{display:block;font-size:13px;color:#6b7280;margin-bottom:6px}
+.smart-compact .btn{height:36px}
+
+/* rows */
+.smart-compact .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.smart-compact .flex-1{flex:1 1 auto}
+.smart-compact .sm{width:180px;flex:0 0 180px}
+.smart-compact .xs{width:120px;flex:0 0 120px}
+
+/* head row */
+.smart-compact .head-row .sm{width:160px}
+
+/* Row A: specs (8 columns) */
+.smart-compact .specs-row{
+  display:grid;grid-template-columns:repeat(8, minmax(110px,1fr));
+  gap:10px;margin-top:10px
+}
+.smart-compact .specs-row .xs,
+.smart-compact .specs-row .sm{width:auto;flex:unset}
+
+/* Row B: metrics (4 columns) */
+.smart-compact .metrics-row{
+  display:grid;grid-template-columns:repeat(4, minmax(160px,1fr));
+  gap:10px;margin-top:10px
+}
+
+/* Description */
+.smart-compact .desc-row{margin-top:10px}
+.smart-compact .desc-row textarea{min-height:100px}
+
+/* Media section */
+.smart-compact .upload-grid{
+  display:grid;grid-template-columns:repeat(3, minmax(160px,1fr));gap:12px
+}
+.smart-compact .media-strip{margin-top:8px;display:flex;gap:8px;overflow:auto}
+.smart-compact .media-strip .thumb{
+  width:96px;height:64px;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover
+}
+
+/* Domain toggle */
+.smart-compact .domain-toggle{gap:8px}
+.smart-compact .domain-toggle .btn{width:40px}
+
+/* Action row */
+.smart-compact .actions{margin-top:12px}
+
+/* Layout: sticky preview on the right */
+.editor-grid{
+  display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start
+}
+.preview-card.sticky{position:sticky;top:16px}
+
+/* keep labels from wrapping onto next line when narrow */
+.smart-compact .xs label,
+.smart-compact .sm label{white-space:nowrap}
+
+/* ---------- Compact Property Editor (Phase 1) ---------- */
+.smart-compact .compact-editor{padding:14px}
+.smart-compact label{display:block;font-size:13px;color:#6b7280;margin-bottom:6px}
+.smart-compact .btn{height:36px}
+
+/* rows */
+.smart-compact .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.smart-compact .flex-1{flex:1 1 auto}
+.smart-compact .sm{width:180px;flex:0 0 180px}
+.smart-compact .xs{width:120px;flex:0 0 120px}
+
+/* head row */
+.smart-compact .head-row .sm{width:160px}
+
+/* Row A: specs (8 columns) */
+.smart-compact .specs-row{
+  display:grid;grid-template-columns:repeat(8, minmax(110px,1fr));
+  gap:10px;margin-top:10px
+}
+.smart-compact .specs-row .xs,
+.smart-compact .specs-row .sm{width:auto;flex:unset}
+
+/* Row B: metrics (4 columns) */
+.smart-compact .metrics-row{
+  display:grid;grid-template-columns:repeat(4, minmax(160px,1fr));
+  gap:10px;margin-top:10px
+}
+
+/* Description */
+.smart-compact .desc-row{margin-top:10px}
+.smart-compact .desc-row textarea{min-height:100px}
+
+/* Media section */
+.smart-compact .upload-grid{
+  display:grid;grid-template-columns:repeat(3, minmax(160px,1fr));gap:12px
+}
+.smart-compact .media-strip{margin-top:8px;display:flex;gap:8px;overflow:auto}
+.smart-compact .media-strip .thumb{
+  width:96px;height:64px;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover
+}
+
+/* Domain toggle */
+.smart-compact .domain-toggle{gap:8px}
+.smart-compact .domain-toggle .btn{width:40px}
+
+/* Action row */
+.smart-compact .actions{margin-top:12px}
+
+/* Layout: sticky preview on the right */
+.editor-grid{
+  display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start
+}
+.preview-card.sticky{position:sticky;top:16px}
+
+/* keep labels from wrapping onto next line when narrow */
+.smart-compact .xs label,
+.smart-compact .sm label{white-space:nowrap}
