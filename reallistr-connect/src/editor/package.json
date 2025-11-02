@@ -1,0 +1,15 @@
+{
+  "name": "editor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "editor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "editor": "PORT=5176 node server.mjs",
+    "editor:bg": "nohup env PORT=5176 node server.mjs >/tmp/rl5176.log 2>&1 &",
+    "editor:stop": "pkill -f \"server.mjs\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

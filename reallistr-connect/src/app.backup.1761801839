@@ -80,9 +80,8 @@ const TPL = {
   `,
   /* ---------- Option B: stacked editor + live card ---------- */
   
-  
   '#/property-editor': `
-    <h1 class="h1">Property Editor <span style="font-size:12px;color:#6b7280">vA1</span></h1>
+    <h1 class="h1">Property Editor</h1>
 
     <div class="card">
       <div class="field"><label>Address</label><input id="p_address" class="btn" placeholder="123 Main St" style="width:100%"/></div>
@@ -102,12 +101,13 @@ const TPL = {
         </div>
       </div>
 
+      <!-- Minimal dropdown with EVERYTHING -->
       <div class="field">
         <label class="row between">
-          <span>Details (single dropdown)</span>
+          <span>Details</span>
           <button id="details_toggle" class="btn xs" type="button">▼</button>
         </label>
-        <div id="details_panel" class="dropdown-panel open">
+        <div id="details_panel" class="dropdown-panel">
           <div class="field-row wrap">
             <div class="field xs"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
             <div class="field xs"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
@@ -117,6 +117,7 @@ const TPL = {
             <div class="field xs"><label>EV</label><input type="checkbox" id="p_ev"/></div>
             <div class="field xs"><label>Solar (W)</label><div class="row tight"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div></div>
             <div class="field sm"><label>Grass</label><select id="p_grass" class="btn" style="width:100%">${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div>
+
             <div class="field sm"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
             <div class="field sm"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
             <div class="field sm"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
@@ -155,7 +156,6 @@ const TPL = {
       <div id="p_preview" class="preview-card"></div>
     </div>
   `,
-
 
 }; // <-- keep this comma+brace so router sees all pages
 

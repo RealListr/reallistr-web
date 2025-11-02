@@ -1,17 +1,27 @@
 {
   "properties": [
-    {"address": "12 Bayview Ave, Brighton VIC", "status": "published", "beds": 4, "baths": 3},
-    {"address": "88 Collins St, Melbourne VIC", "status": "draft", "beds": 2, "baths": 2},
-    {"address": "5 Seaview Rd, Dromana VIC", "status": "published", "beds": 3, "baths": 2}
+    {
+      "address": "12 Bayview Ave, Brighton VIC",
+      "status": "published",
+      "beds": 4, "baths": 3, "cars": 2,
+      "ev_charger": true, "solar": true, "solar_watts": 6000,
+      "grass_type": "Buffalo", "land_m2": 620, "build_m2": 240,
+      "level": null, "pool": true,
+      "type": "House",
+      "listing_labels": ["Private Sale"],
+      "listing_close_date": "",
+      "desc": "Sunlit bayside family home with pool and solar.",
+      "media": { "images": [], "videos": [], "realcuts": [] },
+      "lat": -37.904, "lng": 144.996
+    }
   ],
-  "leads": [
-    {"name": "Sophie Turner", "property_id": "12 Bayview Ave, Brighton VIC", "stage": "New", "last_activity_at": "2025-10-20T10:05:00Z"},
-    {"name": "Liam Chen", "property_id": "88 Collins St, Melbourne VIC", "stage": "Contacted", "last_activity_at": "2025-10-21T12:20:00Z"},
-    {"name": "Amelia Rossi", "property_id": "5 Seaview Rd, Dromana VIC", "stage": "Offer", "last_activity_at": "2025-10-22T09:15:00Z"}
-  ],
-  "campaigns": [
-    {"property_id": "12 Bayview Ave, Brighton VIC", "status": "active"},
-    {"property_id": "88 Collins St, Melbourne VIC", "status": "paused"}
-  ],
-  "subscription": {"plan": "starter", "usage_props": 3, "usage_media_gb": 3.2, "ai_credits": 10}
+  "leads": [],
+  "campaigns": [{"property_id":"12 Bayview Ave, Brighton VIC","status":"active"}],
+  "subscription": {"plan": "starter", "usage_props": 1, "usage_media_gb": 0.2, "ai_credits": 10},
+  "agent": {"name": "Primary Agent", "avatar": ""},
+  "agency": {"name": "Reallistr", "avatar": ""},
+  "team": [
+    {"name":"Alex Novak","avatar":"","followers":1200},
+    {"name":"Priya Patel","avatar":"","followers":980}
+  ]
 }

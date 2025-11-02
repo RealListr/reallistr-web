@@ -1,0 +1,207 @@
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// ---- data helpers ----
+const DATA_DIR = path.join(__dirname, "data");
+const FILES = {
+  properties: path.join(DATA_DIR, "properties.json"),
+  leads: path.join(DATA_DIR, "leads.json"),
+  subscriptions: path.join(DATA_DIR, "subscriptions.json"),
+  tokens: path.join(DATA_DIR, "tokens.json"),
+  partners: path.join(DATA_DIR, "partners.json"),
+};
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+for (const f of Object.values(FILES)) if (!fs.existsSync(f)) fs.writeFileSync(f, "[]");
+
+const read = (k) => JSON.parse(fs.readFileSync(FILES[k], "utf8"));
+const write = (k, rows) => fs.writeFileSync(FILES[k], JSON.stringify(rows, null, 2));
+
+// ---- tokens & access ----
+const VALID_SECTORS = ["agents","finance","insurance","energy"];
+const getToken = (code) => (read("tokens").find(t => t.code === code) || null);
+const requireSector = (sector) => (req, res, next) => {
+  const code = req.header("x-access-token") || "";
+  const t = getToken(code);
+  if (!t || !Array.isArray(t.sectors) || !t.sectors.includes(sector)) {
+    return res.status(403).json({ error: "access_denied", need: sector });
+  }
+  next();
+};
+
+// ---- static ----
+app.use(express.static(__dirname));
+app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "editor.html")));
+
+// ---- properties (Agents) ----
+app.get("/api/properties", (_req, res) => res.json(read("properties")));
+app.post("/api/properties", requireSector("agents"), (req, res) => {
+  const body = req.body || {};
+  if (!body.title) return res.status(400).json({ error: "title is required" });
+  const all = read("properties");
+  const id = String(Date.now());
+  const row = { id, ...body, createdAt: new Date().toISOString() };
+  all.push(row);
+  write("properties", all);
+  res.json({ id, ok: true });
+});
+
+// ---- leads (Finance/Insurance/Energy) ----
+app.get("/api/leads", (req, res) => {
+  const sector = (req.query.sector || "").toString();
+  const all = read("leads");
+  if (!sector) return res.json(all);
+  res.json(all.filter(x => x.sector === sector));
+});
+app.post("/api/leads",
+  (req, res, next) => {
+    const { sector } = req.body || {};
+    if (!VALID_SECTORS.includes(sector) || sector === "agents")
+      return res.status(400).json({ error: "valid sector required (finance|insurance|energy)" });
+    return requireSector(sector)(req, res, next);
+  },
+  (req, res) => {
+    const { sector, name, contact, value } = req.body || {};
+    const all = read("leads");
+    const id = String(Date.now());
+    const row = { id, sector, name: name||"", contact: contact||"", value: Number(value||0), createdAt: new Date().toISOString() };
+    all.push(row);
+    write("leads", all);
+    res.json({ id, ok: true });
+  }
+);
+
+// ---- subscriptions (UI selections) ----
+app.get("/api/subscriptions", (_req, res) => res.json(read("subscriptions")));
+app.post("/api/subscriptions", (req, res) => {
+  const { sector, tier } = req.body || {};
+  const validSector = ["agents-domestic","agents-commercial","finance","insurance","energy"];
+  const validTier = ["lite","active","pro"];
+  if (!validSector.includes(sector)) return res.status(400).json({ error: "invalid sector" });
+  if (!validTier.includes(tier)) return res.status(400).json({ error: "invalid tier" });
+  const all = read("subscriptions").filter(s => s.sector !== sector);
+  const row = { id: String(Date.now()), sector, tier, updatedAt: new Date().toISOString() };
+  all.push(row);
+  write("subscriptions", all);
+  res.json({ ok: true, selected: row });
+});
+
+// ---- tokens ----
+app.get("/api/tokens/:code", (req, res) => {
+  const t = getToken(req.params.code);
+  if (!t) return res.status(404).json({ error: "invalid_code" });
+  res.json({ code: t.code, sectors: t.sectors });
+});
+app.post("/api/tokens", (req, res) => {
+  const { code, sectors } = req.body || {};
+  const clean = (Array.isArray(sectors) ? sectors : []).filter(s => VALID_SECTORS.includes(s));
+  if (!clean.length) return res.status(400).json({ error: "at least one sector required" });
+  const c = code || String(Math.floor(100000 + Math.random()*900000)); // 6-digit
+  const all = read("tokens").filter(t => t.code !== c);
+  all.push({ code: c, sectors: clean, updatedAt: new Date().toISOString() });
+  write("tokens", all);
+  res.json({ ok: true, code: c, sectors: clean });
+});
+
+// ---- partner enquiries (public) ----
+const FREE_EMAILS = new Set([
+  "gmail.com","googlemail.com","icloud.com","me.com","mac.com",
+  "outlook.com","hotmail.com","live.com","msn.com",
+  "yahoo.com","yahoo.com.au","aol.com","proton.me","protonmail.com",
+  "gmx.com","yandex.com","mail.com","zoho.com"
+]);
+function isFreeEmail(email="") {
+  const at = email.indexOf("@");
+  if (at < 0) return true;
+  const domain = email.slice(at+1).toLowerCase();
+  return FREE_EMAILS.has(domain);
+}
+
+app.post("/api/partners", (req, res) => {
+  const { name, email, company, sector, note, position, phone, linkedin, source } = req.body || {};
+  if (!name || !email || !sector) return res.status(400).json({ error: "name, email, sector required" });
+  if (isFreeEmail(email)) return res.status(400).json({ error: "Please use a company email address." });
+
+  const all = read("partners");
+  const id = String(Date.now());
+  all.push({
+    id, name, email, company: company||"", sector,
+    position: position||"", phone: phone||"", linkedin: linkedin||"",
+    source: source||"", note: note||"",
+    createdAt: new Date().toISOString()
+  });
+  write("partners", all);
+  res.json({ ok: true, id });
+});
+
+const PORT = 5176;
+app.listen(PORT, () => console.log(`RealListr console running: http://localhost:${PORT}/`));
+
+/* -------- Properties API (simple) -------- */
+app.get("/api/properties", (req,res)=>{
+  try{
+    if(!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE,"[]");
+    const list = JSON.parse(fs.readFileSync(DB_FILE,"utf8") || "[]");
+    res.json({ok:true, items:list});
+  }catch(e){ res.status(500).json({error:"read_failed"}); }
+});
+
+app.post("/api/properties", (req,res)=>{
+  try{
+    const body = req.body || {};
+    if(!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE,"[]");
+    const list = JSON.parse(fs.readFileSync(DB_FILE,"utf8") || "[]");
+    const item = { id: Date.now().toString(36), ...body, savedAt: new Date().toISOString() };
+    list.push(item);
+    fs.writeFileSync(DB_FILE, JSON.stringify(list,null,2));
+    res.json({ok:true, item});
+  }catch(e){ res.status(500).json({error:"write_failed"}); }
+});
+
+/* Tokens API */
+app.get("/api/tokens/:code", (req, res) => {
+  try {
+    if (!fs.existsSync(FILES.tokens)) fs.writeFileSync(FILES.tokens, "[]");
+    const all = JSON.parse(fs.readFileSync(FILES.tokens, "utf8") || "[]");
+    const hit = all.find(t => t.code === req.params.code);
+    if (!hit) return res.status(404).json({ ok:false, error:"invalid_code" });
+    return res.json({ ok:true, code: hit.code, sectors: hit.sectors || [] });
+  } catch (e) {
+    return res.status(500).json({ ok:false, error:"verify_failed" });
+  }
+});
+// --- HOTFIX: token endpoints expected by the UI ---
+app.post('/api/tokens', (req, res) => {
+  try {
+    const { code } = req.body || {};
+    if (!code) return res.status(400).json({ ok:false, error:'missing_code' });
+    const db = JSON.parse(fs.readFileSync(FILES.tokens, 'utf8'));
+    const t = db.find(x => x.code === code);
+    if (!t) return res.status(404).json({ ok:false, error:'invalid_code' });
+    return res.json({ ok:true, code: t.code, sectors: t.sectors || [] });
+  } catch (e) {
+    return res.status(500).json({ ok:false, error:'server_error' });
+  }
+});
+
+app.get('/api/tokens/:code', (req, res) => {
+  try {
+    const { code } = req.params;
+    const db = JSON.parse(fs.readFileSync(FILES.tokens, 'utf8'));
+    const t = db.find(x => x.code === code);
+    if (!t) return res.status(404).json({ ok:false, error:'invalid_code' });
+    return res.json({ ok:true, code: t.code, sectors: t.sectors || [] });
+  } catch (e) {
+    return res.status(500).json({ ok:false, error:'server_error' });
+  }
+});
+// --- END HOTFIX ---

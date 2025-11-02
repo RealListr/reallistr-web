@@ -1,0 +1,4 @@
+[
+  { "id":"f1", "product":"Home Loan",   "lender":"Demo Bank",   "rate":5.89, "notes":"Owner-occupier, variable" },
+  { "id":"f2", "product":"Refinance",   "lender":"Acme Credit", "rate":5.49, "notes":"Cashback eligible" }
+]

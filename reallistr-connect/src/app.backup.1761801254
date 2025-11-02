@@ -79,15 +79,11 @@ const TPL = {
     </div>
   `,
   /* ---------- Option B: stacked editor + live card ---------- */
-  
-  
   '#/property-editor': `
-    <h1 class="h1">Property Editor <span style="font-size:12px;color:#6b7280">vA1</span></h1>
-
+    <h1 class="h1">Property Editor</h1>
     <div class="card">
       <div class="field"><label>Address</label><input id="p_address" class="btn" placeholder="123 Main St" style="width:100%"/></div>
-
-      <div class="field-row" style="gap:12px">
+      <div class="field-row">
         <div class="field sm"><label>Status</label>
           <select id="p_status" class="btn" style="width:100%">
             <option value="draft">Draft</option>
@@ -102,33 +98,30 @@ const TPL = {
         </div>
       </div>
 
-      <div class="field">
-        <label class="row between">
-          <span>Details (single dropdown)</span>
-          <button id="details_toggle" class="btn xs" type="button">▼</button>
-        </label>
-        <div id="details_panel" class="dropdown-panel open">
-          <div class="field-row wrap">
-            <div class="field xs"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
-            <div class="field xs"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
-            <div class="field xs"><label>Car</label><input id="p_cars" class="btn" type="number" min="0"/></div>
-            <div class="field xs"><label>Level</label><input id="p_level" class="btn" type="number" min="0"/></div>
-            <div class="field xs"><label>Pool</label><input type="checkbox" id="p_pool"/></div>
-            <div class="field xs"><label>EV</label><input type="checkbox" id="p_ev"/></div>
-            <div class="field xs"><label>Solar (W)</label><div class="row tight"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div></div>
-            <div class="field sm"><label>Grass</label><select id="p_grass" class="btn" style="width:100%">${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div>
-            <div class="field sm"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="field sm"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
-            <div class="field sm"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
-            <div class="field sm"><label>Listing Label</label>
-              <select id="p_label" class="btn" style="width:100%">
-                <option value="">Select a label</option>
-                ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
-              </select>
-            </div>
-            <div class="field sm" id="closeWrap" style="display:none"><label>Close date</label><input id="p_close" class="btn" placeholder="dd/mm/yyyy"/></div>
-          </div>
+      <div class="divider"></div>
+
+      <div class="field-row wrap">
+        <div class="field xs"><label>Beds</label><input id="p_beds" class="btn" type="number" min="0"/></div>
+        <div class="field xs"><label>Baths</label><input id="p_baths" class="btn" type="number" min="0"/></div>
+        <div class="field xs"><label>Car</label><input id="p_cars" class="btn" type="number" min="0"/></div>
+        <div class="field xs"><label>Level</label><input id="p_level" class="btn" type="number" min="0"/></div>
+        <div class="field xs"><label>Pool</label><input type="checkbox" id="p_pool"/></div>
+        <div class="field xs"><label>EV</label><input type="checkbox" id="p_ev"/></div>
+        <div class="field xs"><label>Solar (W)</label><div class="row tight"><input type="checkbox" id="p_solar"/><input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/></div></div>
+        <div class="field sm"><label>Grass</label><select id="p_grass" class="btn" style="width:100%">${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div>
+      </div>
+
+      <div class="field-row wrap">
+        <div class="field sm"><label>Land m²</label><input id="p_land" class="btn" type="number" min="0" step="0.1"/></div>
+        <div class="field sm"><label>Build m²</label><input id="p_build" class="btn" type="number" min="0" step="0.1"/></div>
+        <div class="field sm"><label>Property Type</label><select id="p_type" class="btn" style="width:100%"></select></div>
+        <div class="field sm"><label>Listing Label</label>
+          <select id="p_label" class="btn" style="width:100%">
+            <option value="">Select a label</option>
+            ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
+          </select>
         </div>
+        <div class="field sm" id="closeWrap" style="display:none"><label>Close date</label><input id="p_close" class="btn" placeholder="dd/mm/yyyy"/></div>
       </div>
 
       <div class="field"><label>Description</label>
@@ -150,13 +143,12 @@ const TPL = {
       </div>
     </div>
 
+    <!-- Live Preview (exact same card used on feed) -->
     <div class="card" style="margin-top:12px">
       <div class="h2">Preview (Draft)</div>
       <div id="p_preview" class="preview-card"></div>
     </div>
   `,
-
-
 }; // <-- keep this comma+brace so router sees all pages
 
 /* ---------- router ---------- */
@@ -261,12 +253,6 @@ function attachControllers(path){
     };
     toggleClose();
 
-    // details dropdown
-    const togg = document.getElementById('details_toggle');
-    const panel = document.getElementById('details_panel');
-    if(togg && panel){ togg.onclick = ()=> panel.classList.toggle('open'); }
-
-
     /* media strip */
     const strip = byId('p_media_strip');
     const drawStrip = ()=>{
@@ -316,13 +302,7 @@ function attachControllers(path){
     byId('domC').onclick = ()=>{ setDomain('commercial'); };
     drawTypes();
 
-    bind('p_label', e=>{ p.listing_label = e.target.value; store.persist(); toggleClose();
-
-    // details dropdown
-    const togg = document.getElementById('details_toggle');
-    const panel = document.getElementById('details_panel');
-    if(togg && panel){ togg.onclick = ()=> panel.classList.toggle('open'); }
- syncPreview(); });
+    bind('p_label', e=>{ p.listing_label = e.target.value; store.persist(); toggleClose(); syncPreview(); });
     bind('p_close', e=>{ p.listing_close_date = e.target.value; store.persist(); syncPreview(); });
     bind('p_desc',  e=>{ p.desc = e.target.value; store.persist(); syncPreview(); });
 

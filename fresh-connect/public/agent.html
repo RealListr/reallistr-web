@@ -1,0 +1,105 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Property • RealListr</title>
+<style>
+  :root{--text:#0a0a0a;--muted:#6b7280;--border:#e5e7eb;--blue:#2563eb}
+  *{box-sizing:border-box}
+  body{font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:32px auto;padding:0 16px;color:var(--text)}
+  .card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff;margin-top:16px}
+  .muted{color:var(--muted)}
+  pre{white-space:pre-wrap;border:1px dashed var(--border);padding:12px;border-radius:10px;background:#fafafa}
+  a.btn,button.btn{display:inline-block;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:inherit;text-decoration:none;cursor:pointer}
+  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+</style>
+
+<h1 style="margin:0 0 8px">Property Details</h1>
+<p class="muted" id="pid">Loading…</p>
+
+<div id="details" class="card">Fetching…</div>
+
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px">
+    <h3 style="margin:0">Feeder Card Preview</h3>
+    <button id="editInList" class="btn btn-small">Edit in list</button>
+  </div>
+  <div id="card" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:6px">
+    <div id="c-address" style="font-weight:700"></div>
+    <div id="c-sub" class="muted" style="margin-top:4px"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 6px">Raw JSON</h3>
+  <pre id="json">…</pre>
+  <button class="btn" id="copy">Copy JSON</button>
+  <button class="btn" id="copyLink">Copy Link</button>
+  <a class="btn" href="/" id="back">Back</a>
+</div>
+
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const id = q.get('id') || '';
+  const set = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
+  const text = (sel, t) => { const el = document.querySelector(sel); if (el) el.textContent = t; };
+
+  text('#pid', id ? `ID: ${id}` : 'No id');
+  if (!id) { text('#details', 'No id given.'); return; }
+
+  const api = '/api/agents/' + encodeURIComponent(id);
+  try {
+    const r = await fetch(api, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const p = await r.json();
+    if (!p || !p.id) { text('#details', 'Not found.'); return; }
+
+    // Details
+    set('#details', `
+      <div><b>Address:</b> ${p.address||''}</div>
+      <div><b>Suburb:</b> ${p.suburb||''}</div>
+      <div><b>State:</b> ${p.state||''}</div>
+      <div><b>Price:</b> ${p.price!=null ? ('$'+(p.price.toLocaleString?.() ?? p.price)) : '-'}</div>
+    `);
+
+    // Card
+    text('#c-address', p.address || '');
+    text('#c-sub', [p.suburb, p.state].filter(Boolean).join(', '));
+
+    // JSON
+    const raw = JSON.stringify(p, null, 2);
+    text('#json', raw);
+
+    const copy = document.getElementById('copy');
+    if (copy) copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(raw); alert('JSON copied'); }
+      catch { alert('Copy failed'); }
+    };
+
+    const copyLink = document.getElementById('copyLink');
+    if (copyLink) copyLink.onclick = async () => {
+      try { await navigator.clipboard.writeText(location.href); alert('Link copied'); }
+      catch { alert('Copy failed'); }
+    };
+
+    const editBtn = document.getElementById('editInList');
+    if (editBtn) editBtn.onclick = () => {
+      location.href = '/#agents?id=' + encodeURIComponent(id);
+    };
+
+    const back = document.getElementById('back');
+    if (back) back.href = '/#agents';
+  } catch (e) {
+    text('#details', 'Failed to fetch ' + api + ' — ' + e.message);
+    console.error(e);
+  }
+})();
+</script>
+<!-- Replace your existing Back button on agent.html with: -->
+<button class="btn" id="back">Back</button>
+<script>
+  (function(){
+    const id = new URLSearchParams(location.search).get('id') || '';
+    const back = document.getElementById('back');
+    back.onclick = () => { location.href = '/#agents?id=' + encodeURIComponent(id); };
+  })();
+</script>

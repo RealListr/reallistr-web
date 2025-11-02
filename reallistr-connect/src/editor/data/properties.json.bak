@@ -1,0 +1,9 @@
+[
+  {
+    "id": "prop-1",
+    "address": "123 Demo St",
+    "suburb": "Testville",
+    "state": "NSW",
+    "status": "new"
+  }
+]

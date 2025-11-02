@@ -1,0 +1,6 @@
+[
+  { "id":"sub-agents", "key":"agents", "name":"Agents Portal", "active": true },
+  { "id":"sub-fin",    "key":"finance","name":"Finance Portal","active": false },
+  { "id":"sub-ins",    "key":"insurance","name":"Insurance Portal","active": false },
+  { "id":"sub-energy", "key":"energy","name":"Energy Portal","active": false }
+]

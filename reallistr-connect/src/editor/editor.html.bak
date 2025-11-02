@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RealListr — Connect Centre</title>
+  <link rel="stylesheet" href="./editor.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">RealListr Connect Centre</div>
+    <nav class="tabs" id="topTabs">
+      <a href="#/home" data-tab="home" style="display:none">Home</a>
+      <a href="#/agents" data-tab="agents" style="display:none">Agents Portal</a>
+      <a href="#/finance" data-tab="finance" style="display:none">Finance Portal</a>
+      <a href="#/insurance" data-tab="insurance" style="display:none">Insurance Portal</a>
+      <a href="#/energy" data-tab="energy" style="display:none">Energy Portal</a>
+      <a href="#/subscriptions" data-tab="subscriptions" style="display:none">Subscriptions</a>
+    </nav>
+    <div class="auth">
+      <span class="who" id="whoAmI"></span>
+      <button class="btn" id="partnerBtn" style="margin-right:6px;">Join Partner Programs – EOI</button>
+      <button class="btn" id="loginBtn">Login</button>
+      <button class="btn" id="logoutBtn" style="display:none">Logout</button>
+    </div>
+  </header>
+
+  <!-- Login modal -->
+  <div id="loginModal" class="modal" style="display:none">
+    <div class="modal-card">
+      <h3>Enter Access Code</h3>
+      <input id="loginCode" placeholder="6-digit code" />
+      <div class="modal-actions">
+        <button id="loginConfirm" class="btn primary">Login</button>
+        <button id="loginCancel" class="btn">Cancel</button>
+      </div>
+      <p id="loginMsg" class="muted"></p>
+    </div>
+  </div>
+
+  <main id="app">
+
+    <!-- LANDING (public) -->
+    <section id="section-landing" class="landing">
+      <div class="landing-card">
+        <div class="landing-logo">RealListr</div>
+        <div class="landing-sub">Connect Centre</div>
+        <p class="landing-copy">Private access for subscribed partners only.</p>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button id="landingPartner" class="btn">Join Partner Programs – EOI</button>
+          <button id="landingLogin" class="btn primary">Login</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARTNERS (public) -->
+    <section id="section-partners" class="section" style="display:none">
+      <h1>Join RealListr Partner Programs – Expression of Interest</h1>
+      <p class="muted">Pick the program(s) that fit, then send a quick EOI. We’ll reply with pricing and a private access code.</p>
+
+      <div class="partner-layout">
+        <!-- Left: Programs overview -->
+        <div class="partner-box">
+          <h2 class="partner-title">Programs Overview</h2>
+          <div class="partner-cards">
+            <div class="partner-card">
+              <div class="pc-title">Agents & Agencies</div>
+              <div class="pc-desc">Listings + Advertising & Leads packages — Domestic | Commercial.</div>
+            </div>
+            <div class="partner-card">
+              <div class="pc-title">Finance</div>
+              <div class="pc-desc">New Mortgage • Re-Finance — Domestic | Commercial lead packages.</div>
+            </div>
+            <div class="partner-card">
+              <div class="pc-title">Insurance</div>
+              <div class="pc-desc">Home, Contents, Commercial, Industrial leads packages & more.</div>
+            </div>
+            <div class="partner-card">
+              <div class="pc-title">Energy</div>
+              <div class="pc-desc">New Solar + Storage / Utilities leads & opportunities.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: EOI form -->
+        <div class="partner-box">
+          <h2 class="partner-title">Expression of Interest</h2>
+          <div class="grid two">
+            <label>Name<input id="pName" /></label>
+            <label>Email<input id="pEmail" type="email" /></label>
+          </div>
+          <div class="grid two">
+            <label>Company<input id="pCompany" /></label>
+            <label>Position<input id="pPosition" placeholder="e.g., Director, Partnerships" /></label>
+          </div>
+          <div class="grid two">
+            <label>Phone<input id="pPhone" placeholder="+61 ..." /></label>
+            <label>LinkedIn<input id="pLinkedIn" placeholder="https://www.linkedin.com/in/..." /></label>
+          </div>
+          <div class="grid two">
+            <label>Sector
+              <select id="pSector">
+                <option value="agents">Agents</option>
+                <option value="finance">Finance</option>
+                <option value="insurance">Insurance</option>
+                <option value="energy">Energy</option>
+              </select>
+            </label>
+            <label>How did you find us?
+              <select id="pSource">
+                <option value="">—</option>
+                <option>Referral</option>
+                <option>Search</option>
+                <option>Social</option>
+                <option>Event/Conference</option>
+                <option>News/Press</option>
+                <option>Other</option>
+              </select>
+            </label>
+          </div>
+          <label>Brief note
+            <textarea id="pNote" placeholder="Tell us a bit about what you need…"></textarea>
+          </label>
+          <div class="actions">
+            <button id="pSubmit" class="btn primary">Send Request</button>
+            <span id="pMsg" class="muted"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOME (private) -->
+    <section id="section-home" class="section" style="display:none">
+      <h1>Welcome</h1>
+      <p class="muted">Your subscribed portals</p>
+      <div id="homeCards" class="home-cards"></div>
+    </section>
+
+    <!-- AGENTS -->
+    <section id="section-agents" class="section" style="display:none">
+      <h1>Agents Portal – Property Editor</h1>
+      <p id="flash"></p>
+      <div id="agents-form"></div>
+    </section>
+
+    <!-- FINANCE -->
+    <section id="section-finance" class="section" style="display:none">
+      <h1>Finance Portal</h1>
+      <p class="muted">Purchased Leads</p>
+      <div class="lead-controls">
+        <input id="leadFinanceName" placeholder="Lead name" />
+        <input id="leadFinanceContact" placeholder="Contact" />
+        <input id="leadFinanceValue" type="number" placeholder="Value" />
+        <button class="btn primary" id="addLeadFinance">Add lead</button>
+      </div>
+      <ul id="listFinance" class="lead-list"></ul>
+    </section>
+
+    <!-- INSURANCE -->
+    <section id="section-insurance" class="section" style="display:none">
+      <h1>Insurance Portal</h1>
+      <p class="muted">Purchased Leads</p>
+      <div class="lead-controls">
+        <input id="leadInsuranceName" placeholder="Lead name" />
+        <input id="leadInsuranceContact" placeholder="Contact" />
+        <input id="leadInsuranceValue" type="number" placeholder="Value" />
+        <button class="btn primary" id="addLeadInsurance">Add lead</button>
+      </div>
+      <ul id="listInsurance" class="lead-list"></ul>
+    </section>
+
+    <!-- ENERGY -->
+    <section id="section-energy" class="section" style="display:none">
+      <h1>Energy Portal</h1>
+      <p class="muted">Purchased Leads</p>
+      <div class="lead-controls">
+        <input id="leadEnergyName" placeholder="Lead name" />
+        <input id="leadEnergyContact" placeholder="Contact" />
+        <input id="leadEnergyValue" type="number" placeholder="Value" />
+        <button class="btn primary" id="addLeadEnergy">Add lead</button>
+      </div>
+      <ul id="listEnergy" class="lead-list"></ul>
+    </section>
+
+    <!-- SUBSCRIPTIONS (backoffice) -->
+    <section id="section-subscriptions" class="section" style="display:none">
+      <h1>Subscriptions</h1>
+      <h2>Agents – Subscriptions & Advertising</h2>
+      <div class="subgrid">
+        <div class="subcol">
+          <div class="subhead">Domestic</div>
+          <div class="tiers" data-sector="agents-domestic">
+            <button class="tier" data-tier="lite">Lite</button>
+            <button class="tier" data-tier="active">Active</button>
+            <button class="tier" data-tier="pro">Pro</button>
+          </div>
+          <div class="note">Pick one now; pricing to follow.</div>
+        </div>
+        <div class="subcol">
+          <div class="subhead">Commercial</div>
+          <div class="tiers" data-sector="agents-commercial">
+            <button class="tier" data-tier="lite">Lite</button>
+            <button class="tier" data-tier="active">Active</button>
+            <button class="tier" data-tier="pro">Pro</button>
+          </div>
+          <div class="note">Pick one now; pricing to follow.</div>
+        </div>
+      </div>
+
+      <h2>Platforms</h2>
+      <div class="subgrid">
+        <div class="subcol">
+          <div class="subhead">Finance</div>
+          <div class="tiers" data-sector="finance">
+            <button class="tier" data-tier="lite">Lite</button>
+            <button class="tier" data-tier="active">Active</button>
+            <button class="tier" data-tier="pro">Pro</button>
+          </div>
+        </div>
+        <div class="subcol">
+          <div class="subhead">Insurance</div>
+          <div class="tiers" data-sector="insurance">
+            <button class="tier" data-tier="lite">Lite</button>
+            <button class="tier" data-tier="active">Active</button>
+            <button class="tier" data-tier="pro">Pro</button>
+          </div>
+        </div>
+        <div class="subcol">
+          <div class="subhead">Energy</div>
+          <div class="tiers" data-sector="energy">
+            <button class="tier" data-tier="lite">Lite</button>
+            <button class="tier" data-tier="active">Active</button>
+            <button class="tier" data-tier="pro">Pro</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="subsStatus" class="muted" style="margin-top:8px;"></div>
+
+      <div class="section" id="admin-tokenbox">
+        <h2>Generate Access Code</h2>
+        <div class="muted" style="margin-bottom:8px">Pick sectors for this subscriber, then generate a unique code.</div>
+        <div class="lead-controls">
+          <label class="chk"><input type="checkbox" id="secAgents"> Agents</label>
+          <label class="chk"><input type="checkbox" id="secFinance"> Finance</label>
+          <label class="chk"><input type="checkbox" id="secInsurance"> Insurance</label>
+          <label class="chk"><input type="checkbox" id="secEnergy"> Energy</label>
+          <button class="btn primary" id="genTokenBtn">Generate Code</button>
+        </div>
+        <div id="genResult" class="muted"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./editor.js" defer></script>
+  <script src="./editor_hotfix.js" defer></script>
+  <script src="./editor_hotfix.js" defer></script>
+</body>
+</html>

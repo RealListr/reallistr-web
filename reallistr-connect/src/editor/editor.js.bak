@@ -1,0 +1,124 @@
+/* RealListr Connect – minimal router + persistent Agents editor */
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  // --- Simple router guard: mount editor when "Agents" is shown
+  function tryMountAgents() {
+    const root = $("agents-form");
+    if (!root) return;                 // not on Agents page
+    if (root.dataset.mounted === "1") return; // already mounted once
+
+    root.dataset.mounted = "1";
+    root.innerHTML = `
+      <div class="section">
+        <h2 style="margin:0 0 10px;">New Property</h2>
+
+        <div class="grid two">
+          <label>Title
+            <input id="pf_title" placeholder="Elegant 2-bed in JLT">
+          </label>
+          <label>Price (number)
+            <input id="pf_price" type="number" placeholder="4250000">
+          </label>
+        </div>
+
+        <label>Street address
+          <input id="pf_addr" placeholder="One JLT, Jumeirah Lake Towers">
+        </label>
+
+        <div class="grid two">
+          <label>Bedrooms
+            <input id="pf_beds" type="number" min="0" value="2">
+          </label>
+          <label>Bathrooms
+            <input id="pf_baths" type="number" min="0" value="2">
+          </label>
+        </div>
+
+        <div class="grid two">
+          <label>Area (sqm)
+            <input id="pf_area" type="number" min="0" value="120">
+          </label>
+          <label>Status
+            <select id="pf_status">
+              <option>Draft</option>
+              <option>Published</option>
+              <option>Hidden</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Hero Image URL
+          <input id="pf_hero" placeholder="https://...">
+        </label>
+
+        <label>Description
+          <textarea id="pf_desc" placeholder="South light, EV charging, close to metro..."></textarea>
+        </label>
+
+        <div class="actions">
+          <button id="pf_save" class="btn primary">Save</button>
+          <button id="pf_list" class="btn">List Saved</button>
+          <span id="pf_msg" class="muted"></span>
+        </div>
+      </div>`;
+
+    const msg = $("pf_msg");
+    const key = "rl_props";
+
+    async function save() {
+      const item = {
+        id: Date.now().toString(36),
+        title: $("pf_title").value.trim(),
+        price: Number($("pf_price").value || 0),
+        address: $("pf_addr").value.trim(),
+        beds: Number($("pf_beds").value || 0),
+        baths: Number($("pf_baths").value || 0),
+        area: Number($("pf_area").value || 0),
+        status: $("pf_status").value,
+        hero: $("pf_hero").value.trim(),
+        description: $("pf_desc").value.trim(),
+        savedAt: new Date().toISOString(),
+      };
+      if (!item.title) { msg.textContent = "Title required."; return; }
+
+      // Try API, fall back to localStorage (so you never lose work)
+      try {
+        const res = await fetch("/api/properties", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item),
+        });
+        if (!res.ok) throw new Error("no_api");
+        msg.textContent = "Saved to server.";
+      } catch {
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        arr.push(item);
+        localStorage.setItem(key, JSON.stringify(arr));
+        msg.textContent = "Saved locally (API not present).";
+      }
+    }
+
+    function listSaved() {
+      const arr = JSON.parse(localStorage.getItem(key) || "[]");
+      alert(arr.length ? arr.map(p => `• ${p.title} — ${p.status}`).join("\n")
+                       : "No local items yet.");
+    }
+
+    $("pf_save").onclick = save;
+    $("pf_list").onclick = listSaved;
+  }
+
+  // Mount on navigation + initial load (works with hash or tab click)
+  window.addEventListener("hashchange", tryMountAgents);
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t && t.closest && t.closest('[data-nav="agents"]')) {
+      setTimeout(tryMountAgents, 0);
+    }
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    tryMountAgents();
+    setTimeout(tryMountAgents, 0); // in case tab content paint is delayed
+  });
+})();

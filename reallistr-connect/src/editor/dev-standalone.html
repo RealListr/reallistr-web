@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>RealListr • DEV Standalone</title>
+<link rel="stylesheet" href="./editor.css" />
+<style>
+  /* Absolutely hide any dialog/backdrop if something injects it */
+  [role="dialog"], .modal, .backdrop, .overlay, .mdc-dialog, .MuiModal-root, dialog {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body { max-width: 1080px; margin: 24px auto; }
+  .card { padding:16px; border:1px solid rgba(0,0,0,.08); border-radius:12px; }
+</style>
+<body>
+  <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h1 style="margin:0">RealListr • DEV</h1>
+    <small id="tokenView"></small>
+  </header>
+
+  <section id="portal-content" class="card">
+    <h2 style="margin:0 0 12px">Agents — Properties</h2>
+    <div id="status" style="opacity:.7">Loading…</div>
+    <ul id="list" style="list-style:none;margin:0;padding:0"></ul>
+  </section>
+
+  <script>
+    (async () => {
+      // 1) force token so all future dev pages are "logged in"
+      const CODE = new URL(location.href).searchParams.get('token') || '000000';
+      try {
+        localStorage.setItem('rl_token', CODE);
+        localStorage.setItem('token', CODE);
+        sessionStorage.setItem('token', CODE);
+        document.cookie = 'token=' + CODE + '; Path=/; SameSite=Lax';
+        document.documentElement.setAttribute('data-auth','ok');
+        document.getElementById('tokenView').textContent = 'token=' + CODE;
+      } catch {}
+
+      // 2) fetch data (prefer /api/agents; else filter /api/properties)
+      const getJSON = async (u) => { try { const r = await fetch(u); if(!r.ok) throw 0; return await r.json(); } catch { return null; } };
+      let data = await getJSON('/api/agents');
+      if (!Array.isArray(data)) {
+        data = await getJSON('/api/properties') || [];
+        data = data.filter(x =>
+          String(x.portal||'').toLowerCase()==='agents' ||
+          String(x.sector||'').toLowerCase()==='agents'
+        );
+      }
+
+      // 3) render
+      const status = document.getElementById('status');
+      const ul = document.getElementById('list');
+      ul.innerHTML = '';
+      if (!Array.isArray(data) || data.length === 0) { status.textContent = 'No agent listings yet.'; return; }
+      status.remove();
+      ul.innerHTML = data.slice(0,50).map(x=>{
+        const price = x.price!=null ? ` — $${(x.price.toLocaleString?.() ?? x.price)}` : '';
+        return `<li style="padding:10px 12px;border:1px solid rgba(0,0,0,.06);border-radius:10px;margin-bottom:10px">
+          ${x.address||'Address'}${x.suburb?`, ${x.suburb}`:''}${x.state?`, ${x.state}`:''}${price}
+        </li>`;
+      }).join('');
+    })();
+  </script>
+</body>
