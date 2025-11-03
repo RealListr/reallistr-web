@@ -1,105 +1,388 @@
-<!doctype html>
-<meta charset="utf-8">
-<title>Property • RealListr</title>
-<style>
-  :root{--text:#0a0a0a;--muted:#6b7280;--border:#e5e7eb;--blue:#2563eb}
-  *{box-sizing:border-box}
-  body{font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:32px auto;padding:0 16px;color:var(--text)}
-  .card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff;margin-top:16px}
-  .muted{color:var(--muted)}
-  pre{white-space:pre-wrap;border:1px dashed var(--border);padding:12px;border-radius:10px;background:#fafafa}
-  a.btn,button.btn{display:inline-block;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:inherit;text-decoration:none;cursor:pointer}
-  .btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-</style>
-
-<h1 style="margin:0 0 8px">Property Details</h1>
-<p class="muted" id="pid">Loading…</p>
-
-<div id="details" class="card">Fetching…</div>
-
-<div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px">
-    <h3 style="margin:0">Feeder Card Preview</h3>
-    <button id="editInList" class="btn btn-small">Edit in list</button>
-  </div>
-  <div id="card" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:6px">
-    <div id="c-address" style="font-weight:700"></div>
-    <div id="c-sub" class="muted" style="margin-top:4px"></div>
-  </div>
-</div>
-
-<div class="card">
-  <h3 style="margin:0 0 6px">Raw JSON</h3>
-  <pre id="json">…</pre>
-  <button class="btn" id="copy">Copy JSON</button>
-  <button class="btn" id="copyLink">Copy Link</button>
-  <a class="btn" href="/" id="back">Back</a>
-</div>
-
 <script>
-(async () => {
-  const q = new URLSearchParams(location.search);
-  const id = q.get('id') || '';
-  const set = (sel, html) => { const el = document.querySelector(sel); if (el) el.innerHTML = html; };
-  const text = (sel, t) => { const el = document.querySelector(sel); if (el) el.textContent = t; };
+/* ---------- config & element refs ---------- */
+const LS_KEY = "connect-centre:agents";
+let LITE_MODE = false;
+let items = [];
 
-  text('#pid', id ? `ID: ${id}` : 'No id');
-  if (!id) { text('#details', 'No id given.'); return; }
+const $ = (id) => document.getElementById(id);
+const els = {
+  name: $("a-name"),
+  agency: $("a-agency"),
+  title: $("a-title"),
+  price: $("a-price"),
+  address: $("a-address"),
+  media: $("a-media"),
+  info: $("a-info"),
+  notes: $("a-notes"),
+  id: $("a-id"),
+  save: $("save"),
+  clear: $("clear"),
+  list: $("list"),
+  empty: $("empty"),
+  catDom: $("cat-dom"),
+  catCom: $("cat-com"),
+  ptype: $("a-ptype"),
+  sale: $("a-sale"),
+  highlights: [...document.querySelectorAll(".hi")],
+  pinBtn: $("btn-pin"),
+  pinStatus: $("pin-status"),
+  pinModal: $("pin-modal"),
+  pinClose: $("pin-close"),
+  pinUse: $("pin-use"),
+};
 
-  const api = '/api/agents/' + encodeURIComponent(id);
+/* ---------- lite-mode ping ---------- */
+async function pingApi() {
   try {
-    const r = await fetch(api, { cache: 'no-store' });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const p = await r.json();
-    if (!p || !p.id) { text('#details', 'Not found.'); return; }
-
-    // Details
-    set('#details', `
-      <div><b>Address:</b> ${p.address||''}</div>
-      <div><b>Suburb:</b> ${p.suburb||''}</div>
-      <div><b>State:</b> ${p.state||''}</div>
-      <div><b>Price:</b> ${p.price!=null ? ('$'+(p.price.toLocaleString?.() ?? p.price)) : '-'}</div>
-    `);
-
-    // Card
-    text('#c-address', p.address || '');
-    text('#c-sub', [p.suburb, p.state].filter(Boolean).join(', '));
-
-    // JSON
-    const raw = JSON.stringify(p, null, 2);
-    text('#json', raw);
-
-    const copy = document.getElementById('copy');
-    if (copy) copy.onclick = async () => {
-      try { await navigator.clipboard.writeText(raw); alert('JSON copied'); }
-      catch { alert('Copy failed'); }
-    };
-
-    const copyLink = document.getElementById('copyLink');
-    if (copyLink) copyLink.onclick = async () => {
-      try { await navigator.clipboard.writeText(location.href); alert('Link copied'); }
-      catch { alert('Copy failed'); }
-    };
-
-    const editBtn = document.getElementById('editInList');
-    if (editBtn) editBtn.onclick = () => {
-      location.href = '/#agents?id=' + encodeURIComponent(id);
-    };
-
-    const back = document.getElementById('back');
-    if (back) back.href = '/#agents';
-  } catch (e) {
-    text('#details', 'Failed to fetch ' + api + ' — ' + e.message);
-    console.error(e);
+    const r = await fetch("/api/agents", { method: "GET", cache: "no-store" });
+    if (!r.ok) throw new Error(String(r.status));
+    return true;
+  } catch {
+    return false;
   }
-})();
-</script>
-<!-- Replace your existing Back button on agent.html with: -->
-<button class="btn" id="back">Back</button>
-<script>
-  (function(){
-    const id = new URLSearchParams(location.search).get('id') || '';
-    const back = document.getElementById('back');
-    back.onclick = () => { location.href = '/#agents?id=' + encodeURIComponent(id); };
-  })();
+}
+
+/* ---------- storage helpers ---------- */
+async function load() {
+  // detect once
+  if (!LITE_MODE) {
+    const ok = await pingApi();
+    LITE_MODE = !ok;
+  }
+
+  if (LITE_MODE) {
+    try {
+      items = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    } catch {
+      items = [];
+    }
+    seedIfEmpty();
+  } else {
+    try {
+      const r = await fetch("/api/agents", { cache: "no-store" });
+      items = await r.json();
+    } catch {
+      items = [];
+    }
+  }
+  render();
+}
+
+function persist(itemsNow) {
+  if (LITE_MODE) {
+    localStorage.setItem(LS_KEY, JSON.stringify(itemsNow));
+    return Promise.resolve();
+  } else {
+    // simple upsert of the last changed item (first in array)
+    const last = itemsNow[0];
+    return fetch("/api/agents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(last),
+    });
+  }
+}
+
+function upsert(item) {
+  const i = items.findIndex((x) => String(x.id) === String(item.id));
+  if (i >= 0) items[i] = item;
+  else items.unshift(item);
+
+  persist(items).then(load).catch(load);
+  clearForm();
+}
+
+function removeItem(id) {
+  items = items.filter((x) => String(x.id) !== String(id));
+  if (LITE_MODE) {
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
+    return Promise.resolve().then(() => {
+      load();
+      refreshFeedSoon();
+    });
+  } else {
+    return fetch(`/api/agents/${encodeURIComponent(id)}`, { method: "DELETE" })
+      .then(() => {
+        load();
+        refreshFeedSoon();
+      })
+      .catch(() => {
+        load();
+        refreshFeedSoon();
+      });
+  }
+}
+
+/* ---------- one-off seed for empty lite mode ---------- */
+function seedIfEmpty() {
+  if (!items || !items.length) {
+    items = [
+      {
+        id: "d1",
+        title: "Untitled",
+        price: "$750,000",
+        address: "123 Demo St",
+        name: "Agent A",
+        agency: "Demo Co",
+        category: "Domestic",
+        highlights: ["3 Bed", "2 Bath"],
+      },
+      {
+        id: "d2",
+        title: "Untitled",
+        price: "$1,250,000",
+        address: "45 Market St",
+        name: "Agent B",
+        agency: "Demo Co",
+        category: "Domestic",
+        highlights: ["4 Bed", "3 Bath"],
+      },
+      {
+        id: "d3",
+        title: "Untitled",
+        price: "$990,000",
+        address: "77 Sample Rd",
+        name: "Agent C",
+        agency: "Demo Co",
+        category: "Domestic",
+        highlights: ["2 Bed", "2 Bath"],
+      },
+    ];
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
+  }
+}
+
+/* ---------- UI helpers ---------- */
+const fmtPrice = (raw) => {
+  const digits = (raw || "").replace(/[^\d]/g, "");
+  if (!digits) return "";
+  // Use the user's locale currency if you want AU explicitly: 'AUD'
+  const currency = (Intl.NumberFormat().resolvedOptions().locale || "").includes("AU")
+    ? "AUD"
+    : "USD";
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(Number(digits));
+};
+
+function enableSaveIfReady() {
+  const ready =
+    els.name.value.trim() && els.agency.value.trim() && els.title.value.trim();
+  els.save.disabled = !ready;
+}
+
+/* ---------- category toggle ---------- */
+let category = "Domestic";
+function setCategory(c) {
+  category = c;
+  els.catDom.classList.toggle("active", c === "Domestic");
+  els.catCom.classList.toggle("active", c === "Commercial");
+  els.catDom.setAttribute("aria-pressed", String(c === "Domestic"));
+  els.catCom.setAttribute("aria-pressed", String(c === "Commercial"));
+}
+
+/* ---------- pin modal ---------- */
+let pinned = false;
+function openPin() {
+  els.pinModal.classList.add("open");
+  els.pinModal.setAttribute("aria-hidden", "false");
+}
+function closePin() {
+  els.pinModal.classList.remove("open");
+  els.pinModal.setAttribute("aria-hidden", "true");
+}
+
+/* ---------- highlights live preview ---------- */
+const hiPreview = document.createElement("div");
+hiPreview.className = "chips";
+document.querySelector(".hi-grid").after(hiPreview);
+
+function renderHiPreview() {
+  const vals = els.highlights
+    .map((i) => i.value.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  hiPreview.innerHTML =
+    vals.map((v) => `<span class="chip">${v}</span>`).join("") ||
+    '<span class="muted">Add 1–6 short highlights…</span>';
+}
+
+/* ---------- render list ---------- */
+function render() {
+  els.list.innerHTML = "";
+  if (!items.length) {
+    els.empty.style.display = "";
+    return;
+  }
+  els.empty.style.display = "none";
+
+  items.forEach((it) => {
+    const row = document.createElement("div");
+    row.className = "listing";
+    row.innerHTML = `
+      <img src="${it.media || "https://placehold.co/100x100?text=No+Img"}" alt="">
+      <div class="listing-body">
+        <h3>${it.title || "Untitled"}</h3>
+        <p><b>${it.price || ""}</b> · ${it.address || ""}</p>
+        <p class="muted">
+          ${(it.name || "")}${it.agency ? " — " + it.agency : ""} · ${it.category || ""}${
+      it.propertyType ? " · " + it.propertyType : ""
+    }${it.saleMethod ? " · " + it.saleMethod : ""}
+        </p>
+        ${
+          it.highlights && it.highlights.length
+            ? `<div class="chips">${it.highlights
+                .map((h) => `<span class="chip">${h}</span>`)
+                .join("")}</div>`
+            : ""
+        }
+        ${it.info ? `<p style="margin-top:6px">${it.info}</p>` : ""}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-edit">Edit</button>
+        <button class="btn btn-delete">Delete</button>
+      </div>`;
+
+    row.querySelector(".btn-edit").onclick = () => {
+      els.name.value = it.name || "";
+      els.agency.value = it.agency || "";
+      els.title.value = it.title || "";
+      els.price.value = it.price || "";
+      els.address.value = it.address || "";
+      els.media.value = it.media || "";
+      els.info.value = it.info || "";
+      els.notes.value = it.notes || "";
+      els.id.value = it.id || "";
+      els.ptype.value = it.propertyType || "";
+      els.sale.value = it.saleMethod || "";
+      setCategory(it.category || "Domestic");
+      pinned = !!it.pinned;
+      els.pinStatus.textContent = pinned
+        ? "Pinned location saved"
+        : "Pinned location not set";
+      els.highlights.forEach((inp, idx) => {
+        inp.value = it.highlights && it.highlights[idx] ? it.highlights[idx] : "";
+      });
+      renderHiPreview();
+      enableSaveIfReady();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    row.querySelector(".btn-delete").onclick = () =>
+      removeItem(it.id).then(refreshFeedSoon);
+
+    els.list.appendChild(row);
+  });
+}
+
+/* ---------- feed cards refresh hook ---------- */
+function refreshFeedSoon() {
+  setTimeout(() => {
+    if (typeof renderFeederCards === "function") renderFeederCards("feed");
+  }, 350);
+}
+
+/* ---------- wire up events ---------- */
+["input", "change"].forEach((ev) => {
+  [els.name, els.agency, els.title].forEach((el) =>
+    el.addEventListener(ev, enableSaveIfReady)
+  );
+});
+els.price.addEventListener("blur", () => {
+  els.price.value = fmtPrice(els.price.value);
+});
+
+els.catDom.onclick = () => setCategory("Domestic");
+els.catCom.onclick = () => setCategory("Commercial");
+setCategory("Domestic");
+
+els.pinBtn.onclick = openPin;
+els.pinClose.onclick = closePin;
+els.pinUse.onclick = () => {
+  pinned = true;
+  els.pinStatus.textContent = "Pinned location saved";
+  closePin();
+};
+
+els.highlights.forEach((i) => i.addEventListener("input", renderHiPreview));
+renderHiPreview();
+
+window.addEventListener("keydown", (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    if (!els.save.disabled) els.save.click();
+  }
+});
+
+els.save.onclick = () => {
+  const name = els.name.value.trim();
+  const agency = els.agency.value.trim();
+  const title = els.title.value.trim();
+  if (!name || !agency || !title) return;
+
+  const id =
+    els.id.value.trim() ||
+    (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const highlights = els.highlights
+    .map((i) => i.value.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+
+  const item = {
+    id,
+    name,
+    agency,
+    title,
+    price: els.price.value.trim(),
+    address: els.address.value.trim(),
+    media: els.media.value.trim(),
+    info: els.info.value.trim(),
+    notes: els.notes.value.trim(),
+    category,
+    propertyType: els.ptype.value,
+    saleMethod: els.sale.value,
+    highlights,
+    pinned,
+  };
+  upsert(item);
+  refreshFeedSoon();
+};
+
+els.clear.onclick = () => {
+  clearForm();
+  refreshFeedSoon();
+};
+
+function clearForm() {
+  [
+    els.name,
+    els.agency,
+    els.title,
+    els.price,
+    els.address,
+    els.media,
+    els.info,
+    els.notes,
+    els.id,
+  ].forEach((i) => (i.value = ""));
+  els.ptype.value = "";
+  els.sale.value = "";
+  els.highlights.forEach((i) => (i.value = ""));
+  setCategory("Domestic");
+  pinned = false;
+  els.pinStatus.textContent = "Pinned location not set";
+  enableSaveIfReady();
+  renderHiPreview();
+}
+
+/* ---------- boot ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  // one-and-only hook for the visual cards
+  if (typeof renderFeederCards === "function") renderFeederCards("feed");
+  load();
+  els.save.disabled = true;
+  enableSaveIfReady();
+});
 </script>
