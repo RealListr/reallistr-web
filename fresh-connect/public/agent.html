@@ -1,388 +1,510 @@
-<script>
-/* ---------- config & element refs ---------- */
-const LS_KEY = "connect-centre:agents";
-let LITE_MODE = false;
-let items = [];
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RealListr • Connect Centre — Agents (Lite)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --border:#e5e7eb; --muted:#6b7280; --blue:#2563eb; --bg:#f8fafc; }
+    *{ box-sizing:border-box }
+    body{ font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif; margin:32px auto; max-width:1100px; padding:0 16px; background:#fff; color:#111;}
+    .wrap{ max-width:1100px; margin:0 auto; }
+    .title{ font-size:28px; font-weight:800; margin:0 0 4px; }
+    .muted{ color:var(--muted); }
+    .pill{ display:inline-block; padding:9px 14px; border:1px solid var(--border); border-radius:999px; background:var(--bg); text-decoration:none; color:inherit; font-weight:600; }
+    .pill.active{ outline:2px solid var(--blue); }
+    .section{ border:1px solid var(--border); border-radius:16px; background:#fff; padding:16px; }
+    .row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
+    .input{ height:44px; border:1px solid #d1d5db; border-radius:12px; padding:0 12px; width:100%; }
+    textarea.input{ height:100px; resize:vertical; padding:10px 12px; }
+    .btn{ height:42px; padding:0 16px; border-radius:12px; border:1px solid var(--border); background:#fff; cursor:pointer; }
+    .btn.primary{ background:var(--blue); color:#fff; border-color:var(--blue); }
+    .seg{ display:flex; gap:10px; }
+    .seg .chip{ padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:#fff; cursor:pointer; }
+    .seg .chip.active{ border-color:var(--blue); color:#1d4ed8; }
+    .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .chip{ padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:#fff; font-size:12px; }
 
-const $ = (id) => document.getElementById(id);
-const els = {
-  name: $("a-name"),
-  agency: $("a-agency"),
-  title: $("a-title"),
-  price: $("a-price"),
-  address: $("a-address"),
-  media: $("a-media"),
-  info: $("a-info"),
-  notes: $("a-notes"),
-  id: $("a-id"),
-  save: $("save"),
-  clear: $("clear"),
-  list: $("list"),
-  empty: $("empty"),
-  catDom: $("cat-dom"),
-  catCom: $("cat-com"),
-  ptype: $("a-ptype"),
-  sale: $("a-sale"),
-  highlights: [...document.querySelectorAll(".hi")],
-  pinBtn: $("btn-pin"),
-  pinStatus: $("pin-status"),
-  pinModal: $("pin-modal"),
-  pinClose: $("pin-close"),
-  pinUse: $("pin-use"),
-};
+    /* Listing card (preview + list) */
+    .listing{ border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; gap:16px; align-items:center; background:#fff; }
+    .listing img{ width:100px; height:100px; object-fit:cover; border-radius:12px; background:#f3f4f6; }
+    .listing-body{ flex:1; }
 
-/* ---------- lite-mode ping ---------- */
-async function pingApi() {
-  try {
-    const r = await fetch("/api/agents", { method: "GET", cache: "no-store" });
-    if (!r.ok) throw new Error(String(r.status));
-    return true;
-  } catch {
-    return false;
-  }
-}
+    /* Utility */
+    .langbar{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+    .langbar select{height:34px;border:1px solid var(--border);border-radius:10px;padding:0 10px;background:#fff}
+    .tr { color:#6b7280; font-weight:500; margin-left:.5rem; }
+    .feed{ display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">RealListr • Connect Centre</h1>
+    <p class="muted">Lite mode — no login, just data.</p>
 
-/* ---------- storage helpers ---------- */
-async function load() {
-  // detect once
-  if (!LITE_MODE) {
-    const ok = await pingApi();
-    LITE_MODE = !ok;
-  }
+    <nav style="display:flex;gap:12px;margin:16px 0 20px">
+      <a class="pill active" href="/agent.html">Agents (Editor)</a>
+      <a class="pill" href="/index.html">Agents List</a>
+      <a class="pill" href="/finance.html">Finance</a>
+      <a class="pill" href="/insurance.html">Insurance</a>
+      <a class="pill" href="/energy.html">Energy</a>
+    </nav>
 
-  if (LITE_MODE) {
-    try {
-      items = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-    } catch {
-      items = [];
-    }
-    seedIfEmpty();
-  } else {
-    try {
-      const r = await fetch("/api/agents", { cache: "no-store" });
-      items = await r.json();
-    } catch {
-      items = [];
-    }
-  }
-  render();
-}
+    <div style="display:flex;gap:8px;align-items:center;margin:0 0 12px">
+      <button id="reset" class="btn" type="button">Reset</button>
+      <span class="muted">Clears local listings (safe while testing).</span>
+    </div>
 
-function persist(itemsNow) {
-  if (LITE_MODE) {
-    localStorage.setItem(LS_KEY, JSON.stringify(itemsNow));
-    return Promise.resolve();
-  } else {
-    // simple upsert of the last changed item (first in array)
-    const last = itemsNow[0];
-    return fetch("/api/agents", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(last),
-    });
-  }
-}
+    <div class="langbar">
+      <strong>Language</strong>
+      <select id="lang-mode" aria-label="Language mode">
+        <option value="en">English</option>
+        <option value="en+zh">English + 中文</option>
+      </select>
+      <span class="muted">UI labels only — your listing data stays as typed.</span>
+    </div>
 
-function upsert(item) {
-  const i = items.findIndex((x) => String(x.id) === String(item.id));
-  if (i >= 0) items[i] = item;
-  else items.unshift(item);
+    <!-- Feed preview -->
+    <section class="section" style="margin:0 0 20px">
+      <h2 id="feed-title" style="margin:0 0 6px;font-size:22px">Feed Preview</h2>
+      <div id="feed" class="feed"></div>
+    </section>
 
-  persist(items).then(load).catch(load);
-  clearForm();
-}
+    <h2 id="agents-title" class="title" style="font-size:24px">Agents</h2>
+    <p class="muted">Your current listings</p>
 
-function removeItem(id) {
-  items = items.filter((x) => String(x.id) !== String(id));
-  if (LITE_MODE) {
-    localStorage.setItem(LS_KEY, JSON.stringify(items));
-    return Promise.resolve().then(() => {
-      load();
-      refreshFeedSoon();
-    });
-  } else {
-    return fetch(`/api/agents/${encodeURIComponent(id)}`, { method: "DELETE" })
-      .then(() => {
-        load();
-        refreshFeedSoon();
-      })
-      .catch(() => {
-        load();
-        refreshFeedSoon();
-      });
-  }
-}
-
-/* ---------- one-off seed for empty lite mode ---------- */
-function seedIfEmpty() {
-  if (!items || !items.length) {
-    items = [
-      {
-        id: "d1",
-        title: "Untitled",
-        price: "$750,000",
-        address: "123 Demo St",
-        name: "Agent A",
-        agency: "Demo Co",
-        category: "Domestic",
-        highlights: ["3 Bed", "2 Bath"],
-      },
-      {
-        id: "d2",
-        title: "Untitled",
-        price: "$1,250,000",
-        address: "45 Market St",
-        name: "Agent B",
-        agency: "Demo Co",
-        category: "Domestic",
-        highlights: ["4 Bed", "3 Bath"],
-      },
-      {
-        id: "d3",
-        title: "Untitled",
-        price: "$990,000",
-        address: "77 Sample Rd",
-        name: "Agent C",
-        agency: "Demo Co",
-        category: "Domestic",
-        highlights: ["2 Bed", "2 Bath"],
-      },
-    ];
-    localStorage.setItem(LS_KEY, JSON.stringify(items));
-  }
-}
-
-/* ---------- UI helpers ---------- */
-const fmtPrice = (raw) => {
-  const digits = (raw || "").replace(/[^\d]/g, "");
-  if (!digits) return "";
-  // Use the user's locale currency if you want AU explicitly: 'AUD'
-  const currency = (Intl.NumberFormat().resolvedOptions().locale || "").includes("AU")
-    ? "AUD"
-    : "USD";
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(Number(digits));
-};
-
-function enableSaveIfReady() {
-  const ready =
-    els.name.value.trim() && els.agency.value.trim() && els.title.value.trim();
-  els.save.disabled = !ready;
-}
-
-/* ---------- category toggle ---------- */
-let category = "Domestic";
-function setCategory(c) {
-  category = c;
-  els.catDom.classList.toggle("active", c === "Domestic");
-  els.catCom.classList.toggle("active", c === "Commercial");
-  els.catDom.setAttribute("aria-pressed", String(c === "Domestic"));
-  els.catCom.setAttribute("aria-pressed", String(c === "Commercial"));
-}
-
-/* ---------- pin modal ---------- */
-let pinned = false;
-function openPin() {
-  els.pinModal.classList.add("open");
-  els.pinModal.setAttribute("aria-hidden", "false");
-}
-function closePin() {
-  els.pinModal.classList.remove("open");
-  els.pinModal.setAttribute("aria-hidden", "true");
-}
-
-/* ---------- highlights live preview ---------- */
-const hiPreview = document.createElement("div");
-hiPreview.className = "chips";
-document.querySelector(".hi-grid").after(hiPreview);
-
-function renderHiPreview() {
-  const vals = els.highlights
-    .map((i) => i.value.trim())
-    .filter(Boolean)
-    .slice(0, 6);
-  hiPreview.innerHTML =
-    vals.map((v) => `<span class="chip">${v}</span>`).join("") ||
-    '<span class="muted">Add 1–6 short highlights…</span>';
-}
-
-/* ---------- render list ---------- */
-function render() {
-  els.list.innerHTML = "";
-  if (!items.length) {
-    els.empty.style.display = "";
-    return;
-  }
-  els.empty.style.display = "none";
-
-  items.forEach((it) => {
-    const row = document.createElement("div");
-    row.className = "listing";
-    row.innerHTML = `
-      <img src="${it.media || "https://placehold.co/100x100?text=No+Img"}" alt="">
-      <div class="listing-body">
-        <h3>${it.title || "Untitled"}</h3>
-        <p><b>${it.price || ""}</b> · ${it.address || ""}</p>
-        <p class="muted">
-          ${(it.name || "")}${it.agency ? " — " + it.agency : ""} · ${it.category || ""}${
-      it.propertyType ? " · " + it.propertyType : ""
-    }${it.saleMethod ? " · " + it.saleMethod : ""}
-        </p>
-        ${
-          it.highlights && it.highlights.length
-            ? `<div class="chips">${it.highlights
-                .map((h) => `<span class="chip">${h}</span>`)
-                .join("")}</div>`
-            : ""
-        }
-        ${it.info ? `<p style="margin-top:6px">${it.info}</p>` : ""}
+    <!-- Form -->
+    <div class="section" style="margin:12px 0 16px">
+      <div class="row">
+        <input id="a-name" class="input" placeholder="Agent Name" />
+        <input id="a-agency" class="input" placeholder="Agency" />
+        <input id="a-title" class="input" placeholder="Listing Title" />
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <button class="btn btn-edit">Edit</button>
-        <button class="btn btn-delete">Delete</button>
-      </div>`;
+      <div class="row">
+        <input id="a-price" class="input" placeholder="Price (e.g. $795,000)" />
+        <input id="a-address" class="input" placeholder="Address" />
+        <input id="a-media" class="input" placeholder="Image / Video URL or data:" />
+      </div>
 
-    row.querySelector(".btn-edit").onclick = () => {
-      els.name.value = it.name || "";
-      els.agency.value = it.agency || "";
-      els.title.value = it.title || "";
-      els.price.value = it.price || "";
-      els.address.value = it.address || "";
-      els.media.value = it.media || "";
-      els.info.value = it.info || "";
-      els.notes.value = it.notes || "";
-      els.id.value = it.id || "";
-      els.ptype.value = it.propertyType || "";
-      els.sale.value = it.saleMethod || "";
-      setCategory(it.category || "Domestic");
-      pinned = !!it.pinned;
-      els.pinStatus.textContent = pinned
-        ? "Pinned location saved"
-        : "Pinned location not set";
-      els.highlights.forEach((inp, idx) => {
-        inp.value = it.highlights && it.highlights[idx] ? it.highlights[idx] : "";
-      });
-      renderHiPreview();
-      enableSaveIfReady();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      <div class="row">
+        <div>
+          <label class="muted" style="font-size:12px">Category</label>
+          <div class="seg" style="margin-top:6px">
+            <button class="chip" id="cat-dom" type="button" aria-pressed="true">Domestic</button>
+            <button class="chip" id="cat-com" type="button" aria-pressed="false">Commercial</button>
+          </div>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Property Type</label>
+          <select id="a-ptype" class="input" style="height:44px;margin-top:6px">
+            <option value="">Select type…</option>
+            <option>House</option><option>Townhouse</option><option>Apartment</option>
+            <option>Unit</option><option>Villa</option><option>Office</option>
+            <option>Retail</option><option>Warehouse</option><option>Land</option>
+          </select>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Sale Method</label>
+          <select id="a-sale" class="input" style="height:44px;margin-top:6px">
+            <option value="">Choose…</option>
+            <option>Auction</option><option>For Sale</option><option>Contact Agent</option>
+            <option>EOI</option><option>For Lease</option><option>Just Listed</option>
+            <option>Private Treaty</option><option>Off-market</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="muted" style="font-size:12px">Property Information</label>
+        <textarea id="a-info" class="input" placeholder="Key details, description, inclusions…"></textarea>
+      </div>
+
+      <h4 style="margin:16px 0 8px">Key Highlights (6)</h4>
+      <div class="hi-grid" style="display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
+        <input class="input hi" placeholder="e.g. 3 Bed" />
+        <input class="input hi" placeholder="2 Bath" />
+        <input class="input hi" placeholder="1 Car" />
+        <input class="input hi" placeholder="Study" />
+        <input class="input hi" placeholder="Pool" />
+        <input class="input hi" placeholder="Pet friendly" />
+      </div>
+
+      <div class="row" style="grid-template-columns:1fr 2fr auto auto;margin-top:10px">
+        <input id="a-notes" class="input" placeholder="Internal notes (private)" />
+        <input id="a-id" class="input" placeholder="ID (auto if blank)" />
+        <button id="save" class="btn primary" type="button">Save</button>
+        <button id="clear" class="btn" type="button">Clear</button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="list" class="feed"></div>
+    <div id="empty" class="muted" style="border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:8px;display:none">
+      No listings yet — start by adding one above.
+    </div>
+  </div>
+
+  <!-- ========== App Logic ========== -->
+  <script>
+    /* ===== Constants ===== */
+    const LS_KEY  = "connect-centre:agents:v2";
+    const LS_LANG = "rl:langMode"; // 'en' | 'en+zh'
+
+    /* ===== i18n (UI labels only) ===== */
+    const dict = {
+      en: { feedPreview:"Feed Preview", agents:"Agents", noMedia:"No media", open:"Open" },
+      zh: { feedPreview:"预览",        agents:"经纪人",  noMedia:"无媒体",  open:"开放" }
+    };
+    const getLangMode = () => localStorage.getItem(LS_LANG) || "en";
+    const setLangMode = (v) => localStorage.setItem(LS_LANG, v);
+    const tx = (k) => {
+      const en = dict.en[k] || k, zh = dict.zh[k] || en;
+      return (getLangMode()==="en+zh") ? `${en}<span class="tr"> · ${zh}</span>` : en;
     };
 
-    row.querySelector(".btn-delete").onclick = () =>
-      removeItem(it.id).then(refreshFeedSoon);
+    /* ===== Shorthands ===== */
+    const $ = (id)=>document.getElementById(id);
+    const on = (el,ev,fn)=> el && el.addEventListener(ev,fn);
+    const html = (s)=>s; // tiny template safety
+    const escapeHtml = (s)=> String(s??"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 
-    els.list.appendChild(row);
-  });
-}
+    /* ===== Refs ===== */
+    const els = {
+      feed: $("feed"), feedTitle:$("feed-title"), agentsTitle:$("agents-title"),
+      name:$("a-name"), agency:$("a-agency"), title:$("a-title"),
+      price:$("a-price"), address:$("a-address"), media:$("a-media"),
+      info:$("a-info"), notes:$("a-notes"), id:$("a-id"),
+      ptype:$("a-ptype"), sale:$("a-sale"),
+      hi:[...document.querySelectorAll(".hi")],
+      save:$("save"), clear:$("clear"),
+      list:$("list"), empty:$("empty"),
+      catDom:$("cat-dom"), catCom:$("cat-com"),
+      lang:$("lang-mode"), reset:$("reset")
+    };
 
-/* ---------- feed cards refresh hook ---------- */
-function refreshFeedSoon() {
-  setTimeout(() => {
-    if (typeof renderFeederCards === "function") renderFeederCards("feed");
-  }, 350);
-}
+    /* ===== State / Storage ===== */
+    let items = [];
+    let category = "Domestic";
+    function load(){ try{ items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }catch{ items=[]; } }
+    function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
 
-/* ---------- wire up events ---------- */
-["input", "change"].forEach((ev) => {
-  [els.name, els.agency, els.title].forEach((el) =>
-    el.addEventListener(ev, enableSaveIfReady)
-  );
-});
-els.price.addEventListener("blur", () => {
-  els.price.value = fmtPrice(els.price.value);
-});
+    /* ===== Helpers ===== */
+    function setCategory(c){
+      category=c;
+      els.catDom.classList.toggle("active", c==="Domestic");
+      els.catCom.classList.toggle("active", c==="Commercial");
+      els.catDom.setAttribute("aria-pressed", String(c==="Domestic"));
+      els.catCom.setAttribute("aria-pressed", String(c==="Commercial"));
+      renderFeedFromForm(); // reflect instantly
+    }
+    function fmtPrice(raw){
+      const digits=(raw||"").replace(/[^\d]/g,""); if(!digits) return "";
+      return new Intl.NumberFormat(undefined,{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Number(digits));
+    }
+    function readFormItem(){
+      return {
+        id: els.id.value.trim() || "preview",
+        name: els.name.value.trim(),
+        agency: els.agency.value.trim(),
+        title: els.title.value.trim(),
+        price: els.price.value.trim(),
+        address: els.address.value.trim(),
+        media: els.media.value.trim(),
+        info: els.info.value.trim(),
+        notes: els.notes.value.trim(),
+        category,
+        propertyType: els.ptype.value || "",
+        saleMethod: els.sale.value || "",
+        highlights: els.hi.map(i=>i.value.trim()).filter(Boolean).slice(0,6),
+        oi: { date:"", start:"", end:"" }
+      };
+    }
+    function isEmptyItem(it){
+      return ![it.title,it.price,it.address,it.info,(it.highlights||[]).join("")].some(Boolean);
+    }
 
-els.catDom.onclick = () => setCategory("Domestic");
-els.catCom.onclick = () => setCategory("Commercial");
-setCategory("Domestic");
+    /* ===== Live Feed Preview (EN + optional ZH mirror) ===== */
+    async function renderFeedFromForm(){
+      const formItem = readFormItem();
+      const it = isEmptyItem(formItem) ? (items[0] || null) : formItem;
+      if (!it){
+        els.feed.innerHTML = `<div class="muted">No listings to preview yet.</div>`;
+        els.feedTitle.innerHTML = tx("feedPreview");
+        return;
+      }
 
-els.pinBtn.onclick = openPin;
-els.pinClose.onclick = closePin;
-els.pinUse.onclick = () => {
-  pinned = true;
-  els.pinStatus.textContent = "Pinned location saved";
-  closePin();
-};
+      const media = it.media?.trim() || "";
+      const img = media
+        ? `<img src="${escapeHtml(media)}" alt="">`
+        : `<div style="width:100px;height:100px;border-radius:12px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#6b7280;border:1px solid #e5e7eb">${dict.en.noMedia}</div>`;
+      const chipsEN = (it.highlights||[]).slice(0,6).map(h=>`<span class="chip">${escapeHtml(h)}</span>`).join("");
+      const oi = (it.oi?.date && it.oi?.start)
+        ? `<div class="chip" style="font-weight:700">${dict.en.open} ${escapeHtml(it.oi.date)} ${escapeHtml(it.oi.start)}${it.oi.end?'–'+escapeHtml(it.oi.end):''}</div>`
+        : "";
 
-els.highlights.forEach((i) => i.addEventListener("input", renderHiPreview));
-renderHiPreview();
+      // English card
+      els.feed.innerHTML = `
+        <div class="listing">
+          ${img}
+          <div class="listing-body">
+            <h3 style="margin:0 0 4px">${escapeHtml(it.title || "Untitled")}</h3>
+            <p style="margin:0"><b>${escapeHtml(it.price || "")}</b>${(it.price&&it.address)?" — ":""}${escapeHtml(it.address || "")}</p>
+            <p style="margin:2px 0;color:#6b7280;font-size:14px">
+              ${escapeHtml(it.category||"")}${it.propertyType?" · "+escapeHtml(it.propertyType):""}${it.saleMethod?" · "+escapeHtml(it.saleMethod):""}
+            </p>
+            ${oi}
+            ${chipsEN ? `<div class="chips" style="margin-top:6px">${chipsEN}</div>` : ""}
+            ${it.info ? `<p style="margin-top:6px">${escapeHtml(it.info)}</p>` : ""}
+            <div id="mirror-slot"></div>
+          </div>
+        </div>`;
+      els.feedTitle.innerHTML = tx("feedPreview");
 
-window.addEventListener("keydown", (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
-    e.preventDefault();
-    if (!els.save.disabled) els.save.click();
+      // Chinese mirror (if enabled)
+      if (window.RL_Translation && window.RL_Translation.shouldTranslate?.("zh")) {
+        try {
+          const mirrors = await window.RL_Translation.makeMirrors(it);
+          const zh = mirrors?.zh;
+          if (zh) {
+            let zhHTML = "";
+            if (zh.title) {
+              zhHTML += `<div class="tr" style="margin-top:6px">${escapeHtml(zh.title)}</div>`;
+            }
+            if (zh.price || zh.address) {
+              zhHTML += `<div class="tr" style="margin-top:2px"><b>${escapeHtml(zh.price||"")}</b>${(zh.price&&zh.address)?" — ":""}${escapeHtml(zh.address||"")}</div>`;
+            }
+            if (zh.highlights?.length) {
+              zhHTML += `<div class="chips" style="margin-top:6px">${zh.highlights.map(h=>`<span class="chip">${escapeHtml(h)}</span>`).join("")}</div>`;
+            }
+            if (zh.description) {
+              zhHTML += `<p class="tr" style="margin-top:6px">${escapeHtml(zh.description)}</p>`;
+            }
+            const slot = els.feed.querySelector("#mirror-slot");
+            if (slot) slot.innerHTML = zhHTML;
+          }
+        } catch(e){ console.warn("mirror render failed", e); }
+      }
+    }
+
+    /* ===== Saved List (below) ===== */
+    function renderList(){
+      els.list.innerHTML = "";
+      if(!items.length){ els.empty.style.display = ""; return; }
+      els.empty.style.display = "none";
+      items.forEach(it=>{
+        const row = document.createElement("div");
+        row.className = "listing";
+        row.innerHTML = `
+          <img src="${it.media?.trim() || 'https://placehold.co/100x100?text=No+Img'}" alt="">
+          <div class="listing-body">
+            <h3 style="margin:0 0 4px">${escapeHtml(it.title||"Untitled")}</h3>
+            <p style="margin:2px 0"><b>${escapeHtml(it.price||"")}</b> · ${escapeHtml(it.address||"")}</p>
+            <p class="muted" style="margin:2px 0">
+              ${(it.name||"")}${it.agency?" — "+escapeHtml(it.agency):""} · ${escapeHtml(it.category||"")}${it.propertyType?" · "+escapeHtml(it.propertyType):""}${it.saleMethod?" · "+escapeHtml(it.saleMethod):""}
+            </p>
+            ${(it.highlights||[]).length ? `<div class="chips" style="margin-top:6px">${it.highlights.map(h=>`<span class="chip">${escapeHtml(h)}</span>`).join("")}</div>` : ""}
+            ${it.info?`<p style="margin-top:6px">${escapeHtml(it.info)}</p>`:""}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:92px">
+            <button class="btn btn-edit">Edit</button>
+            <button class="btn btn-delete">Delete</button>
+          </div>`;
+        row.querySelector(".btn-edit").onclick = ()=>{
+          els.name.value = it.name||""; els.agency.value=it.agency||""; els.title.value=it.title||"";
+          els.price.value=it.price||""; els.address.value=it.address||""; els.media.value=it.media||"";
+          els.info.value=it.info||""; els.notes.value=it.notes||""; els.id.value=it.id||"";
+          els.ptype.value=it.propertyType||""; els.sale.value=it.saleMethod||"";
+          setCategory(it.category||"Domestic");
+          els.hi.forEach((inp,i)=> inp.value = it.highlights?.[i] || "");
+          renderFeedFromForm();
+          window.scrollTo({ top:0, behavior:"smooth" });
+        };
+        row.querySelector(".btn-delete").onclick = ()=>{
+          items = items.filter(x=> String(x.id)!==String(it.id));
+          persist(); renderList(); renderFeedFromForm();
+        };
+        els.list.appendChild(row);
+      });
+    }
+
+    /* ===== Actions ===== */
+    on(els.save, "click", ()=>{
+      const id = els.id.value.trim() || (crypto.randomUUID? crypto.randomUUID() : String(Date.now()));
+      const item = readFormItem(); item.id = id;
+      const i = items.findIndex(x=> String(x.id)===String(item.id));
+      if (i>=0) items[i]=item; else items.unshift(item);
+      persist(); renderList(); renderFeedFromForm();
+      clearForm();
+    });
+
+    on(els.clear, "click", clearForm);
+    function clearForm(){
+      [els.name,els.agency,els.title,els.price,els.address,els.media,els.info,els.notes,els.id]
+        .forEach(i=> i.value="");
+      els.ptype.value=""; els.sale.value="";
+      els.hi.forEach(i=> i.value="");
+      setCategory("Domestic");
+      renderFeedFromForm();
+    }
+
+    // LIVE preview bindings (typing updates preview)
+    ["input","change","blur"].forEach(ev=>{
+      [els.name,els.agency,els.title,els.price,els.address,els.media,els.info,els.ptype,els.sale, ...els.hi]
+        .forEach(el=> on(el, ev, renderFeedFromForm));
+    });
+
+    on(els.price, "blur", ()=>{ els.price.value = fmtPrice(els.price.value); renderFeedFromForm(); });
+    on(els.catDom, "click", ()=> setCategory("Domestic"));
+    on(els.catCom, "click", ()=> setCategory("Commercial"));
+
+    on(els.lang, "change", ()=>{
+      setLangMode(els.lang.value);
+      els.feedTitle.innerHTML = tx("feedPreview");
+      els.agentsTitle.innerHTML = tx("agents");
+      renderFeedFromForm();
+    });
+
+    on(els.reset, "click", ()=>{
+      localStorage.removeItem(LS_KEY);
+      items = [];
+      persist();
+      renderList(); renderFeedFromForm();
+      clearForm();
+      alert("Local listings cleared.");
+    });
+
+    /* ===== Boot ===== */
+    (function init(){
+      setCategory("Domestic");
+      load();
+      els.lang.value = getLangMode();
+      els.feedTitle.innerHTML = tx("feedPreview");
+      els.agentsTitle.innerHTML = tx("agents");
+      renderList();
+      renderFeedFromForm();
+    })();
+  </script>
+
+  <!-- ========== Minimal Translation Layer (client) ========== -->
+  <script>
+  (function(){
+    // Simple in-page translation manager that calls your proxy
+    const _policy = {
+      engine: "deepl-pro:v2",
+      targets: [],                 // e.g. ["zh"]
+      currencyContext: "AU",       // "AU" appends （澳元） to mirrored price
+      fields: {
+        title: true,
+        description: true,
+        highlights: true,
+        price: true,
+        agentName: false,
+        agency: false,
+        address: false
+      },
+      api: { endpoint: "", source_lang: "EN" }
+    };
+    const cache = new Map(); // key → translated string
+
+    function getPolicy(){ return JSON.parse(JSON.stringify(_policy)); }
+    function setPolicy(p){ Object.assign(_policy, p || {}); }
+
+    function shouldTranslate(lang){
+      return Array.isArray(_policy.targets) && _policy.targets.includes(lang);
+    }
+
+    function _norm(s){ return (s==null?"":String(s)).trim(); }
+    function _mkKey(text, tgt, src){ return `${tgt}|${src}|${text}`; }
+
+    async function _translateMany(texts, target, source){
+      const endpoint = _policy.api?.endpoint;
+      if (!endpoint) throw new Error("No translation endpoint configured");
+
+      // serve from cache where possible
+      const out = new Array(texts.length);
+      const toFetch = [];
+      const toFetchIdx = [];
+
+      texts.forEach((t, i)=>{
+        const key = _mkKey(t, target, source);
+        if (cache.has(key)) out[i] = cache.get(key);
+        else { toFetch.push(t); toFetchIdx.push(i); }
+      });
+
+      if (toFetch.length){
+        const r = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texts: toFetch, target_lang: target.toUpperCase(), source_lang: source.toUpperCase() })
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error || `translate_${r.status}`);
+        (data.translations||[]).forEach((txt, j)=>{
+          const i = toFetchIdx[j];
+          const key = _mkKey(toFetch[j], target, source);
+          cache.set(key, txt);
+          out[i] = txt;
+        });
+      }
+      return out;
+    }
+
+    async function makeMirrors(item){
+      const source = _policy.api?.source_lang || "EN";
+      const mirrors = {};
+      if (shouldTranslate("zh")){
+        // build fields in a known order to map responses back
+        const pieces = [];
+        const map = []; // {field, index}
+        if (_policy.fields.title)       { map.push({field:"title"});       pieces.push(_norm(item.title)); }
+        if (_policy.fields.description) { map.push({field:"description"}); pieces.push(_norm(item.info)); }
+        if (_policy.fields.highlights)  { map.push({field:"highlights"});  pieces.push((item.highlights||[]).filter(Boolean).join(" • ")); }
+        if (_policy.fields.price)       { map.push({field:"price"});       pieces.push(_norm(item.price)); }
+        if (_policy.fields.address)     { map.push({field:"address"});     pieces.push(_norm(item.address)); }
+
+        const res = await _translateMany(pieces, "zh", source);
+        const zh = {};
+        map.forEach((m, i)=>{
+          if (m.field==="highlights"){
+            zh.highlights = (res[i]||"").split(/[•・·]\s*/).map(s=>s.trim()).filter(Boolean);
+          } else if (m.field==="price"){
+            const base = res[i] || "";
+            zh.price = (_policy.currencyContext==="AU" && base) ? `${base}（澳元）` : base;
+          } else {
+            zh[m.field] = res[i] || "";
+          }
+        });
+        mirrors.zh = zh;
+      }
+      return mirrors;
+    }
+
+    window.RL_Translation = { getPolicy, setPolicy, makeMirrors, shouldTranslate };
+  })();
+  <script>
+(function () {
+  if (!window.RL_Translation) return;
+  const p = window.RL_Translation.getPolicy();
+
+  // Auto-pick endpoint: local file/dev vs Codespaces public URL
+  let endpoint = "http://127.0.0.1:8787/translate";
+  const h = location.hostname;
+  if (h.endsWith(".app.github.dev")) {
+    endpoint = `https://${h.replace(/-\d+\.app\.github\.dev$/, "-8787.app.github.dev")}/translate`;
   }
-});
 
-els.save.onclick = () => {
-  const name = els.name.value.trim();
-  const agency = els.agency.value.trim();
-  const title = els.title.value.trim();
-  if (!name || !agency || !title) return;
-
-  const id =
-    els.id.value.trim() ||
-    (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
-  const highlights = els.highlights
-    .map((i) => i.value.trim())
-    .filter(Boolean)
-    .slice(0, 6);
-
-  const item = {
-    id,
-    name,
-    agency,
-    title,
-    price: els.price.value.trim(),
-    address: els.address.value.trim(),
-    media: els.media.value.trim(),
-    info: els.info.value.trim(),
-    notes: els.notes.value.trim(),
-    category,
-    propertyType: els.ptype.value,
-    saleMethod: els.sale.value,
-    highlights,
-    pinned,
-  };
-  upsert(item);
-  refreshFeedSoon();
-};
-
-els.clear.onclick = () => {
-  clearForm();
-  refreshFeedSoon();
-};
-
-function clearForm() {
-  [
-    els.name,
-    els.agency,
-    els.title,
-    els.price,
-    els.address,
-    els.media,
-    els.info,
-    els.notes,
-    els.id,
-  ].forEach((i) => (i.value = ""));
-  els.ptype.value = "";
-  els.sale.value = "";
-  els.highlights.forEach((i) => (i.value = ""));
-  setCategory("Domestic");
-  pinned = false;
-  els.pinStatus.textContent = "Pinned location not set";
-  enableSaveIfReady();
-  renderHiPreview();
-}
-
-/* ---------- boot ---------- */
-document.addEventListener("DOMContentLoaded", () => {
-  // one-and-only hook for the visual cards
-  if (typeof renderFeederCards === "function") renderFeederCards("feed");
-  load();
-  els.save.disabled = true;
-  enableSaveIfReady();
-});
+  p.api = { endpoint, source_lang: "EN" };
+  p.targets = ["zh"];
+  p.currencyContext = "AU";
+  p.fields = Object.assign(p.fields || {}, {
+    title: true, description: true, highlights: true, price: true,
+    agentName: false, agency: false, address: false
+  });
+  window.RL_Translation.setPolicy(p);
+  console.log("Translation endpoint set:", p.api);
+})();
 </script>
+<script>(function(){if(!window.RL_Translation)return;const p=window.RL_Translation.getPolicy();p.api={endpoint:"https://vigilant-space-chainsaw-pj94p7qw76gx294jv-8787.app.github.dev/translate",source_lang:"EN"};p.targets=["zh"];p.currencyContext="AU";p.fields=Object.assign(p.fields||{},{title:true,description:true,highlights:true,price:true,agentName:false,agency:false,address:false});window.RL_Translation.setPolicy(p);console.log("Translation endpoint set:",p.api);})();</script>
+</body>
+</html>
