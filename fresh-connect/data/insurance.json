@@ -1,0 +1,4 @@
+[
+  { "id":"i1", "type":"Home & Contents", "provider":"SureCover", "note":"Domestic package" },
+  { "id":"i2", "type":"Landlord",        "provider":"SafeHouse", "note":"Includes loss of rent" }
+]

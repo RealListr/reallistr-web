@@ -1,0 +1,26 @@
+[
+  {
+    "id": "prop-1",
+    "portal": "agents",
+    "sector": "Agents",
+    "address": "123 Demo St",
+    "suburb": "Testville",
+    "state": "NSW",
+    "status": "new",
+    "price": 750000,
+    "beds": 3,
+    "baths": 2
+  },
+  {
+    "id": "prop-2",
+    "portal": "agents",
+    "sector": "Agents",
+    "address": "45 Market St",
+    "suburb": "Sydney",
+    "state": "NSW",
+    "status": "active",
+    "price": 1250000,
+    "beds": 4,
+    "baths": 3
+  }
+]

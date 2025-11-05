@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>RealListr – Dev Mode</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; }
+    h1 { margin-bottom: 8px; }
+    li { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>Agents — Properties</h1>
+  <ul id="list"><li>Loading…</li></ul>
+
+  <script>
+    async function load() {
+      const res = await fetch('/api/properties');
+      const data = await res.json();
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+      if (!Array.isArray(data) || !data.length) {
+        list.innerHTML = '<li>No data found</li>';
+        return;
+      }
+      for (const p of data) {
+        const price = p.price ? ` — $${p.price.toLocaleString?.() ?? p.price}` : '';
+        const li = document.createElement('li');
+        li.textContent = `${p.address}, ${p.suburb}, ${p.state}${price}`;
+        list.appendChild(li);
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

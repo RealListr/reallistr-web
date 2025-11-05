@@ -1,0 +1,4 @@
+[
+  { "id":"e1", "plan":"Solar Saver", "provider":"BrightEnergy", "rate":"$0.22/kWh", "note":"Feed-in 8c" },
+  { "id":"e2", "plan":"Business 12m","provider":"GridCo",       "rate":"$0.25/kWh", "note":"Fixed term" }
+]

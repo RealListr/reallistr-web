@@ -1,0 +1,213 @@
+import { KPITile } from './components/KPITile.js';
+import { Table } from './components/Table.js';
+import { PropertyCard, bindPropertyCardFlyouts } from "./components/PropertyCard.js";
+import { ensurePreviewSlot } from "./components/ensurePreview.js";
+import { store, initStore } from './store.js';
+import { MAPBOX_TOKEN } from './config.js';
+import './ai-stubs.js';
+
+/* ---------- helpers ---------- */
+const byId = (id)=>document.getElementById(id);
+const toDataURL = (file)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+const ensureProp = (p)=>Object.assign({
+  address:'', status:'draft',
+  beds:0, baths:0, cars:0, level:null,
+  pool:false, ev_charger:false, solar:false, solar_watts:null,
+  grass_type:'Artificial',
+  land_m2:null, build_m2:null,
+  type:'House',
+  listing_label:'', listing_close_date:'',
+  desc:'',
+  media:{ images:[], videos:[], realcuts:[] },
+  lat:null, lng:null
+}, p||{});
+const GRASS = ["Kikuyu","Buffalo","Couch","Fescue","Native","Artificial","Other"];
+const P_TYPES = [
+  "House","Apartment","Unit","Townhouse","Granny Flat","Home + Granny Flat","Office",
+  "Mixed use Commercial","Warehouse","Industrial Land","City Commercial Opportunity","Retail Shop","Car Park"
+];
+const LABELS = [
+  "Auction","For Sale","For Lease","Leasing","Pending Auction","Contact Agent",
+  "Seeking Offers","Expression of Interest","Agency in Control","Lead Agency",
+  "Private Sale","Private Treaty","Off Market"
+];
+
+/* ---------- GI chips renderer (like 1:1 with your live card) ---------- */
+const spriteUse = (id)=> id ? `<svg class="gi" aria-hidden="true"><use href="./public/icons/reallistr-ghost.svg#${id}" xlink:href="./public/icons/reallistr-ghost.svg#${id}"></use></svg>` : ""; const chip = (id,text)=>`<span class="gi-chip">${spriteUse(id)}<span>${text}</span></span>`;
+const renderSpecs = (p)=>{
+  const out = [
+    chip('gi-bed',  `${p.beds||0}`),
+    chip('gi-bath', `${p.baths||0}`),
+    chip('gi-car',  `${p.cars||0}`)
+  ];
+  if(p.pool) out.push(chip('gi-pool',''));
+  if(p.ev_charger) out.push(chip('gi-ev',''));
+  if(p.solar) out.push(chip('gi-solar', p.solar_watts?`${p.solar_watts}W`:'' ));
+  if(p.level!=null && p.level!=='') out.push(chip('gi-level', `${p.level}`));
+  if(p.land_m2)  out.push(chip('gi-land',  `${p.land_m2}m²`));
+  if(p.build_m2) out.push(chip('gi-build', `${p.build_m2}m²`));
+  return out.join('');
+};
+const firstImage = (p)=> p.media?.images?.[0] || '';
+
+/* ---------- pages ---------- */
+const TPL = {
+  '#/dashboard': `
+    <h1 class="h1">Dashboard</h1>
+    <div id="kpis" class="grid-3"></div>
+    <div class="card" style="margin-top:16px"><div class="h2">My Properties</div><div id="myProps"></div></div>
+  `,
+  '#/subscriptions': `
+    <h1 class="h1">Agent Subscription Tiers</h1>
+    <div class="grid-3">
+      <div class="card tier--starter"><div class="h2">Starter</div><ul><li>Up to <b>10 properties</b></li><li>Basic AI assist</li><li>10 GB media</li></ul><div class="cta"><button class="btn">Get Started</button></div></div>
+      <div class="card tier--pro"><div class="h2">Pro</div><ul><li><b>Unlimited properties</b></li><li>100 GB media</li><li>Up to 5 agents</li></ul><div class="cta"><button class="btn primary">Upgrade to Pro</button></div></div>
+      <div class="card tier--enterprise"><div class="h2">Enterprise</div><ul><li><b>Unlimited agents & offices</b></li><li>Priority AI</li></ul><div class="cta"><button class="btn">Contact Sales</button></div></div>
+    </div>
+  `,
+  '#/ads': `
+    <h1 class="h1">Advertising Models</h1>
+    <div class="grid-3">
+      <div class="card ad--lite"><div class="h2">Lite</div><ul><li>1 campaign</li><li>Meta reach</li></ul><div class="cta"><button class="btn">Activate Lite</button></div></div>
+      <div class="card ad--active"><div class="h2">Active</div><ul><li>Up to 5 campaigns</li><li>Meta + Google</li></ul><div class="cta"><button class="btn primary">Go Active</button></div></div>
+      <div class="card ad--advanced"><div class="h2">Advanced</div><ul><li>Unlimited campaigns</li><li>Retargeting</li></ul><div class="cta"><button class="btn">Launch Advanced</button></div></div>
+    </div>
+  `,
+  '#/properties': `
+    <h1 class="h1">Properties</h1>
+    <div class="card" style="margin-bottom:16px">
+      <button class="btn" id="btnNewProp">+ New Property</button>
+      <button class="btn" id="btnAIAdd">AI Quick Add (stub)</button>
+    </div>
+    <div id="propTable"></div>
+  `,
+  '#/leads': `<h1 class="h1">Leads</h1><div id="leadsTable"></div>`,
+  '#/settings': `
+    <h1 class="h1">Settings</h1>
+    <div class="grid-2">
+      <section class="card"><div class="h2">Subscription</div><div id="plan"></div></section>
+      <section class="card"><div class="h2">Integrations</div><p>Status: <span class="badge" id="adStatus">Not Connected</span></p><button class="btn" id="btnConnect">Connect Ad Account (mock)</button></section>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="h2">Team (Agents)</div>
+      <div style="margin:8px 0"><button class="btn" id="btnAddAgent">+ Add Agent</button></div>
+      <div class="agent-grid" id="teamGrid"></div>
+    </div>
+  `,
+  '#/property-editor': `
+    <h1 class="h1">Property Editor</h1>
+    <div class="editor-grid">
+      <section>
+        <div class="card">
+          <!-- Address + Status -->
+          <div class="row">
+            <div style="flex:1">
+              <label>Address</label><br/>
+              <input id="p_address" class="btn" style="width:100%" placeholder="123 Main St"/>
+            </div>
+            <div class="sm">
+              <label>Status</label><br/>
+              <select id="p_status" class="btn" style="width:100%">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row A: compact spec bar -->
+          <div class="row" style="margin-top:10px">
+            <div class="xs"><label>Beds</label><br/><input id="p_beds" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Baths</label><br/><input id="p_baths" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Car</label><br/><input id="p_cars" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Level</label><br/><input id="p_level" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Pool</label><br/><input type="checkbox" id="p_pool"/></div>
+            <div class="xs"><label>EV</label><br/><input type="checkbox" id="p_ev"/></div>
+            <div class="xs">
+              <label>Solar</label><br/>
+              <div class="row">
+                <input type="checkbox" id="p_solar"/>
+                <input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="W"/>
+              </div>
+            </div>
+            <div class="sm">
+              <label>Grass</label><br/>
+              <select id="p_grass" class="btn" style="width:100%">
+                ${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <!-- Row B: land/build/type -->
+          <div class="row" style="margin-top:8px">
+            <div class="sm" style="flex:1"><label>Land m²</label><br/><input id="p_land" class="btn" type="number" min="0" step="0.1" style="width:100%"/></div>
+            <div class="sm" style="flex:1"><label>Build m²</label><br/><input id="p_build" class="btn" type="number" min="0" step="0.1" style="width:100%"/></div>
+            <div class="sm"><label>Property Type</label><br/>
+              <select id="p_type" class="btn" style="width:100%">
+                ${P_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+
+          <!-- Row C: Listing label dropdown + conditional close date -->
+          <div class="row" style="margin-top:8px">
+            <div class="sm" style="flex:1">
+              <label>Listing Label</label><br/>
+              <select id="p_label" class="btn" style="width:100%">
+                <option value="">Select a label</option>
+                ${LABELS.map(l=>`<option value="${l}">${l}</option>`).join('')}
+              </select>
+            </div>
+            <div class="sm" id="closeWrap" style="display:none">
+              <label>Close date</label><br/>
+              <input id="p_close" class="btn" placeholder="YYYY-MM-DD" />
+            </div>
+          </div>
+
+          <!-- Row D: Description promoted -->
+          <div style="margin-top:10px">
+            <label>Description</label><br/>
+            <textarea id="p_desc" class="btn" style="width:100%;min-height:100px" placeholder="Short description..."></textarea>
+          </div>
+        </div>
+
+        <!-- Media -->
+        <div class="card" style="margin-top:12px">
+          <div class="h2">Media</div>
+          <div class="row" style="margin-top:4px"><b>Images</b> <input id="p_imgs" type="file" accept="image/*" multiple /></div>
+          <div class="row" style="margin-top:4px"><b>Videos</b> <input id="p_vids" type="file" accept="video/*" multiple /></div>
+          <div class="row" style="margin-top:4px"><b>RealCuts</b> <input id="p_cuts" type="file" accept="video/*" multiple /></div>
+          <div id="p_media_strip" class="hscroll" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Map (compact) -->
+        <div class="card" style="margin-top:12px">
+          <div class="h2">Map</div>
+          <div id="mapWrap" style="height:200px;border:1px solid #e5e7eb;border-radius:10px"></div>
+          <div class="row" id="llRow" style="margin-top:6px;display:none">
+            <input id="p_lat" class="btn" placeholder="lat" style="width:48%"/>
+            <input id="p_lng" class="btn" placeholder="lng" style="width:48%"/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="p_save">Save</button>
+          <button class="btn" id="p_cancel">Cancel</button>
+        </div>
+      </section>
+
+      <aside>
+        <div id="p_preview" class="preview-card sticky"></div>
+      </aside>
+    </div>
+  `
+};
+
+/* ---------- router ---------- */
+const routes = Object.keys(TPL);
+const mount = async () => {
+  const path = routes.includes(window.location.hash) ? window.location.hash : '#/dashboard';
+  document.getElementById('app').innerHTML = TPL[path];
+  attachControllers(path);
+};
+
+/* ---------- preview ---------- */

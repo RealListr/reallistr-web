@@ -1,0 +1,140 @@
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs/promises';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+
+app.use((req, _res, next) => { console.log(`${new Date().toISOString()} ${req.method} ${req.url}`); next(); });
+const PORT = process.env.PORT || 5176;
+const DATA_DIR = path.join(__dirname, 'data');
+
+app.use(express.json());
+
+// ------- static editor -------
+app.use(express.static(__dirname, { index: 'editor.html' }));
+app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'editor.html')));
+
+// ------- helpers -------
+async function readJson(name) {
+  const fp = path.join(DATA_DIR, name);
+  const txt = await fs.readFile(fp, 'utf8');
+  return JSON.parse(txt);
+}
+async function writeJson(name, data) {
+  const fp = path.join(DATA_DIR, name);
+  await fs.writeFile(fp, JSON.stringify(data, null, 2), 'utf8');
+}
+
+// ------- mock API backed by ./data/*.json -------
+
+// GET /api/properties  -> properties.json
+app.get('/api/properties', async (_req, res) => {
+  try {
+    const data = await readJson('properties.json');
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: 'failed to read properties.json', detail: String(e) });
+  }
+});
+
+// POST /api/properties -> append to properties.json (basic mock)
+app.post('/api/properties', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const list = await readJson('properties.json').catch(() => []);
+    const next = Array.isArray(list) ? [...list, body] : [list, body].filter(Boolean);
+    await writeJson('properties.json', next);
+    res.status(201).json({ ok: true, saved: body });
+  } catch (e) {
+    res.status(500).json({ error: 'failed to write properties.json', detail: String(e) });
+  }
+});
+
+// GET /api/tokens/:raw -> lookup in tokens.json (flexible shape)
+app.get('/api/tokens/:raw', async (req, res) => {
+  const raw = req.params.raw;
+  try {
+    const data = await readJson('tokens.json');
+    let found = null;
+
+    if (Array.isArray(data)) {
+      // try common fields
+      found = data.find(
+        x =>
+          String(x?.token ?? '') === raw ||
+          String(x?.raw ?? '') === raw ||
+          String(x?.id ?? '') === raw
+      );
+    } else if (data && typeof data === 'object') {
+      // object map—direct key or any value match
+      if (raw in data) found = data[raw];
+      else {
+        for (const v of Object.values(data)) {
+          if (v && typeof v === 'object') {
+            if (Object.values(v).map(String).includes(raw)) { found = v; break; }
+          } else if (String(v) === raw) { found = v; break; }
+        }
+      }
+    }
+
+    if (!found) return res.status(404).json({ ok: false, message: 'token not found', raw });
+    res.json({ ok: true, token: raw, data: found });
+  } catch (e) {
+    res.status(500).json({ error: 'failed to read tokens.json', detail: String(e) });
+  }
+});
+
+// Optional convenience endpoints if you use them later:
+app.get('/api/leads',        async (_req, res)=> res.json(await readJson('leads.json').catch(()=>[])));
+app.get('/api/partners',     async (_req, res)=> res.json(await readJson('partners.json').catch(()=>[])));
+app.get('/api/subscriptions',async (_req, res)=> res.json(await readJson('subscriptions.json').catch(()=>[])));
+
+app.listen(PORT, () => {
+  console.log(`RealListr console running: http://localhost:${PORT}/`);
+});
+
+// Agents-only view
+app.get('/api/agents', async (_req, res) => {
+  try {
+    const list = await readJson('properties.json').catch(() => []);
+    const filtered = (Array.isArray(list) ? list : []).filter(
+      x => String(x.portal||'').toLowerCase() === 'agents' ||
+           String(x.sector||'').toLowerCase() === 'agents'
+    );
+    res.json(filtered);
+  } catch (e) {
+    res.status(500).json({ error: 'failed to read properties.json', detail: String(e) });
+  }
+});
+
+app.get('/__ping', (req, res) => {
+  console.log(new Date().toISOString(), 'PING /__ping');
+  res.json({ ok: true, t: Date.now() });
+});
+
+// ------- DEV mode switch -------
+const DEV = process.env.DEV === '1';
+
+// set a simple cookie so some UIs that read cookies see the token too
+app.use((req,res,next)=>{
+  if (DEV) res.setHeader('Set-Cookie','token=000000; Path=/; SameSite=Lax');
+  next();
+});
+
+// serve static with dev.html as index when DEV=1
+app.use(express.static(__dirname, { index: DEV ? 'dev.html' : 'editor.html' }));
+
+// root -> dev.html (DEV) or editor.html (normal)
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, DEV ? 'dev.html' : 'editor.html'));
+});
+
+// alias: /api/tokens?code=... or ?token=... -> /api/tokens/:raw
+app.get('/api/tokens', (req, res) => {
+  const raw = (req.query.code || req.query.token || '000000') + '';
+  res.redirect(307, `/api/tokens/${encodeURIComponent(raw)}`);
+});

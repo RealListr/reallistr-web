@@ -1,0 +1,111 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>RealListr • Energy</title> <!-- change per page -->
+<link rel="stylesheet" href="/fresh-connect/public/connect.css" />
+<style>
+  :root{--text:#0a0a0a;--muted:#6b7280;--border:#e5e7eb;--pill:#f8fafc;--blue:#2563eb}
+  body{font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);max-width:1100px;margin:32px auto;padding:0 16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--pill);cursor:pointer;font-weight:600;text-decoration:none;color:inherit}
+  .active{outline:2px solid var(--blue)}
+  .card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff}
+  ul{list-style:none;margin:0;padding:0}
+  li{padding:12px;border:1px solid var(--border);border-radius:10px;margin:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .muted{color:var(--muted)}
+  .btn{padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;text-decoration:none;color:inherit}
+  input{padding:10px;border:1px solid var(--border);border-radius:10px}
+  .grow{flex:1 1 220px}
+</style>
+
+<header class="row" style="justify-content:space-between;margin-bottom:16px">
+  <div>
+    <h1 style="margin:0">RealListr • Connect Centre</h1>
+    <p class="muted" style="margin:4px 0 0">Lite mode — no login, just data.</p>
+  </div>
+  <nav class="tabs">
+    <a class="pill" href="/index.html">Agents</a>
+    <a class="pill" href="/finance.html">Finance</a>
+    <a class="pill" href="/insurance.html">Insurance</a>
+    <a class="pill active" href="/energy.html">Energy</a>
+  </nav>
+</header>
+
+<section class="card">
+  <h2 style="margin:0 0 6px">Energy</h2>
+  <p class="muted" style="margin:0 0 12px">Plans</p>
+
+  <div class="row" style="margin:6px 0 12px">
+    <input class="grow" id="f-plan"     placeholder="Plan">
+    <input class="grow" id="f-supplier" placeholder="Supplier">
+    <input style="width:140px" id="f-rate" placeholder="Rate (c/kWh)" type="number" step="0.01">
+    <input class="grow" id="f-notes"    placeholder="Notes">
+  </div>
+  <div class="row" style="margin:0 0 16px">
+    <input class="grow" id="f-id" placeholder="ID (auto if blank)">
+    <button class="btn" id="btn-save">Save</button>
+    <button class="btn" id="btn-clear">Clear</button>
+  </div>
+
+  <div id="content">Loading…</div>
+</section>
+
+<script>
+(async () => {
+  const $ = (s)=>document.querySelector(s);
+  const content = $('#content');
+  const fId=$('#f-id'), fPlan=$('#f-plan'), fSupplier=$('#f-supplier'), fRate=$('#f-rate'), fNotes=$('#f-notes');
+  $('#btn-clear').onclick = () => [fId,fPlan,fSupplier,fRate,fNotes].forEach(i=>i.value='');
+
+  async function load(){
+    content.textContent = 'Loading…';
+    const r = await fetch('/api/energy', {cache:'no-store'});
+    const list = await r.json();
+    content.innerHTML = '<ul>' + list.map(p => {
+      const rate = p.rate!=null ? (String(p.rate).includes('c/kWh') ? p.rate : `${p.rate} c/kWh`) : '';
+      return `<li>
+        <span><b>${p.product||p.plan||'-'}</b> — ${p.supplier||'-'} <span class="muted">${rate} ${p.notes? '· '+p.notes : ''}</span></span>
+        <span>
+          <button class="btn" data-edit="${p.id}">Edit</button>
+          <button class="btn" data-del="${p.id}">Delete</button>
+        </span>
+      </li>`;
+    }).join('') + '</ul>';
+
+    content.querySelectorAll('[data-edit]').forEach(b => {
+      b.onclick = async () => {
+        const id = b.getAttribute('data-edit');
+        const items = await (await fetch('/api/energy', {cache:'no-store'})).json();
+        const row = items.find(x => String(x.id)===String(id));
+        if (!row) return;
+        fId.value=row.id||''; fPlan.value=row.product||row.plan||''; fSupplier.value=row.supplier||''; fRate.value=row.rate??''; fNotes.value=row.notes||'';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+    });
+    content.querySelectorAll('[data-del]').forEach(b => {
+      b.onclick = async () => {
+        const id = b.getAttribute('data-del');
+        if (!confirm('Delete this energy item?')) return;
+        await fetch('/api/energy/'+encodeURIComponent(id), { method:'DELETE' });
+        await load();
+      };
+    });
+  }
+
+  async function save(){
+    const payload = {
+      id: fId.value.trim() || undefined,
+      product:  fPlan.value.trim(),     // stored as 'product' for parity
+      supplier: fSupplier.value.trim(),
+      rate:     fRate.value ? Number(fRate.value) : null,
+      notes:    fNotes.value.trim() || ''
+    };
+    await fetch('/api/energy', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    [fId,fPlan,fSupplier,fRate,fNotes].forEach(i=>i.value='');
+    await load();
+  }
+
+  $('#btn-save').onclick = save;
+  load();
+})();
+</script>

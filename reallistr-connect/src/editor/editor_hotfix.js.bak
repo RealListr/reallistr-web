@@ -1,0 +1,127 @@
+(function(){
+  const log = (...a)=>console.log('[hotfix]', ...a);
+
+  // Safe container for portal content
+  function ensurePortalContainer(){
+    let c = document.getElementById('portal-content');
+    if(!c){
+      c = document.createElement('section');
+      c.id = 'portal-content';
+      c.style.position = 'relative';
+      c.style.zIndex = '1';
+      c.style.marginTop = '24px';
+      c.style.minHeight = '200px';
+      c.style.padding = '16px';
+      c.style.border = '1px solid rgba(0,0,0,0.08)';
+      c.style.borderRadius = '12px';
+      const main = document.querySelector('main, #root, body');
+      (main || document.body).appendChild(c);
+    }
+    return c;
+  }
+
+  async function fetchJSON(url, init){
+    try{
+      const r = await fetch(url, init);
+      if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return await r.json();
+    }catch(e){ log('fetch error', url, e); return null; }
+  }
+
+  function renderAgents(list){
+    const c = ensurePortalContainer();
+    c.innerHTML = '';
+    const title = document.createElement('h2');
+    title.textContent = 'Agents — Properties';
+    title.style.margin = '0 0 12px';
+    c.appendChild(title);
+
+    if(!Array.isArray(list) || list.length === 0){
+      const p = document.createElement('p');
+      p.textContent = 'No agent listings yet.';
+      c.appendChild(p);
+      return;
+    }
+
+    const ul = document.createElement('ul');
+    ul.style.listStyle = 'none';
+    ul.style.margin = '0';
+    ul.style.padding = '0';
+    list.slice(0,50).forEach(x=>{
+      const li = document.createElement('li');
+      li.style.padding = '10px 12px';
+      li.style.border = '1px solid rgba(0,0,0,0.06)';
+      li.style.borderRadius = '10px';
+      li.style.marginBottom = '10px';
+      li.textContent = [
+        x.address || 'Address',
+        x.suburb ? `, ${x.suburb}` : '',
+        x.state ? `, ${x.state}` : '',
+        x.price ? ` — $${x.price.toLocaleString?.() ?? x.price}` : ''
+      ].join('');
+      ul.appendChild(li);
+    });
+    c.appendChild(ul);
+  }
+
+  async function loadAgents(){
+    try{
+      localStorage.setItem('rl_token', localStorage.getItem('rl_token') || '000000');
+      localStorage.setItem('token',     localStorage.getItem('token')     || '000000');
+      sessionStorage.setItem('token',   sessionStorage.getItem('token')   || '000000');
+    }catch{}
+
+    let data = await fetchJSON('/api/agents');
+    if(!Array.isArray(data)){
+      data = await fetchJSON('/api/properties');
+      if(Array.isArray(data)){
+        data = data.filter(x =>
+          String(x.portal||'').toLowerCase()==='agents' ||
+          String(x.sector||'').toLowerCase()==='agents'
+        );
+      }
+    }
+    renderAgents(Array.isArray(data)?data:[]);
+  }
+
+  function findAgentsTab(){
+    return (
+      document.querySelector('[data-portal="agents"]') ||
+      document.querySelector('#tab-agents') ||
+      [...document.querySelectorAll('a,button,li,div')].find(e => /agents portal/i.test(e.textContent||''))
+    );
+  }
+
+  function bind(){
+    const tab = findAgentsTab();
+    if(!tab){ log('agents tab not found yet'); return false; }
+    if(tab.__hotfixBound) return true;
+    tab.__hotfixBound = true;
+
+    tab.addEventListener('click', (ev)=>{
+      try{ ev.preventDefault(); }catch{}
+      log('Agents tab clicked');
+      loadAgents();
+    }, { passive: true });
+
+    try{ tab.style.outline = '2px solid #ff7a00'; tab.style.borderRadius = '8px'; }catch{}
+    log('bound to agents tab');
+    return true;
+  }
+
+  const start = Date.now();
+  const timer = setInterval(()=>{
+    if(bind()){
+      clearInterval(timer);
+      setTimeout(()=> {
+        const t = findAgentsTab();
+        if(t){ t.click(); }
+      }, 200);
+    }else if(Date.now() - start > 8000){
+      clearInterval(timer);
+      log('gave up waiting for agents tab');
+    }
+  }, 200);
+
+  document.addEventListener('DOMContentLoaded', bind, { once: true });
+})();

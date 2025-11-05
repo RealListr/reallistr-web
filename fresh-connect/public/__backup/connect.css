@@ -1,0 +1,218 @@
+/* Root + base */
+:root{
+  --text:#0a0a0a; --muted:#6b7280; --border:#e5e7eb; --pill:#f8fafc; --blue:#2563eb;
+}
+body{
+  font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  color:var(--text); max-width:1100px; margin:32px auto; padding:0 16px;
+}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{
+  padding:8px 12px; border:1px solid var(--border); border-radius:999px;
+  background:var(--pill); cursor:pointer; font-weight:600; text-decoration:none; color:inherit;
+}
+.pill.active{outline:2px solid var(--blue)}
+.section{border:1px solid var(--border); border-radius:16px; background:#fff; padding:20px; margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.section h2{margin:0 0 6px; font-size:26px}
+.section .muted{margin:0 0 12px; color:var(--muted)}
+.feed-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+
+/* Avatar/logo upload */
+.avatar-uploader{display:flex;align-items:center;gap:12px}
+.avatar{
+  width:56px;height:56px;border-radius:999px;border:1px solid var(--border);
+  background:#f3f4f6; object-fit:cover; display:block;
+}
+.uploader input[type="file"]{display:none}
+.uploader .btn{height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
+.uploader .hint{font-size:12px;color:var(--muted)}
+
+/* Icons row */
+.icon-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:#fff;border-radius:10px;height:36px;padding:0 10px;cursor:pointer}
+
+/* Two/three column grids */
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
+
+/* Map pin row */
+.map-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center}
+
+/* Compact the feed images a touch */
+.feed-card img,
+.feed-grid img { height: 160px; }
+
+/* Subtle divider between the live preview and forms below */
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  border: 0;
+  margin: 16px 0 28px;
+  opacity: .9;
+  border-radius: 1px;
+}
+
+/* Small niceties */
+.pill:hover { background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+.pill:focus { outline:2px solid var(--blue); outline-offset:1px; }
+.btn:hover { background:#f9fafb; }
+
+body{
+  font:16px/1.5 system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  max-width:1100px;
+  margin:32px auto;
+  padding:0 16px;
+}
+
+h1{margin:0}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+.pill{
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--pill);
+  cursor:pointer;
+  font-weight:600;
+  text-decoration:none;
+  color:inherit;
+}
+.active{outline:2px solid var(--blue)}
+
+.card{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  background:#fff;
+}
+
+ul{list-style:none;margin:0;padding:0}
+li{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin:8px 0;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+
+.muted{color:var(--muted)}
+
+.btn{
+  padding:6px 10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#fff;
+  text-decoration:none;
+  color:inherit;
+  cursor:pointer;
+}
+
+input, select, textarea{
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font:inherit;
+  color:inherit;
+}
+
+.grow{flex:1 1 220px}
+
+/* --- Connect Centre polish --- */
+.section{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#fff;
+  padding:20px;
+  margin-bottom:32px;
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+}
+.section h2{margin:0 0 6px;font-size:26px}
+.section .muted{margin:0 0 12px}
+
+/* Feed grid + cards (used by feeder-card.js) */
+.feed-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:16px;
+}
+
+.feed-card{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  display:flex;
+  flex-direction:column;
+}
+
+.feed-card img{
+  width:100%;
+  height:180px;            /* tidy, consistent preview */
+  object-fit:cover;
+  background:#f3f4f6;
+  border-radius:12px 12px 0 0;
+}
+
+.feed-card .body{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.feed-grid h3{margin:0 0 2px;font-size:16px;font-weight:700}
+.feed-grid p{margin:0;font-size:14px;color:#4b5563}
+/* ===== Map modal & gallery ===== */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:50}
+.modal{position:fixed;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(900px,92vw);height:min(600px,88vh);background:#fff;border-radius:16px;
+  border:1px solid #e5e7eb;box-shadow:0 8px 30px rgba(0,0,0,.2);display:none;z-index:51;
+  overflow:hidden;display:flex;flex-direction:column}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #e5e7eb}
+.modal-title{font-weight:700}
+.modal-body{flex:1;min-height:300px}
+.mapbox{width:100%;height:100%}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e5e7eb}
+.modal .btn{height:38px;padding:0 14px;border-radius:10px}
+
+/* Gallery */
+.gallery{display:flex;gap:10px;flex-wrap:wrap}
+.thumb{position:relative;width:88px;height:66px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#f8fafc}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .x{position:absolute;top:4px;right:4px;border:none;background:#fff;border:1px solid #e5e7eb;border-radius:999px;width:22px;height:22px;cursor:pointer}
+/* small tweaks */
+.badge {display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;background:#fff;font-size:12px;color:#374151}
+.badge.ok {border-color:#10b981;color:#065f46;background:#ecfdf5}
+.badge.warn {border-color:#d1d5db;color:#6b7280;background:#f9fafb}
+
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.input.compact{height:40px}
+.hi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (min-width:1024px){ .hi-grid{grid-template-columns:repeat(6,minmax(0,1fr));} }
+/* === Chip Icons Library & Selected === */
+.chip-toolbar {display:flex; align-items:center; gap:10px; margin:6px 0 10px}
+.chip-counter {font-size:12px; color:#6b7280}
+.chip-search {flex:1; height:36px; padding:0 10px; border:1px solid #e5e7eb; border-radius:10px}
+.chip-grid {display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px}
+.chip {display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff}
+.chip:hover {border-color:#cbd5e1}
+.chip svg {width:16px; height:16px}
+.chip.kicker {font-weight:600}
+
+.chip.selected {background:#eef2ff; border-color:#6366f1}
+.selected-wrap {display:flex; flex-wrap:wrap; gap:8px; padding:8px; border:1px dashed #e5e7eb; border-radius:12px; background:#fafafa}
+.selected-chip {display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid #e5e7eb; border-radius:999px; background:#fff}
+.selected-chip .drag {cursor:grab}
+.selected-chip .remove {border:0; background:#f3f4f6; border-radius:999px; padding:4px 6px; cursor:pointer}
+.selected-chip input {width:44px; height:28px; padding:0 6px; border:1px solid #e5e7eb; border-radius:8px}
+
+/* Small helper for the preview row inside the section */
+.chip-preview-row {display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+.chip-pill {display:inline-flex; align-items:center; gap:6px; border:1px solid #e5e7eb; padding:4px 8px; border-radius:999px; font-size:12px; background:#fff}
+.chip-pill svg {width:14px; height:14px}

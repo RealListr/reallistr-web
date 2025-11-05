@@ -1,0 +1,4 @@
+[
+  { "id":"prop-1", "portal":"agents", "address":"123 Demo St", "suburb":"Testville", "state":"NSW", "price":750000 },
+  { "id":"prop-2", "portal":"agents", "address":"45 Market St", "suburb":"Sydney",   "state":"NSW", "price":1250000 }
+]

@@ -1,0 +1,402 @@
+:root{--bg:#f7f8fb;--card:#fff;--ink:#0b1221;--muted:#6b7280;--line:#e5e7eb}
+
+/* Ghost icon sizing (chips + preview) */
+.gi{width:16px;height:16px;display:inline-block}
+.preview-card .gi{width:18px;height:18px}
+.gi-chip,.lbl-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);
+  border-radius:999px;background:#fff;font-size:13px}
+
+/* PropertyCard */
+.pc-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}
+.pc-media{aspect-ratio:16/9;background:#f3f4f6}
+.pc-media img{width:100%;height:100%;object-fit:cover;display:block}
+.pc-media--empty{display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280}
+.pc-body{padding:14px}
+.pc-row{display:flex;align-items:center;justify-content:space-between}
+.pc-row--head{gap:12px}
+.type-badge{display:inline-flex;gap:8px;align-items:center;font-weight:600}
+.pc-actions{display:flex;gap:8px;align-items:center}
+.pc-icon{background:transparent;border:none;padding:6px;border-radius:8px;cursor:pointer}
+.pc-icon:hover{background:#f3f4f6}
+.pc-address{color:#6b7280;margin-top:2px}
+.pc-specs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pc-flyout{position:absolute;background:rgba(0,0,0,.12);inset:0;padding:16px}
+.pc-card{position:relative}
+.pc-flyout-inner{margin-left:auto;width:min(420px,92%);background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+.pc-flyout-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.pc-flyout-title{font-weight:600}
+.desc-snippet{margin-top:8px;color:#374151}
+
+/* Hide legacy large map card if present (we use inline toggle now) */
+.card:has(#mapWrap){ display:none; }
+@supports not (selector(:has(*))){
+  /* Fallback for browsers without :has — the JS already hides it, but keep this harmless */
+}
+
+/* Safety: if legacy Map card slips through, keep it collapsed */
+.card:has(#mapWrap){ display:none; }
+
+/* Safety: collapse legacy big map card if still in DOM */
+.card:has(#mapWrap){ display:none; }
+/* === Smart Compact Pro layout === */
+.smart-compact { gap: 20px; align-items: start; }
+.compact-editor { background:#fff; border-radius:12px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.compact-editor .row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.compact-editor label { font-size:13px; font-weight:600; color:#6b7280; display:block; margin-bottom:2px; }
+.compact-editor input, .compact-editor select, .compact-editor textarea {
+  height:38px; border:1px solid #e5e7eb; border-radius:8px; padding:6px 8px; font-size:14px;
+}
+.compact-editor textarea { height:auto; resize:vertical; min-height:90px; }
+.upload-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+.media-strip { margin-top:10px; display:flex; gap:8px; overflow-x:auto; }
+.media-strip .thumb { width:80px; height:60px; border-radius:8px; object-fit:cover; border:1px solid #e5e7eb; }
+.actions { justify-content:center; margin-top:16px; }
+.actions .btn { min-width:100px; }
+.domain-toggle .btn { min-width:36px; padding:4px 8px; }
+
+/* ---------- Compact Property Editor (Phase 1) ---------- */
+.smart-compact .compact-editor{padding:14px}
+.smart-compact label{display:block;font-size:13px;color:#6b7280;margin-bottom:6px}
+.smart-compact .btn{height:36px}
+
+/* rows */
+.smart-compact .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.smart-compact .flex-1{flex:1 1 auto}
+.smart-compact .sm{width:180px;flex:0 0 180px}
+.smart-compact .xs{width:120px;flex:0 0 120px}
+
+/* head row */
+.smart-compact .head-row .sm{width:160px}
+
+/* Row A: specs (8 columns) */
+.smart-compact .specs-row{
+  display:grid;grid-template-columns:repeat(8, minmax(110px,1fr));
+  gap:10px;margin-top:10px
+}
+.smart-compact .specs-row .xs,
+.smart-compact .specs-row .sm{width:auto;flex:unset}
+
+/* Row B: metrics (4 columns) */
+.smart-compact .metrics-row{
+  display:grid;grid-template-columns:repeat(4, minmax(160px,1fr));
+  gap:10px;margin-top:10px
+}
+
+/* Description */
+.smart-compact .desc-row{margin-top:10px}
+.smart-compact .desc-row textarea{min-height:100px}
+
+/* Media section */
+.smart-compact .upload-grid{
+  display:grid;grid-template-columns:repeat(3, minmax(160px,1fr));gap:12px
+}
+.smart-compact .media-strip{margin-top:8px;display:flex;gap:8px;overflow:auto}
+.smart-compact .media-strip .thumb{
+  width:96px;height:64px;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover
+}
+
+/* Domain toggle */
+.smart-compact .domain-toggle{gap:8px}
+.smart-compact .domain-toggle .btn{width:40px}
+
+/* Action row */
+.smart-compact .actions{margin-top:12px}
+
+/* Layout: sticky preview on the right */
+.editor-grid{
+  display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start
+}
+.preview-card.sticky{position:sticky;top:16px}
+
+/* keep labels from wrapping onto next line when narrow */
+.smart-compact .xs label,
+.smart-compact .sm label{white-space:nowrap}
+
+/* ---------- Compact Property Editor (Phase 1) ---------- */
+.smart-compact .compact-editor{padding:14px}
+.smart-compact label{display:block;font-size:13px;color:#6b7280;margin-bottom:6px}
+.smart-compact .btn{height:36px}
+
+/* rows */
+.smart-compact .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.smart-compact .flex-1{flex:1 1 auto}
+.smart-compact .sm{width:180px;flex:0 0 180px}
+.smart-compact .xs{width:120px;flex:0 0 120px}
+
+/* head row */
+.smart-compact .head-row .sm{width:160px}
+
+/* Row A: specs (8 columns) */
+.smart-compact .specs-row{
+  display:grid;grid-template-columns:repeat(8, minmax(110px,1fr));
+  gap:10px;margin-top:10px
+}
+.smart-compact .specs-row .xs,
+.smart-compact .specs-row .sm{width:auto;flex:unset}
+
+/* Row B: metrics (4 columns) */
+.smart-compact .metrics-row{
+  display:grid;grid-template-columns:repeat(4, minmax(160px,1fr));
+  gap:10px;margin-top:10px
+}
+
+/* Description */
+.smart-compact .desc-row{margin-top:10px}
+.smart-compact .desc-row textarea{min-height:100px}
+
+/* Media section */
+.smart-compact .upload-grid{
+  display:grid;grid-template-columns:repeat(3, minmax(160px,1fr));gap:12px
+}
+.smart-compact .media-strip{margin-top:8px;display:flex;gap:8px;overflow:auto}
+.smart-compact .media-strip .thumb{
+  width:96px;height:64px;border:1px solid #e5e7eb;border-radius:8px;object-fit:cover
+}
+
+/* Domain toggle */
+.smart-compact .domain-toggle{gap:8px}
+.smart-compact .domain-toggle .btn{width:40px}
+
+/* Action row */
+.smart-compact .actions{margin-top:12px}
+
+/* Layout: sticky preview on the right */
+.editor-grid{
+  display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start
+}
+.preview-card.sticky{position:sticky;top:16px}
+
+/* keep labels from wrapping onto next line when narrow */
+.smart-compact .xs label,
+.smart-compact .sm label{white-space:nowrap}
+
+/* --- Compact Property Editor (Phase 1 hardening) --- */
+.compact-editor .head-row{
+  display:grid; grid-template-columns: 1fr 180px 120px; gap:12px; align-items:end;
+}
+.compact-editor .specs-row{
+  display:grid; grid-template-columns: repeat(8, minmax(0,1fr));
+  gap:12px; align-items:end; margin-top:10px;
+}
+.compact-editor .metrics-row{
+  display:grid; grid-template-columns: repeat(4, minmax(0,1fr));
+  gap:12px; align-items:end; margin-top:10px;
+}
+.compact-editor .desc-row{ margin-top:10px; }
+.compact-editor .media-row{ margin-top:12px; }
+.compact-editor .actions{ margin-top:12px; display:flex; gap:8px; }
+
+.compact-editor .xs,
+.compact-editor .sm,
+.compact-editor .flex-1{ display:flex; flex-direction:column; gap:6px; }
+
+.compact-editor label{ font-size:12px; color:#6b7280; }
+.compact-editor input.btn,
+.compact-editor select.btn,
+.compact-editor textarea.btn{ width:100%; box-sizing:border-box; }
+
+.compact-editor .domain-toggle{ gap:8px; }
+.compact-editor .row.tight{ gap:8px; align-items:center; }
+
+.smart-compact .preview-card.sticky{ position:sticky; top:16px; }
+
+/* ---- Emergency tidy for Property Editor (Option A) ---- */
+.compact-editor .specs-row,
+.compact-editor .metrics-row{ gap:12px; }
+
+.compact-editor .specs-row .xs,
+.compact-editor .specs-row .sm,
+.compact-editor .metrics-row .sm{
+  display:flex; flex-direction:column; gap:6px;
+}
+
+/* Make every control in the spec/metrics rows actually show */
+.compact-editor .specs-row input.btn,
+.compact-editor .specs-row select.btn,
+.compact-editor .metrics-row input.btn,
+.compact-editor .metrics-row select.btn{
+  display:block !important;
+  width:100% !important;
+  min-height:38px !important;
+  padding:8px 10px !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:10px !important;
+  background:#fff !important;
+  box-sizing:border-box !important;
+}
+
+/* Keep labels compact and aligned */
+.compact-editor label{ font-size:12px; color:#6b7280; line-height:1; }
+
+/* Don’t let tiny number inputs collapse */
+.compact-editor input[type="number"].btn{ min-width:80px; }
+
+/* Domain toggle spacing */
+.compact-editor .domain-toggle{ gap:8px; }
+
+/* ---------- PHASE-LOCKED Property Editor Layout ---------- */
+.compact-editor {
+  max-width: 960px;
+  margin: auto;
+}
+
+.compact-editor .head-row {
+  display: grid;
+  grid-template-columns: 1fr 160px 100px;
+  gap: 12px;
+  align-items: end;
+}
+
+.compact-editor .specs-row {
+  display: grid;
+  grid-template-columns:
+    repeat(4, 1fr)
+    80px 80px 140px 160px; /* Pool, EV, Solar, Grass */
+  gap: 12px;
+  margin-top: 10px;
+  align-items: end;
+}
+
+.compact-editor .metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+  align-items: end;
+}
+
+.compact-editor .desc-row,
+.compact-editor .media-row,
+.compact-editor .actions {
+  margin-top: 16px;
+}
+
+.compact-editor .xs,
+.compact-editor .sm,
+.compact-editor .flex-1 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compact-editor label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.compact-editor input.btn,
+.compact-editor select.btn,
+.compact-editor textarea.btn {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.compact-editor textarea.btn {
+  resize: vertical;
+}
+
+.compact-editor .domain-toggle {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* --- FINAL PROPERTY EDITOR CLEAN GRID LAYOUT --- */
+.compact-editor .row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+  gap: 12px !important;
+  align-items: end !important;
+  margin-bottom: 10px !important;
+}
+
+/* Header alignment */
+.compact-editor .head-row {
+  grid-template-columns: 1fr 160px 100px !important;
+}
+
+/* Row A (specs) - 8 columns max */
+.compact-editor .specs-row {
+  grid-template-columns: repeat(8, minmax(90px, 1fr)) !important;
+}
+
+/* Row B (metrics) - 4 even columns */
+.compact-editor .metrics-row {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* Labels and inputs */
+.compact-editor label {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  margin-bottom: 3px !important;
+}
+.compact-editor input.btn,
+.compact-editor select.btn,
+.compact-editor textarea.btn {
+  width: 100% !important;
+  min-height: 36px !important;
+  padding: 6px 10px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-sizing: border-box !important;
+}
+
+/* Force rows to stay distinct */
+.compact-editor .desc-row,
+.compact-editor .media-row,
+.compact-editor .actions {
+  margin-top: 16px !important;
+}
+
+.compact-editor .domain-toggle { gap: 8px; }
+
+/* --- Property Editor field blocks --- */
+.compact-editor .row{ display:grid; gap:12px; align-items:end; }
+.compact-editor .head-row{ grid-template-columns:1fr 160px 100px; }
+.compact-editor .specs-row{ grid-template-columns:repeat(8, minmax(110px,1fr)); }
+.compact-editor .metrics-row{ grid-template-columns:repeat(4, minmax(160px,1fr)); }
+
+/* each control = a field (label over control) */
+.compact-editor .field{ display:flex; flex-direction:column; }
+.compact-editor .field label{ font-size:12px; color:#6b7280; margin-bottom:4px; }
+.compact-editor .field input.btn,
+.compact-editor .field select.btn,
+.compact-editor .field textarea.btn{ width:100%; min-height:36px; }
+
+.compact-editor .row.tight{ gap:6px; }
+
+/* Option B stacked editor */
+.field{margin:10px 0}
+.field label{display:block;font-weight:600;margin-bottom:6px}
+.field-row{display:flex;gap:12px}
+.field-row.wrap{flex-wrap:wrap}
+.field.xs{width:120px}
+.field.sm{width:220px}
+.field .btn[type="number"]{text-align:right}
+.row.tight{gap:6px;align-items:center}
+.upload-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:6px 0}
+.divider{height:1px;background:#e5e7eb;margin:12px 0}
+.preview-card{padding:6px}
+.media-strip .thumb{width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;margin-right:6px}
+
+/* Minimal dropdown editor */
+.row.between{display:flex;align-items:center;justify-content:space-between}
+.btn.xs{padding:4px 8px;font-size:12px}
+.dropdown-panel{border:1px solid #e5e7eb;border-radius:10px;padding:10px;background:#fafafa;display:none}
+.dropdown-panel.open{display:block}
+.field{margin:10px 0}
+.field label{display:block;font-weight:600;margin-bottom:6px}
+.field-row{display:flex;gap:12px}
+.field-row.wrap{flex-wrap:wrap}
+.field.xs{width:120px}
+.field.sm{width:220px}
+.row.tight{gap:6px;align-items:center}
+.upload-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:6px 0}
+.media-strip .thumb{width:72px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;margin-right:6px}

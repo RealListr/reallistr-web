@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RealListr • Connect Centre — Agents</title>
+
+  <!-- shared styles (keep both) -->
+  <link rel="stylesheet" href="index.css?v=3" />
+  <link rel="stylesheet" href="connect.css?v=3" />
+
+  <style>
+    .wrap{max-width:1100px;margin:0 auto;padding:32px;}
+    .pill{display:inline-flex;align-items:center;height:44px;padding:0 18px;border:1px solid #e5e7eb;border-radius:999px}
+    .pill.active{border-color:#2563eb;color:#1d4ed8}
+    .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center}
+    .input{height:44px;border:1px solid #d1d5db;border-radius:12px;padding:0 12px}
+    .btn{height:42px;padding:0 16px;border-radius:16px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+    .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+    .muted{color:#6b7280}
+    .title{font-size:28px;font-weight:800}
+    .section{border:1px solid #e5e7eb;border-radius:16px;background:#fff;padding:16px}
+
+    /* avatar/logo pickers */
+    .circle-uploader{width:56px;height:56px;border-radius:999px;border:1px dashed #e5e7eb;display:flex;align-items:center;justify-content:center;background:#fafafa}
+    .uploader-col{display:flex;align-items:center;gap:10px}
+    .uploader-caption{font-size:12px;color:#6b7280;line-height:1.2}
+
+    /* category toggle */
+    .seg{display:flex;gap:10px}
+    .seg .chip{padding:8px 12px;border:1px solid #e5e7eb;border-radius:999px;background:#fff;cursor:pointer}
+    .seg .chip.active{border-color:#2563eb;color:#1d4ed8}
+
+    /* feed list rows */
+    .feed{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+    .listing{border:1px solid #e5e7eb;border-radius:16px;padding:16px;display:flex;gap:16px;align-items:center;background:#fff}
+    .listing img{width:90px;height:90px;object-fit:cover;border-radius:12px;background:#f3f4f6}
+    .listing-body{flex:1}
+    .listing h3{margin:0;font-size:17px}
+    .listing p{margin:2px 0;color:#4b5563}
+
+    /* highlights */
+    .hi-grid{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (min-width:1024px){ .hi-grid{grid-template-columns:repeat(6,minmax(0,1fr));} }
+    .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .chip{padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;background:#fff;font-size:12px}
+
+    /* Pin modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.25);z-index:40}
+    .modal.open{display:flex}
+    .modal-card{width:min(960px,92vw);height:min(560px,80vh);background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:flex;flex-direction:column}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e7eb}
+    .modal-body{flex:1;background:#f8fafc;display:flex;align-items:center;justify-content:center;color:#6b7280}
+    .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid #e5e7eb}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1 class="title">RealListr • Connect Centre</h1>
+    <p class="muted">Lite mode — no login, just data.</p>
+
+    <!-- Icon sprite (can be reused anywhere on the page) -->
+    <svg style="display:none" aria-hidden="true">
+      <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 7h12a4 4 0 0 1 4 4v6h-2v-2H5v2H3V7zm2 2v4h14v-2a2 2 0 0 0-2-2H5z"/></symbol>
+      <symbol id="i-bath" viewBox="0 0 24 24"><path d="M7 3a3 3 0 0 1 3 3v4h8a2 2 0 0 1 2 2v3H2v-3a2 2 0 0 1 2-2h4V6a1 1 0 0 0-2 0v1H4V6a3 3 0 0 1 3-3zm15 12v2H2v-2h20z"/></symbol>
+      <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 11l1-3a3 3 0 0 1 3-2h6a3 3 0 0 1 3 2l1 3v6h-2a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H3v-6h2zm3-3l-1 3h10l-1-3a1 1 0 0 0-1-.7H9a1 1 0 0 0-1 .7z"/></symbol>
+      <symbol id="i-study" viewBox="0 0 24 24"><path d="M4 6h16v2H4V6zm0 4h10v2H4v-2zm0 4h16v2H4v-2z"/></symbol>
+      <symbol id="i-pool" viewBox="0 0 24 24"><path d="M6 6a4 4 0 0 1 4-4h4v2h-4a2 2 0 1 0 0 4h4v2h-4a4 4 0 0 1-4-4zm-2 8c1.5 0 1.5 1 3 1s1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1v2c-1.5 0-1.5-1-3-1s-1.5 1-3 1-1.5-1-3-1-1.5 1-3 1-1.5-1-3-1v-2z"/></symbol>
+      <symbol id="i-pet" viewBox="0 0 24 24"><path d="M12 13c3 0 6 2 6 5v2H6v-2c0-3 3-5 6-5zm-6-2a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm12 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM9 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm6 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></symbol>
+      <symbol id="i-balcony" viewBox="0 0 24 24"><path d="M4 4h16v2H4V4zm1 4h14v10h2v2H3v-2h2V8zm2 0v10h2V8H7zm4 0v10h2V8h-2zm4 0v10h2V8h-2z"/></symbol>
+      <symbol id="i-garden" viewBox="0 0 24 24"><path d="M12 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4zM4 18h16v2H4v-2z"/></symbol>
+      <symbol id="i-ac" viewBox="0 0 24 24"><path d="M3 6h18v6H3V6zm2 8h2l1 4h-2l-1-4zm12 0h2l-1 4h-2l1-4z"/></symbol>
+      <symbol id="i-solar" viewBox="0 0 24 24"><path d="M12 4l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4l2-4z"/></symbol>
+      <symbol id="i-lift" viewBox="0 0 24 24"><path d="M5 3h14v18H5V3zm2 2v14h10V5H7zm5 2l3 4h-2v4h-2v-4H9l3-4z"/></symbol>
+      <symbol id="i-secure" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4zm-2 8v4h4v-4h-4z"/></symbol>
+      <symbol id="i-accessible" viewBox="0 0 24 24"><path d="M12 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-3 15l1-4 3 1 2 3h4v2h-5l-2-3-2 .7V21H9z"/></symbol>
+    </svg>
+
+    <!-- Feed Preview -->
+    <section class="section" style="margin: 16px 0 24px">
+      <h2 style="margin:0 0 6px;font-size:26px">Feed Preview</h2>
+      <p class="muted" style="margin:0 0 12px">Live view of uploaded listings</p>
+      <div id="feed" class="feed-grid"></div>
+    </section>
+
+    <!-- Nav -->
+    <div style="display:flex;gap:12px;margin:24px 0 32px">
+      <a class="pill active" href="agent.html">Agents</a>
+      <a class="pill" href="finance.html">Finance</a>
+      <a class="pill" href="insurance.html">Insurance</a>
+      <a class="pill" href="energy.html">Energy</a>
+    </div>
+
+    <h2 class="title" style="font-size:26px">Agents</h2>
+    <p class="muted">Your current listings</p>
+
+    <!-- Form -->
+    <div class="section" style="margin:12px 0 16px">
+      <!-- top row: avatars + quick actions -->
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;margin-bottom:8px">
+        <div style="display:flex;gap:16px">
+          <div class="uploader-col">
+            <div class="circle-uploader"><span class="muted" style="font-size:12px">No Img</span></div>
+            <div>
+              <button class="btn" id="btn-agent-photo" type="button">Upload Agent Photo</button>
+              <div class="uploader-caption">JPG/PNG, auto-cropped</div>
+            </div>
+          </div>
+          <div class="uploader-col">
+            <div class="circle-uploader"><span class="muted" style="font-size:12px">No Logo</span></div>
+            <div>
+              <button class="btn" id="btn-agency-logo" type="button">Upload Agency Logo</button>
+              <div class="uploader-caption">JPG/PNG, auto-cropped</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" type="button">Docs</button>
+          <button class="btn" type="button">Video</button>
+        </div>
+        <div class="muted" style="text-align:right">Optional: attach docs/video later</div>
+      </div>
+
+      <!-- main inputs -->
+      <div class="row">
+        <input id="a-name" class="input" placeholder="Agent Name" />
+        <input id="a-agency" class="input" placeholder="Agency" />
+        <input id="a-title" class="input" placeholder="Listing Title" />
+      </div>
+      <div class="row">
+        <input id="a-price" class="input" placeholder="Price (e.g. $795,000)" />
+        <input id="a-address" class="input" placeholder="Address" />
+        <input id="a-media" class="input" placeholder="Image / Video URL (or upload below)" />
+      </div>
+
+      <div class="row" style="grid-template-columns:1fr 1fr 1fr">
+        <div>
+          <label class="muted" style="font-size:12px">Category</label>
+          <div class="seg" style="margin-top:6px">
+            <button class="chip" id="cat-dom" type="button" aria-pressed="true">Domestic</button>
+            <button class="chip" id="cat-com" type="button" aria-pressed="false">Commercial</button>
+          </div>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Property Type</label>
+          <select id="a-ptype" class="input" style="height:44px;margin-top:6px">
+            <option value="">Select type...</option>
+            <option>House</option>
+            <option>Townhouse</option>
+            <option>Apartment</option>
+            <option>Unit</option>
+            <option>Villa</option>
+            <option>Office</option>
+            <option>Retail</option>
+            <option>Warehouse</option>
+            <option>Land</option>
+          </select>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Sale Method</label>
+          <select id="a-sale" class="input" style="height:44px;margin-top:6px">
+            <option value="">Choose...</option>
+            <option>Auction</option>
+            <option>For Sale</option>
+            <option>Contact Agent</option>
+            <option>EOI</option>
+            <option>For Lease</option>
+            <option>Just Listed</option>
+            <option>Private Treaty</option>
+            <option>Off-market</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <button class="btn" id="btn-pin" type="button">📍 Pin on Map</button>
+        <span id="pin-status" class="muted">Pinned location not set</span>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+        <button class="btn" id="btn-add-images" type="button">+ Add images</button>
+        <button class="btn" id="btn-add-video" type="button">+ Add video</button>
+        <span class="muted">Or paste a URL above. Images are auto-optimized.</span>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="muted" style="font-size:12px">Property Information</label>
+        <textarea id="a-info" class="input" style="height:100px;resize:vertical;margin-top:6px" placeholder="Key details, description, inclusions..."></textarea>
+      </div>
+
+      <h4 style="margin:16px 0 8px">Key Highlights (6)</h4>
+      <div class="hi-grid">
+        <input class="input hi" id="hi-1" placeholder="e.g. 3 Bed" />
+        <input class="input hi" id="hi-2" placeholder="2 Bath" />
+        <input class="input hi" id="hi-3" placeholder="1 Car" />
+        <input class="input hi" id="hi-4" placeholder="Study" />
+        <input class="input hi" id="hi-5" placeholder="Pool" />
+        <input class="input hi" id="hi-6" placeholder="Pet friendly" />
+      </div>
+
+      <div class="row" style="grid-template-columns:1fr 2fr auto auto;margin-top:10px">
+        <input id="a-notes" class="input" placeholder="Internal notes (private)" />
+        <input id="a-id" class="input" placeholder="ID (auto if blank)" />
+        <button id="save" class="btn primary">Save</button>
+        <button id="clear" class="btn">Clear</button>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div id="list" class="feed"></div>
+    <div id="empty" class="muted" style="border:1px solid #e5e7eb;border-radius:16px;padding:24px;margin-top:8px;display:none">
+      No listings yet — start by adding one above.
+    </div>
+  </div>
+
+  <!-- Pin Modal -->
+  <div id="pin-modal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <strong>Select Location</strong>
+        <button class="btn" id="pin-close" type="button">Close</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align:center">
+          <div style="font-size:14px;margin-bottom:8px">Map placeholder</div>
+          <div class="muted">Integrate Mapbox/Google later. This just toggles “pinned”.</div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn primary" id="pin-use" type="button">Use this location</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core portal script -->
+  <script>
+    const LS_KEY = "connect-centre:agents";
+    const $ = id => document.getElementById(id);
+    const els = {
+      name: $("a-name"),
+      agency: $("a-agency"),
+      title: $("a-title"),
+      price: $("a-price"),
+      address: $("a-address"),
+      media: $("a-media"),
+      info: $("a-info"),
+      notes: $("a-notes"),
+      id: $("a-id"),
+      save: $("save"),
+      clear: $("clear"),
+      list: $("list"),
+      empty: $("empty"),
+      catDom: $("cat-dom"),
+      catCom: $("cat-com"),
+      ptype: $("a-ptype"),
+      sale: $("a-sale"),
+      highlights: [...document.querySelectorAll('.hi')],
+      pinBtn: $("btn-pin"),
+      pinStatus: $("pin-status"),
+      pinModal: $("pin-modal"),
+      pinClose: $("pin-close"),
+      pinUse: $("pin-use"),
+    };
+
+    // --- tiny helpers ---
+    const fmtPrice = (raw) => {
+      const digits = (raw || '').replace(/[^\d]/g,'');
+      if(!digits) return '';
+      return new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0})
+             .format(Number(digits));
+    };
+
+    function enableSaveIfReady(){
+      const ready = els.name.value.trim() && els.agency.value.trim() && els.title.value.trim();
+      els.save.disabled = !ready;
+    }
+
+    // live: enable save + format price
+    ["input","change"].forEach(ev=>{
+      [els.name,els.agency,els.title].forEach(el=>el.addEventListener(ev,enableSaveIfReady));
+    });
+    els.price.addEventListener("blur", () => { els.price.value = fmtPrice(els.price.value); });
+
+    // simple category toggle
+    let category = "Domestic";
+    function setCategory(c){
+      category = c;
+      els.catDom.classList.toggle('active', c === "Domestic");
+      els.catCom.classList.toggle('active', c === "Commercial");
+      els.catDom.setAttribute('aria-pressed', c==="Domestic");
+      els.catCom.setAttribute('aria-pressed', c==="Commercial");
+    }
+    els.catDom.onclick = () => setCategory("Domestic");
+    els.catCom.onclick = () => setCategory("Commercial");
+    setCategory("Domestic");
+
+    // pin modal
+    let pinned = false;
+    const openPin = () => { els.pinModal.classList.add('open'); els.pinModal.setAttribute('aria-hidden','false'); };
+    const closePin = () => { els.pinModal.classList.remove('open'); els.pinModal.setAttribute('aria-hidden','true'); };
+    els.pinBtn.onclick = openPin;
+    els.pinClose.onclick = closePin;
+    els.pinUse.onclick = () => { pinned = true; els.pinStatus.textContent = "Pinned location saved"; closePin(); };
+
+    // live highlights preview under the 6 boxes
+    const hiPreview = document.createElement('div');
+    hiPreview.className = 'chips';
+    document.querySelector('.hi-grid').after(hiPreview);
+    function renderHiPreview(){
+      const vals = els.highlights.map(i=>i.value.trim()).filter(Boolean).slice(0,6);
+      hiPreview.innerHTML = vals.map(v=>`<span class="chip">${v}</span>`).join('') || '<span class="muted">Add 1–6 short highlights…</span>';
+    }
+    els.highlights.forEach(i=>i.addEventListener('input',renderHiPreview));
+    renderHiPreview();
+
+    // keyboard: Cmd/Ctrl+S to save
+    window.addEventListener('keydown', (e)=>{
+      if((e.metaKey || e.ctrlKey) && e.key.toLowerCase()==='s'){
+        e.preventDefault(); if(!els.save.disabled) els.save.click();
+      }
+    });
+
+    let items = [];
+    async function load() {
+      try {
+        const r = await fetch("/api/agents", { cache: "no-store" });
+        items = await r.json();
+      } catch { items = []; }
+      render();
+    }
+
+    function clearForm() {
+      [els.name,els.agency,els.title,els.price,els.address,els.media,els.info,els.notes,els.id].forEach(i => i.value = "");
+      els.ptype.value = "";
+      els.sale.value = "";
+      els.highlights.forEach(i => i.value = "");
+      setCategory("Domestic");
+      pinned = false;
+      els.pinStatus.textContent = "Pinned location not set";
+      enableSaveIfReady();
+      renderHiPreview();
+    }
+
+    function upsert(item) {
+      const i = items.findIndex(x => String(x.id) === String(item.id));
+      if (i >= 0) items[i] = item; else items.unshift(item);
+      fetch("/api/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      }).then(load);
+      clearForm();
+    }
+
+    function removeItem(id) {
+      return fetch(`/api/agents/${encodeURIComponent(id)}`, { method: "DELETE" }).then(load);
+    }
+
+    function render() {
+      els.list.innerHTML = "";
+      if (!items.length) { els.empty.style.display = ""; return; }
+      els.empty.style.display = "none";
+
+      items.forEach(it => {
+        const row = document.createElement("div");
+        row.className = "listing";
+        row.innerHTML = `
+          <img src="${it.media || "https://placehold.co/100x100?text=No+Img"}" alt="">
+          <div class="listing-body">
+            <h3>${it.title || "Untitled"}</h3>
+            <p><b>${it.price || ""}</b> · ${it.address || ""}</p>
+            <p class="muted">${(it.name||"")}${it.agency ? " — " + it.agency : ""} · ${it.category||""}${it.propertyType ? " · "+it.propertyType : ""}${it.saleMethod ? " · "+it.saleMethod : ""}</p>
+            ${it.highlights && it.highlights.length ? `<div class="chips">${it.highlights.map(h=>`<span class="chip">${h}</span>`).join('')}</div>` : ""}
+            ${it.info ? `<p style="margin-top:6px">${it.info}</p>` : ""}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <button class="btn btn-edit">Edit</button>
+            <button class="btn btn-delete">Delete</button>
+          </div>`;
+
+        row.querySelector(".btn-edit").onclick = () => {
+          els.name.value = it.name || "";
+          els.agency.value = it.agency || "";
+          els.title.value = it.title || "";
+          els.price.value = it.price || "";
+          els.address.value = it.address || "";
+          els.media.value = it.media || "";
+          els.info.value = it.info || "";
+          els.notes.value = it.notes || "";
+          els.id.value = it.id || "";
+          els.ptype.value = it.propertyType || "";
+          els.sale.value = it.saleMethod || "";
+          setCategory(it.category || "Domestic");
+          pinned = !!it.pinned;
+          els.pinStatus.textContent = pinned ? "Pinned location saved" : "Pinned location not set";
+          els.highlights.forEach((inp, idx) => { inp.value = (it.highlights && it.highlights[idx]) ? it.highlights[idx] : ""; });
+          renderHiPreview();
+          enableSaveIfReady();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        row.querySelector(".btn-delete").onclick = () => removeItem(it.id).then(refreshFeedSoon);
+        els.list.appendChild(row);
+      });
+    }
+
+    els.save.onclick = () => {
+      const name = els.name.value.trim();
+      const agency = els.agency.value.trim();
+      const title = els.title.value.trim();
+      if (!name || !agency || !title) return;
+
+      const id = els.id.value.trim() || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      const highlights = els.highlights.map(i => i.value.trim()).filter(Boolean).slice(0,6);
+
+      const item = {
+        id,
+        name,
+        agency,
+        title,
+        price: els.price.value.trim(),
+        address: els.address.value.trim(),
+        media: els.media.value.trim(),
+        info: els.info.value.trim(),
+        notes: els.notes.value.trim(),
+        category,
+        propertyType: els.ptype.value,
+        saleMethod: els.sale.value,
+        highlights,
+        pinned
+      };
+      upsert(item);
+      refreshFeedSoon();
+    };
+
+    els.clear.onclick = clearForm;
+
+    // initial state
+    els.save.disabled = true;
+    enableSaveIfReady();
+    load();
+  </script>
+
+  <!-- Visual cards renderer + refresh hooks -->
+  <script src="feeder-card.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => renderFeederCards('feed'));
+    function refreshFeedSoon(){ setTimeout(() => renderFeederCards('feed'), 350); }
+  </script>
+</body>
+</html>

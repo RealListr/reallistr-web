@@ -1,0 +1,23 @@
+[
+  {
+    "id": "a1",
+    "address": "123 Demo St",
+    "suburb": "Testville",
+    "state": "NSW",
+    "price": 750000
+  },
+  {
+    "id": "a2",
+    "address": "45 Market St",
+    "suburb": "Sydney",
+    "state": "NSW",
+    "price": 1250000
+  },
+  {
+    "id": "a1762062946060",
+    "address": "77 Sample Rd",
+    "suburb": "Carlton",
+    "state": "VIC",
+    "price": 990000
+  }
+]

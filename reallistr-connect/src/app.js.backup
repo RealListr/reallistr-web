@@ -1,0 +1,389 @@
+import { KPITile } from './components/KPITile.js';
+import { Table } from './components/Table.js';
+import { store, initStore } from './store.js';
+import { MAPBOX_TOKEN } from './config.js';
+import './ai-stubs.js';
+
+/* ---------- helpers ---------- */
+const byId = (id)=>document.getElementById(id);
+const toDataURL = (file)=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+const ensureProp = (p)=>Object.assign({
+  address:'', status:'draft', beds:0, baths:0, cars:0,
+  ev_charger:false, solar:false, solar_watts:null, grass_type:'',
+  land_m2:null, build_m2:null, level:null, pool:false,
+  type:'House',
+  listing_labels:[], listing_close_date:'',
+  desc:'',
+  media:{ images:[], videos:[], realcuts:[] },
+  lat:null, lng:null
+}, p||{});
+const GRASS = ["Kikuyu","Buffalo","Couch","Fescue","Native","Artificial","Other"];
+const P_TYPES = [
+  "House","Apartment","Unit","Townhouse","Granny Flat","Home + Granny Flat","Office",
+  "Mixed use Commercial","Warehouse","Industrial Land","City Commercial Opportunity","Retail Shop","Car Park"
+];
+const LABEL_OPTIONS = [
+  "Auction","For Sale","For Lease","Leasing","Pending Auction","Contact Agent",
+  "Seeking Offers","Expression of Interest","Agency in Control","Lead Agency",
+  "Private Sale","Private Treaty","Off Market"
+];
+
+/* ---------- inline pages ---------- */
+const TPL = {
+  '#/dashboard': `
+    <h1 class="h1">Dashboard</h1>
+    <div id="kpis" class="grid-3"></div>
+    <div class="card" style="margin-top:16px"><div class="h2">My Properties</div><div id="myProps"></div></div>
+  `,
+  '#/subscriptions': `
+    <h1 class="h1">Agent Subscription Tiers</h1>
+    <div class="grid-3">
+      <div class="card tier--starter"><div class="h2">Starter</div><ul><li>Up to <b>10 properties</b></li><li>Basic AI assist</li><li>10 GB media</li></ul><div class="cta"><button class="btn">Get Started</button></div></div>
+      <div class="card tier--pro"><div class="h2">Pro</div><ul><li><b>Unlimited properties</b></li><li>100 GB media</li><li>Up to 5 agents</li></ul><div class="cta"><button class="btn primary">Upgrade to Pro</button></div></div>
+      <div class="card tier--enterprise"><div class="h2">Enterprise</div><ul><li><b>Unlimited agents & offices</b></li><li>Priority AI</li></ul><div class="cta"><button class="btn">Contact Sales</button></div></div>
+    </div>
+  `,
+  '#/ads': `
+    <h1 class="h1">Advertising Models</h1>
+    <div class="grid-3">
+      <div class="card ad--lite"><div class="h2">Lite</div><ul><li>1 campaign</li><li>Meta reach</li></ul><div class="cta"><button class="btn">Activate Lite</button></div></div>
+      <div class="card ad--active"><div class="h2">Active</div><ul><li>Up to 5 campaigns</li><li>Meta + Google</li></ul><div class="cta"><button class="btn primary">Go Active</button></div></div>
+      <div class="card ad--advanced"><div class="h2">Advanced</div><ul><li>Unlimited campaigns</li><li>Retargeting</li></ul><div class="cta"><button class="btn">Launch Advanced</button></div></div>
+    </div>
+  `,
+  '#/properties': `
+    <h1 class="h1">Properties</h1>
+    <div class="card" style="margin-bottom:16px">
+      <button class="btn" id="btnNewProp">+ New Property</button>
+      <button class="btn" id="btnAIAdd">AI Quick Add (stub)</button>
+    </div>
+    <div id="propTable"></div>
+  `,
+  '#/leads': `<h1 class="h1">Leads</h1><div id="leadsTable"></div>`,
+  '#/settings': `
+    <h1 class="h1">Settings</h1>
+    <div class="grid-2">
+      <section class="card"><div class="h2">Subscription</div><div id="plan"></div></section>
+      <section class="card"><div class="h2">Integrations</div><p>Status: <span class="badge" id="adStatus">Not Connected</span></p><button class="btn" id="btnConnect">Connect Ad Account (mock)</button></section>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="h2">Team (Agents)</div>
+      <div style="margin:8px 0"><button class="btn" id="btnAddAgent">+ Add Agent</button></div>
+      <div class="agent-grid" id="teamGrid"></div>
+    </div>
+  `,
+  '#/property-editor': `
+    <h1 class="h1">Property Editor</h1>
+    <div class="editor-grid">
+      <section>
+        <div class="card">
+          <div class="row">
+            <div style="flex:1">
+              <label>Address</label><br/>
+              <input id="p_address" class="btn" style="width:100%" placeholder="123 Main St"/>
+            </div>
+            <div class="min">
+              <label>Status</label><br/>
+              <select id="p_status" class="btn" style="width:100%">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <div class="xs"><label>Beds</label><br/><input id="p_beds" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Baths</label><br/><input id="p_baths" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div class="xs"><label>Car</label><br/><input id="p_cars" class="btn" type="number" min="0" style="width:100%"/></div>
+            <div style="flex:1"></div>
+          </div>
+
+          <div class="row" style="margin-top:8px">
+            <div class="min"><label>Pool</label><br/><input type="checkbox" id="p_pool"/></div>
+            <div class="min"><label>EV Charger</label><br/><input type="checkbox" id="p_ev"/></div>
+            <div>
+              <label>Solar</label><br/>
+              <div class="row">
+                <input type="checkbox" id="p_solar"/>
+                <input id="p_solar_w" class="btn xs" type="number" min="0" placeholder="Watts"/>
+              </div>
+            </div>
+            <div style="flex:1"></div>
+          </div>
+
+          <div class="row" style="margin-top:8px">
+            <div class="min" style="flex:1"><label>Grass</label><br/>
+              <select id="p_grass" class="btn" style="width:100%">
+                ${GRASS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+              </select>
+            </div>
+            <div class="min"><label>Level</label><br/><input id="p_level" class="btn xs" type="number" min="0"/></div>
+            <div class="min" style="flex:1"><label>Land m²</label><br/><input id="p_land" class="btn" type="number" min="0" step="0.1" style="width:100%"/></div>
+            <div class="min" style="flex:1"><label>Build m²</label><br/><input id="p_build" class="btn" type="number" min="0" step="0.1" style="width:100%"/></div>
+          </div>
+
+          <div style="margin-top:8px">
+            <label>Property Type</label><br/>
+            <select id="p_type" class="btn" style="width:100%">
+              ${P_TYPES.map(t=>`<option value="${t}">${t}</option>`).join('')}
+            </select>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Listing Labels (multi-select)</label>
+            <div id="labels" class="chips"></div>
+            <div style="margin-top:8px"><input id="p_close" class="btn" placeholder="EOI/Auction close date (optional)" style="width:100%"/></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label>Description</label><br/>
+            <textarea id="p_desc" class="btn" style="width:100%;min-height:100px" placeholder="Short description..."></textarea>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="h2">Media</div>
+          <div class="row" style="margin-top:6px"><b>Images</b> <input id="p_imgs" type="file" accept="image/*" multiple /></div>
+          <div class="row" style="margin-top:6px"><b>Videos</b> <input id="p_vids" type="file" accept="video/*" multiple /></div>
+          <div class="row" style="margin-top:6px"><b>RealCuts</b> <input id="p_cuts" type="file" accept="video/*" multiple /></div>
+          <div id="p_media_preview" class="media-grid" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="h2">Map</div>
+          <div id="mapWrap" style="height:220px;border:1px solid #e5e7eb;border-radius:10px"></div>
+          <div class="row" style="margin-top:8px">
+            <input id="p_lat" class="btn" placeholder="lat" style="width:48%"/>
+            <input id="p_lng" class="btn" placeholder="lng" style="width:48%"/>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="p_save">Save</button>
+          <button class="btn" id="p_cancel">Cancel</button>
+        </div>
+      </section>
+
+      <aside>
+        <div id="p_preview" class="preview-card sticky"></div>
+      </aside>
+    </div>
+  `
+};
+
+/* ---------- router ---------- */
+const routes = Object.keys(TPL);
+const mount = async () => {
+  const path = routes.includes(window.location.hash) ? window.location.hash : '#/dashboard';
+  document.getElementById('app').innerHTML = TPL[path];
+  attachControllers(path);
+};
+
+/* ---------- renderers ---------- */
+const firstMedia = (p)=> (p.media?.images?.[0] || "");
+const icon = (txt)=> `<span class="chip">${txt}</span>`;
+const renderPreview = (p)=>{
+  const m = firstMedia(p);
+  const specs = [
+    `${p.beds||0} bed`, `${p.baths||0} bath`, `${p.cars||0} car`
+  ];
+  if(p.pool) specs.push("pool");
+  if(p.ev_charger) specs.push("EV");
+  if(p.solar) specs.push(`solar${p.solar_watts?` ${p.solar_watts}W`:''}`);
+  const labels = (p.listing_labels||[]).map(l=>icon(l)).join('');
+  return `
+    <div class="preview-media">${ m ? `<img src="${m}" style="width:100%;height:100%;object-fit:cover">` : `No media` }</div>
+    <div class="preview-body">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="h2" style="margin:0">${p.type||'Property'}</div>
+        <span class="badge-status">${p.status||'draft'}</span>
+      </div>
+      <div class="sub" style="margin-top:2px">${p.address||'Address TBD'}</div>
+      <div class="hline"></div>
+      <div class="meta">${specs.map(icon).join('')}</div>
+      ${labels ? `<div class="meta" style="margin-top:6px">${labels}</div>` : ''}
+      ${p.listing_close_date ? `<div class="sub" style="margin-top:4px">Closes: ${p.listing_close_date}</div>` : ''}
+      ${p.desc ? `<div style="margin-top:8px">${p.desc}</div>` : ''}
+    </div>
+  `;
+};
+
+/* ---------- controllers ---------- */
+function attachControllers(path){
+  if(path === '#/dashboard'){
+    const k = byId('kpis');
+    k.innerHTML = [
+      KPITile('Total Properties', store.properties.length),
+      KPITile('Active Campaigns', store.campaigns.filter(c=>c.status==='active').length),
+      KPITile('Leads', store.leads.length)
+    ].join('');
+    const rows = store.properties.slice(0,6).map(p=>[p.address||'-', p.status||'-', p.beds||0, p.baths||0]);
+    byId('myProps').innerHTML = Table(['Address','Status','Beds','Baths'], rows);
+  }
+
+  if(path === '#/properties'){
+    const draw = ()=>{
+      const rows = store.properties.map((p,i)=>[
+        p.address||'-', p.status||'-', p.beds||0, p.baths||0,
+        `<button class="btn" data-prev="${i}">Preview</button>`,
+        `<button class="btn" data-edit="${i}">Edit</button>`
+      ]);
+      byId('propTable').innerHTML = Table(['Address','Status','Beds','Baths','Preview',''], rows);
+      byId('propTable').querySelectorAll('[data-edit]').forEach(btn=>{
+        btn.onclick = ()=>{ localStorage.setItem('editIndex', btn.getAttribute('data-edit')); location.hash = '#/property-editor'; };
+      });
+      byId('propTable').querySelectorAll('[data-prev]').forEach(btn=>{
+        btn.onclick = ()=>{ localStorage.setItem('editIndex', btn.getAttribute('data-prev')); location.hash = '#/property-editor'; };
+      });
+    };
+    draw();
+    byId('btnNewProp').onclick = ()=>{
+      store.properties.push(ensureProp({ status:'draft' })); store.persist();
+      localStorage.setItem('editIndex', String(store.properties.length-1)); location.hash = '#/property-editor';
+    };
+    byId('btnAIAdd').onclick = ()=>{
+      const ai = ensureProp(window.aiQuickAdd());
+      store.properties.push(ai); store.persist();
+      localStorage.setItem('editIndex', String(store.properties.length-1)); location.hash = '#/property-editor';
+    };
+  }
+
+  if(path === '#/leads'){
+    const rows = store.leads.map(l=>[l.name, l.property_id, l.stage, new Date(l.last_activity_at||Date.now()).toLocaleString()]);
+    byId('leadsTable').innerHTML = Table(['Name','Property','Stage','Last Activity'], rows);
+  }
+
+  if(path === '#/settings'){
+    const s = store.subscription || { plan:'starter', usage_props:0, usage_media_gb:0, ai_credits:0 };
+    byId('plan').innerHTML = `Plan: <b>${s.plan}</b><br>Properties: ${s.usage_props} · Media: ${s.usage_media_gb} GB · AI credits: ${s.ai_credits}`;
+    byId('btnConnect').onclick = ()=>{ const el = byId('adStatus'); el.textContent = 'Connected'; el.classList.add('badge--ok'); };
+
+    // team grid
+    const renderTeam=()=>{
+      const grid = document.getElementById('teamGrid'); grid.innerHTML='';
+      store.team.forEach((m,idx)=>{
+        const card=document.createElement('div'); card.className='agent-card';
+        card.innerHTML = `
+          <img class="avatar" src="${m.avatar||'./public/assets/logo.svg'}" />
+          <div class="meta">
+            <input type="text" value="${m.name||''}" placeholder="Agent name" />
+            <div style="margin-top:6px">Followers: <input type="number" min="0" value="${m.followers||0}" style="width:120px"/></div>
+            <div style="margin-top:6px"><input type="file" accept="image/*"/></div>
+          </div>
+          <button class="btn" data-del="${idx}">Remove</button>`;
+        grid.appendChild(card);
+        const [nameI, followI, fileI] = card.querySelectorAll('input');
+        nameI.oninput = ()=>{ m.name = nameI.value; store.persist(); };
+        followI.oninput = ()=>{ m.followers = parseInt(followI.value||0,10); store.persist(); };
+        fileI.onchange = async ()=>{ if(!fileI.files?.[0]) return; m.avatar = await toDataURL(fileI.files[0]); card.querySelector('img').src = m.avatar; store.persist(); };
+        card.querySelector('[data-del]').onclick = ()=>{ store.team.splice(idx,1); store.persist(); renderTeam(); };
+      });
+    };
+    renderTeam();
+    byId('btnAddAgent').onclick = ()=>{ store.team.push({name:'New Agent', avatar:'', followers:0}); store.persist(); renderTeam(); };
+  }
+
+  if(path === '#/property-editor'){
+    const idx = parseInt(localStorage.getItem('editIndex')||'-1',10);
+    const p = store.properties[idx] = ensureProp(store.properties[idx]);
+
+    // inputs
+    const hook = (id, fn)=>{ const el=byId(id); if(!el) return; el.addEventListener('input', fn); el.addEventListener('change', fn); };
+    const syncPreview = ()=>{ byId('p_preview').innerHTML = renderPreview(p); };
+
+    // populate + hook
+    byId('p_address').value = p.address;
+    byId('p_status').value  = p.status;
+    byId('p_beds').value    = p.beds;
+    byId('p_baths').value   = p.baths;
+    byId('p_cars').value    = p.cars;
+    byId('p_pool').checked  = !!p.pool;
+    byId('p_ev').checked    = !!p.ev_charger;
+    byId('p_solar').checked = !!p.solar;
+    byId('p_solar_w').value = p.solar_watts ?? '';
+    byId('p_grass').value   = p.grass_type || GRASS[0];
+    byId('p_level').value   = p.level ?? '';
+    byId('p_land').value    = p.land_m2 ?? '';
+    byId('p_build').value   = p.build_m2 ?? '';
+    byId('p_type').value    = p.type || 'House';
+    byId('p_desc').value    = p.desc || '';
+    byId('p_lat').value     = p.lat ?? '';
+    byId('p_lng').value     = p.lng ?? '';
+
+    const solarToggle = byId('p_solar'), solarW = byId('p_solar_w');
+    const syncSolar = ()=>{ solarW.disabled = !solarToggle.checked; if(!solarToggle.checked) solarW.value=""; };
+    syncSolar(); solarToggle.onchange = ()=>{ syncSolar(); p.solar = solarToggle.checked; store.persist(); syncPreview(); };
+
+    // labels
+    const labelsEl = byId('labels');
+    labelsEl.innerHTML = LABEL_OPTIONS.map(lbl=>{
+      const active = p.listing_labels.includes(lbl) ? 'active':'';
+      return `<div class="chip ${active}" data-lbl="${lbl}">${lbl}</div>`;
+    }).join('');
+    labelsEl.querySelectorAll('.chip').forEach(ch=>{
+      ch.onclick = ()=>{ const v=ch.getAttribute('data-lbl'); const i=p.listing_labels.indexOf(v);
+        if(i>=0){ p.listing_labels.splice(i,1); ch.classList.remove('active'); }
+        else { p.listing_labels.push(v); ch.classList.add('active'); }
+        store.persist(); syncPreview();
+      };
+    });
+    byId('p_close').value = p.listing_close_date || '';
+
+    // media preview
+    const preview = byId('p_media_preview');
+    const refreshPreview = ()=>{ preview.innerHTML=''; (p.media.images||[]).forEach(src=>{ const img=document.createElement('img'); img.src=src; preview.appendChild(img); });
+      (p.media.videos||[]).forEach(src=>{ const v=document.createElement('video'); v.src=src; v.controls=true; preview.appendChild(v); });
+      (p.media.realcuts||[]).forEach(src=>{ const v=document.createElement('video'); v.src=src; v.controls=true; preview.appendChild(v); });
+      syncPreview();
+    };
+    const pushFiles = async (input, arr)=>{ const files=Array.from(input.files||[]); for(const f of files){ const d=await toDataURL(f); p.media[arr].push(d);} store.persist(); refreshPreview(); };
+    byId('p_imgs').onchange = (e)=>pushFiles(e.target,'images');
+    byId('p_vids').onchange = (e)=>pushFiles(e.target,'videos');
+    byId('p_cuts').onchange = (e)=>pushFiles(e.target,'realcuts');
+
+    // map
+    const initMap = ()=>{
+      if(!MAPBOX_TOKEN || !window.mapboxgl) return;
+      mapboxgl.accessToken = MAPBOX_TOKEN;
+      const map = new mapboxgl.Map({container:'mapWrap', style:'mapbox://styles/mapbox/streets-v12', center:[p.lng||144.9631, p.lat||-37.8136], zoom:11});
+      const marker = new mapboxgl.Marker({draggable:true}).setLngLat([p.lng||144.9631, p.lat||-37.8136]).addTo(map);
+      marker.on('dragend', ()=>{ const ll=marker.getLngLat(); byId('p_lat').value=ll.lat.toFixed(6); byId('p_lng').value=ll.lng.toFixed(6); });
+    };
+    initMap();
+
+    // live-bind fields → state → preview
+    hook('p_address', e=>{ p.address=e.target.value; store.persist(); syncPreview(); });
+    hook('p_status',  e=>{ p.status =e.target.value; store.persist(); syncPreview(); });
+    ['p_beds','p_baths','p_cars'].forEach(id=>hook(id, e=>{ p[id.slice(2)] = parseInt(e.target.value||0,10); store.persist(); syncPreview(); }));
+    hook('p_pool',   e=>{ p.pool = e.target.checked; store.persist(); syncPreview(); });
+    hook('p_ev',     e=>{ p.ev_charger = e.target.checked; store.persist(); syncPreview(); });
+    hook('p_solar_w',e=>{ p.solar_watts = e.target.value?parseInt(e.target.value,10):null; store.persist(); syncPreview(); });
+    hook('p_grass',  e=>{ p.grass_type = e.target.value; store.persist(); });
+    hook('p_level',  e=>{ p.level = e.target.value?parseInt(e.target.value,10):null; store.persist(); });
+    hook('p_land',   e=>{ p.land_m2 = e.target.value?parseFloat(e.target.value):null; store.persist(); });
+    hook('p_build',  e=>{ p.build_m2= e.target.value?parseFloat(e.target.value):null; store.persist(); });
+    hook('p_type',   e=>{ p.type = e.target.value; store.persist(); syncPreview(); });
+    hook('p_desc',   e=>{ p.desc = e.target.value; store.persist(); syncPreview(); });
+    hook('p_close',  e=>{ p.listing_close_date = e.target.value; store.persist(); syncPreview(); });
+    hook('p_lat',    e=>{ p.lat = e.target.value?parseFloat(e.target.value):null; store.persist(); });
+    hook('p_lng',    e=>{ p.lng = e.target.value?parseFloat(e.target.value):null; store.persist(); });
+
+    // initial preview
+    syncPreview();
+
+    // save/cancel
+    byId('p_save').onclick = ()=>{ store.properties[idx]=p; store.persist(); alert('Saved'); location.hash = '#/properties'; };
+    byId('p_cancel').onclick = ()=>{ location.hash = '#/properties'; };
+  }
+}
+
+/* ---------- boot ---------- */
+window.addEventListener('hashchange', mount);
+window.addEventListener('load', async()=>{ await initStore(); mount(); });
+
+const sel = document.getElementById('roleSelect');
+if(sel){ sel.value = localStorage.getItem('role') || 'principal'; sel.onchange = ()=>localStorage.setItem('role', sel.value); }
+window.addEventListener('load', ()=>{
+  const resetBtn = document.getElementById('btnReset');
+  if(resetBtn){ resetBtn.onclick = ()=>{ localStorage.removeItem('connectStore'); alert('Demo data has been reset. Refreshing...'); location.reload(); }; }
+});
