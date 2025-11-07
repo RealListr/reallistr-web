@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RealListr • Connect Centre — Agents (Lite)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --border:#e5e7eb; --muted:#6b7280; --blue:#2563eb; --bg:#f8fafc; }
+    *{ box-sizing:border-box }
+    body{ font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif; margin:32px auto; max-width:1100px; padding:0 16px; background:#fff; color:#111;}
+    .wrap{ max-width:1100px; margin:0 auto; }
+    .title{ font-size:28px; font-weight:800; margin:0 0 4px; }
+    .muted{ color:var(--muted); }
+    .section{ border:1px solid var(--border); border-radius:16px; background:#fff; padding:16px; }
+    .row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; align-items:center; }
+    .input{ height:44px; border:1px solid #d1d5db; border-radius:12px; padding:0 12px; width:100%; }
+    textarea.input{ height:100px; resize:vertical; padding:10px 12px; }
+    .btn{ height:42px; padding:0 16px; border-radius:12px; border:1px solid var(--border); background:#fff; cursor:pointer; }
+    .btn.primary{ background:var(--blue); color:#fff; border-color:var(--blue); }
+    .seg{ display:flex; gap:10px; }
+    .seg .chip{ padding:8px 12px; border:1px solid var(--border); border-radius:999px; background:#fff; cursor:pointer; }
+    .seg .chip.active{ border-color:var(--blue); color:#1d4ed8; }
+    .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .chip{ padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:#fff; font-size:12px; }
+    .listing{ border:1px solid var(--border); border-radius:16px; padding:16px; display:flex; gap:16px; align-items:center; background:#fff; }
+    .listing img{ width:100px; height:100px; object-fit:cover; border-radius:12px; background:#f3f4f6; }
+    .listing-body{ flex:1; }
+    .langbar{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+    .langbar select{height:34px;border:1px solid var(--border);border-radius:10px;padding:0 10px;background:#fff}
+    .tr { color:#6b7280; font-weight:500; margin-left:.5rem; }
+    .feed{ display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">RealListr • Connect Centre</h1>
+    <p class="muted">Lite mode — no login, just data.</p>
+
+    <div style="display:flex;gap:8px;align-items:center;margin:0 0 12px">
+      <button id="reset" class="btn" type="button">Reset</button>
+      <span class="muted">Clears local listings (safe while testing).</span>
+    </div>
+
+    <div class="langbar">
+      <strong>Language</strong>
+      <select id="lang-mode" aria-label="Language mode">
+  <option value="en">English</option>
+  <option value="en+zh">English + 中文 (Simplified)</option>
+  <option value="en+zh-HANT">English + 中文（繁體）</option>
+  <option value="en+vi">English + Tiếng Việt</option>
+  <option value="en+ar">English + العربية</option>
+  <option value="en+hi">English + हिंदी</option>
+  <option value="en+pa">English + ਪੰਜਾਬੀ (beta)</option>
+</select>
+
+      <span class="muted">UI labels only — your listing data stays as typed.</span>
+    </div>
+
+    <section class="section" style="margin:0 0 20px">
+      <h2 id="feed-title" style="margin:0 0 6px;font-size:22px">Feed Preview</h2>
+      <div id="feed" class="feed"></div>
+    </section>
+
+    <h2 id="agents-title" class="title" style="font-size:24px">Agents</h2>
+    <p class="muted">Your current listings</p>
+
+    <div class="section" style="margin:12px 0 16px">
+      <div class="row">
+        <input id="a-name" class="input" placeholder="Agent Name" />
+        <input id="a-agency" class="input" placeholder="Agency" />
+        <input id="a-title" class="input" placeholder="Listing Title" />
+      </div>
+      <div class="row">
+        <input id="a-price" class="input" placeholder="Price (e.g. $795,000)" />
+        <input id="a-address" class="input" placeholder="Address" />
+        <input id="a-media" class="input" placeholder="Image / Video URL or data:" />
+      </div>
+
+      <div class="row">
+        <div>
+          <label class="muted" style="font-size:12px">Category</label>
+          <div class="seg" style="margin-top:6px">
+            <button class="chip" id="cat-dom" type="button" aria-pressed="true">Domestic</button>
+            <button class="chip" id="cat-com" type="button" aria-pressed="false">Commercial</button>
+          </div>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Property Type</label>
+          <select id="a-ptype" class="input" style="height:44px;margin-top:6px">
+            <option value="">Select type…</option>
+            <option>House</option><option>Townhouse</option><option>Apartment</option>
+            <option>Unit</option><option>Villa</option><option>Office</option>
+            <option>Retail</option><option>Warehouse</option><option>Land</option>
+          </select>
+        </div>
+        <div>
+          <label class="muted" style="font-size:12px">Sale Method</label>
+          <select id="a-sale" class="input" style="height:44px;margin-top:6px">
+            <option value="">Choose…</option>
+            <option>Auction</option><option>For Sale</option><option>Contact Agent</option>
+            <option>EOI</option><option>For Lease</option><option>Just Listed</option>
+            <option>Private Treaty</option><option>Off-market</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="muted" style="font-size:12px">Property Information</label>
+        <textarea id="a-info" class="input" placeholder="Key details, description, inclusions…"></textarea>
+      </div>
+
+      <h4 style="margin:16px 0 8px">Key Highlights (6)</h4>
+      <div class="hi-grid" style="display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
+        <input class="input hi" placeholder="e.g. 3 Bed" />
+        <input class="input hi" placeholder="2 Bath" />
+        <input class="input hi" placeholder="1 Car" />
+        <input class="input hi" placeholder="Study" />
+        <input class="input hi" placeholder="Pool" />
+        <input class="input hi" placeholder="Pet friendly" />
+      </div>
+
+      <div class="row" style="grid-template-columns:1fr 2fr auto auto;margin-top:10px">
+        <input id="a-notes" class="input" placeholder="Internal notes (private)" />
+        <input id="a-id" class="input" placeholder="ID (auto if blank)" />
+        <button id="save" class="btn primary" type="button">Save</button>
+        <button id="clear" class="btn" type="button">Clear</button>
+      </div>
+    </div>
+
+    <div id="list" class="feed"></div>
+    <div id="empty" class="muted" style="border:1px solid var(--border);border-radius:16px;padding:24px;margin-top:8px;display:none">
+      <span id="empty-text">No listings yet — start by adding one above.</span>
+    </div>
+  </div>
+
+  <script>
+    // ---- i18n ---------------------------------------------------------------
+    const LS_LANG = "rl:langMode";
+    const dict = {
+      en: { feedPreview:"Feed Preview", agents:"Agents", noMedia:"No media", open:"Open", noListings:"No listings yet — start by adding one above." },
+      zh: { feedPreview:"预览",        agents:"经纪人",  noMedia:"无媒体",  open:"开放", noListings:"暂无房源 — 请在上方添加。" }
+    };
+    const getLangMode = () => localStorage.getItem(LS_LANG) || "en";
+    const setLangMode = (v) => localStorage.setItem(LS_LANG, v);
+    const tx = (k) => {
+      const en = dict.en[k] || k, zh = dict.zh[k] || en;
+      return (getLangMode()==="en+zh") ? `${en}<span class="tr"> · ${zh}</span>` : en;
+    };
+<script>
+// Dropdown value -> translation target code(s)
+const LANG_TO_TARGET = {
+  "en": [],
+  "en+zh": ["zh"],           // Simplified Chinese
+  "en+zh-HANT": ["zh-HANT"], // Traditional Chinese
+  "en+vi": ["vi"],           // Vietnamese
+  "en+ar": ["ar"],           // Arabic
+  "en+hi": ["hi"],           // Hindi
+  "en+pa": ["pa"]            // Punjabi (proxy will fallback if needed)
+};
+</script>
+
+    // ---- DOM utils ----------------------------------------------------------
+    const $ = (id)=>document.getElementById(id);
+    const on = (el,ev,fn)=> el && el.addEventListener(ev,fn);
+    const debounce = (fn,ms=120)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+    const els = {
+      feed: $("feed"), feedTitle:$("feed-title"), agentsTitle:$("agents-title"),
+      name:$("a-name"), agency:$("a-agency"), title:$("a-title"),
+      price:$("a-price"), address:$("a-address"), media:$("a-media"),
+      info:$("a-info"), notes:$("a-notes"), id:$("a-id"),
+      ptype:$("a-ptype"), sale:$("a-sale"),
+      hi:[...document.querySelectorAll(".hi")],
+      save:$("save"), clear:$("clear"),
+      list:$("list"), empty:$("empty"), emptyText:$("empty-text"),
+      catDom:$("cat-dom"), catCom:$("cat-com"),
+      lang:$("lang-mode"), reset:$("reset")
+    };
+
+    // ---- State & storage ----------------------------------------------------
+    const LS_KEY  = "connect-centre:agents:v2";
+    let items = [];
+    let category = "Domestic";
+
+    function load() {
+      try { items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+      catch { items = []; }
+    }
+    function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
+
+    // ---- Helpers ------------------------------------------------------------
+    function setCategory(c){
+      category=c;
+      els.catDom.classList.toggle("active", c==="Domestic");
+      els.catCom.classList.toggle("active", c==="Commercial");
+      els.catDom.setAttribute("aria-pressed", String(c==="Domestic"));
+      els.catCom.setAttribute("aria-pressed", String(c==="Commercial"));
+    }
+    // Price formatter that DOES NOT change your currency/symbol.
+    // Keeps any prefix you typed (e.g., "A$", "$", "£") and just inserts thousand separators.
+    function fmtPrice(raw){
+      const s = String(raw||"").trim();
+      if(!s) return "";
+      const m = s.match(/^([^\d+-]*)([\d,.\s]+)(.*)$/); // prefix, digits, suffix (e.g., " per week")
+      if(!m) return s;
+      const prefix = m[1] || "";
+      const digitsOnly = (m[2]||"").replace(/[^\d]/g,"");
+      const suffix = m[3] || "";
+      if(!digitsOnly) return s;
+      const n = Number(digitsOnly);
+      const withCommas = n.toLocaleString(); // locale separators only
+      return `${prefix}${withCommas}${suffix}`.trim();
+    }
+
+    function escapeHtml(s){ return String(s??"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+
+    // Build a "draft" item straight from the current form fields
+    function getDraftFromForm(){
+      return {
+        id: $("a-id").value.trim() || "draft",
+        name: $("a-name").value.trim(),
+        agency: $("a-agency").value.trim(),
+        title: $("a-title").value.trim(),
+        price: $("a-price").value.trim(),
+        address: $("a-address").value.trim(),
+        media: $("a-media").value.trim(),
+        info: $("a-info").value.trim(),
+        notes: $("a-notes").value.trim(),
+        category,
+        propertyType: $("a-ptype").value || "",
+        saleMethod: $("a-sale").value || "",
+        highlights: els.hi.map(i=>i.value.trim()).filter(Boolean).slice(0,6),
+        oi: { date:"", start:"", end:"" }
+      };
+    }
+    function hasMeaningfulDraft(d){
+      if (!d) return false;
+      return [
+        d.title, d.price, d.address, d.media, d.info,
+        d.name, d.agency, d.propertyType, d.saleMethod
+      ].some(v => String(v||"").trim().length > 0) || (d.highlights?.length>0);
+    }
+
+    // ---- Live feed ----------------------------------------------------------
+    const renderFeed = debounce(function(){
+      const draft = getDraftFromForm();
+      const useDraft = hasMeaningfulDraft(draft);
+      const source = useDraft ? draft : (items[0] || null);
+
+      if (!source){
+        els.feed.innerHTML = `<div class="muted">${tx("noListings")}</div>`;
+        els.feedTitle.innerHTML = tx("feedPreview");
+        return;
+      }
+
+      const media = source.media?.trim() || "";
+      const img = media
+        ? `<img src="${escapeHtml(media)}" alt="" onerror="this.onerror=null;this.src='https://placehold.co/100x100?text=No+Img'">`
+        : `<div style="width:100px;height:100px;border-radius:12px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#6b7280;border:1px solid #e5e7eb">${tx("noMedia")}</div>`;
+
+      const chips = (source.highlights||[]).slice(0,6)
+        .map(h=>`<span class="chip">${escapeHtml(h)}</span>`).join("");
+
+      const oi = (source.oi?.date && source.oi?.start)
+        ? `<div class="chip" style="font-weight:700">${tx("open")} ${escapeHtml(source.oi.date)} ${escapeHtml(source.oi.start)}${source.oi.end?'–'+escapeHtml(source.oi.end):''}</div>`
+        : "";
+
+      els.feed.innerHTML = `
+        <div class="listing">
+          ${img}
+          <div class="listing-body">
+            <h3 style="margin:0 0 4px">${escapeHtml(source.title || "Untitled")}</h3>
+            <p style="margin:0"><b>${escapeHtml(source.price || "")}</b>${(source.price&&source.address)?" — ":""}${escapeHtml(source.address || "")}</p>
+            <p style="margin:2px 0;color:#6b7280;font-size:14px">
+              ${escapeHtml(source.category||"")}${source.propertyType?" · "+escapeHtml(source.propertyType):""}${source.saleMethod?" · "+escapeHtml(source.saleMethod):""}
+            </p>
+            ${oi}
+            ${chips ? `<div class="chips" style="margin-top:6px">${chips}</div>` : ""}
+            ${source.info ? `<p style="margin-top:6px">${escapeHtml(source.info)}</p>` : ""}
+          </div>
+        </div>`;
+      els.feedTitle.innerHTML = tx("feedPreview");
+    });
+
+    function wireLivePreview(){
+      const ids = ["a-name","a-agency","a-title","a-price","a-address","a-media","a-info","a-notes","a-ptype","a-sale"];
+      ids.forEach(id=>{
+        const el = $(id);
+        if (!el) return;
+        ["input","change","blur"].forEach(ev=> on(el,ev,renderFeed));
+      });
+      els.hi.forEach(inp => ["input","change","blur"].forEach(ev => on(inp, ev, renderFeed)));
+
+      const oldSetCategory = setCategory;
+      setCategory = function(c){ oldSetCategory(c); renderFeed(); };
+
+      on($("a-price"), "blur", ()=> { $("a-price").value = fmtPrice($("a-price").value); renderFeed(); });
+
+      on($("clear"), "click", renderFeed);
+      on($("reset"), "click", renderFeed);
+    }
+
+    // ---- List ---------------------------------------------------------------
+    function renderList(){
+      els.list.innerHTML = "";
+      if(!items.length){ els.empty.style.display = ""; els.emptyText.innerHTML = tx("noListings"); return; }
+      els.empty.style.display = "none";
+
+      items.forEach(it=>{
+        const row = document.createElement("div");
+        row.className = "listing";
+        const mediaSrc = escapeHtml(it.media?.trim() || "https://placehold.co/100x100?text=No+Img");
+        row.innerHTML = `
+          <img src="${mediaSrc}" alt="" onerror="this.onerror=null;this.src='https://placehold.co/100x100?text=No+Img'">
+          <div class="listing-body">
+            <h3 style="margin:0 0 4px">${escapeHtml(it.title||"Untitled")}</h3>
+            <p style="margin:2px 0"><b>${escapeHtml(it.price||"")}</b> · ${escapeHtml(it.address||"")}</p>
+            <p class="muted" style="margin:2px 0">
+              ${(it.name||"")}${it.agency?" — "+escapeHtml(it.agency):""} · ${escapeHtml(it.category||"")}${it.propertyType?" · "+escapeHtml(it.propertyType):""}${it.saleMethod?" · "+escapeHtml(it.saleMethod):""}
+            </p>
+            ${(it.highlights||[]).length ? `<div class="chips" style="margin-top:6px">${it.highlights.map(h=>`<span class="chip">${escapeHtml(h)}</span>`).join("")}</div>` : ""}
+            ${it.info?`<p style="margin-top:6px">${escapeHtml(it.info)}</p>`:""}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:92px">
+            <button class="btn btn-edit">Edit</button>
+            <button class="btn btn-delete">Delete</button>
+          </div>`;
+        row.querySelector(".btn-edit").onclick = ()=>{
+          $("a-name").value = it.name||""; $("a-agency").value=it.agency||""; $("a-title").value=it.title||"";
+          $("a-price").value=it.price||""; $("a-address").value=it.address||""; $("a-media").value=it.media||"";
+          $("a-info").value=it.info||""; $("a-notes").value=it.notes||""; $("a-id").value=it.id||"";
+          $("a-ptype").value=it.propertyType||""; $("a-sale").value=it.saleMethod||"";
+          setCategory(it.category||"Domestic");
+          els.hi.forEach((inp,i)=> inp.value = it.highlights?.[i] || "");
+          window.scrollTo({ top:0, behavior:"smooth" });
+          renderFeed();
+        };
+        row.querySelector(".btn-delete").onclick = ()=>{
+          items = items.filter(x=> String(x.id)!==String(it.id));
+          persist(); renderList(); renderFeed();
+        };
+        els.list.appendChild(row);
+      });
+    }
+
+    // ---- Actions ------------------------------------------------------------
+    on($("save"), "click", ()=>{
+      const id = $("a-id").value.trim() || (crypto.randomUUID? crypto.randomUUID() : String(Date.now()));
+      const item = {
+        id,
+        name: $("a-name").value.trim(),
+        agency: $("a-agency").value.trim(),
+        title: $("a-title").value.trim() || "Untitled",
+        price: $("a-price").value.trim(),
+        address: $("a-address").value.trim(),
+        media: $("a-media").value.trim(),
+        info: $("a-info").value.trim(),
+        notes: $("a-notes").value.trim(),
+        category,
+        propertyType: $("a-ptype").value || "",
+        saleMethod: $("a-sale").value || "",
+        highlights: els.hi.map(i=>i.value.trim()).filter(Boolean).slice(0,6),
+        oi: { date:"", start:"", end:"" }
+      };
+      const i = items.findIndex(x=> String(x.id)===String(item.id));
+      if (i>=0) items[i]=item; else items.unshift(item);
+      persist();
+      renderList(); renderFeed();
+      clearForm();
+    });
+
+    on($("clear"), "click", clearForm);
+    function clearForm(){
+      ["a-name","a-agency","a-title","a-price","a-address","a-media","a-info","a-notes","a-id"]
+        .forEach(id=> $(id).value="");
+      $("a-ptype").value=""; $("a-sale").value="";
+      els.hi.forEach(i=> i.value="");
+      setCategory("Domestic");
+      renderFeed();
+    }
+
+    on($("lang-mode"), "change", ()=>{
+      setLangMode($("lang-mode").value);
+      $("feed-title").innerHTML = tx("feedPreview");
+      $("agents-title").innerHTML = tx("agents");
+      els.emptyText.innerHTML = tx("noListings");
+      renderFeed();
+    });
+
+    on($("reset"), "click", ()=>{
+      localStorage.removeItem(LS_KEY);
+      items = [];
+      persist();
+      renderList(); renderFeed();
+      clearForm();
+      alert("Local listings cleared.");
+    });
+
+    on($("a-price"), "blur", ()=> $("a-price").value = fmtPrice($("a-price").value));
+    on($("cat-dom"), "click", ()=> setCategory("Domestic"));
+    on($("cat-com"), "click", ()=> setCategory("Commercial"));
+
+    // ---- Single init --------------------------------------------------------
+    (function init(){
+      setCategory("Domestic");
+      load();
+      $("lang-mode").value = getLangMode();
+      $("feed-title").innerHTML = tx("feedPreview");
+      $("agents-title").innerHTML = tx("agents");
+      els.emptyText.innerHTML = tx("noListings");
+      wireLivePreview();
+      renderList();
+      renderFeed();
+    })();
+  </script>
+</body>
+</html>

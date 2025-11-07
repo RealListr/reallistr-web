@@ -1,60 +1,55 @@
 <!doctype html>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <title>RealListr • Connect Centre (Lite)</title>
 <style>
-  :root { --border:#e5e7eb; --muted:#6b7280; --blue:#2563eb; --pill:#f8fafc }
-  *{box-sizing:border-box}
-  body{font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:1100px;margin:32px auto;padding:0 16px}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .topnav{display:flex;gap:8px;flex-wrap:wrap}
-  .pill{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--pill);text-decoration:none;color:inherit;font-weight:600}
-  .pill.active{outline:2px solid var(--blue)}
-  .card{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fff}
-  h1{margin:0 0 8px}.muted{color:var(--muted)}
+  body{font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:32px auto;padding:0 16px}
+  .muted{color:#6b7280}
+  .pill{display:inline-block;padding:8px 12px;border:1px solid #e5e7eb;border-radius:999px;background:#f8fafc;text-decoration:none;color:inherit;font-weight:600;margin-right:8px}
+  .pill.active{outline:2px solid #2563eb}
   ul{list-style:none;margin:0;padding:0}
-  li{padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin:8px 0;display:flex;gap:8px;justify-content:space-between;align-items:center}
-  .btn{padding:6px 10px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:inherit;background:#fff;cursor:pointer}
-  .btn.small{padding:6px 10px}
+  li{display:flex;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin:8px 0;background:#fff}
+  .btn{padding:6px 10px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;text-decoration:none;color:inherit}
 </style>
 
-<header>
-  <div>
-    <h1>RealListr • Connect Centre</h1>
-    <p class="muted">Lite mode — no login, just data.</p>
-  </div>
-  <nav class="topnav">
-    <a class="pill active" href="/index.html">Agents</a>
-    <a class="pill" href="/finance.html">Finance</a>
-    <a class="pill" href="/insurance.html">Insurance</a>
-    <a class="pill" href="/energy.html">Energy</a>
-  </nav>
-</header>
+<h1>RealListr • Connect Centre</h1>
+<p class="muted">Lite mode — no login, just data.</p>
 
-<section class="card">
-  <h2 style="margin:0 0 6px">Agents</h2>
-  <p class="muted" style="margin:0 0 12px">Your current items</p>
-  <div id="content">Loading…</div>
-</section>
+<nav style="margin:12px 0 18px">
+  <a class="pill active" href="/index.html">Agents</a>
+  <a class="pill" href="/finance.html">Finance</a>
+  <a class="pill" href="/insurance.html">Insurance</a>
+  <a class="pill" href="/energy.html">Energy</a>
+</nav>
+
+<h2 style="margin:0 0 6px">Agents</h2>
+<p class="muted" style="margin:0 0 12px">Your current items</p>
+<div id="content">Rendering…</div>
 
 <script>
-(async () => {
-  const el = document.getElementById('content');
-  try {
-    const r = await fetch('/api/agents',{cache:'no-store'});
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    const list = await r.json();
-    el.innerHTML = '<ul>' + list.map(p=>{
-      const price = p.price!=null ? ' — $' + (p.price?.toLocaleString?.() ?? p.price) : '';
-      return `<li>
-        <span>${p.address}, ${p.suburb}, ${p.state}${price}</span>
-        <span>
-          <a class="btn small" href="/agent.html?id=${encodeURIComponent(p.id)}">View</a>
-        </span>
-      </li>`;
-    }).join('') + '</ul>';
-  } catch(e){
-    console.error(e);
-    el.textContent = 'Failed to load /api/agents: ' + e.message;
+const LS_KEY = "connect-centre:agents:v2"; // <-- match agent.html
+
+function seedIfEmpty() {
+  let items; try { items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { items = []; }
+  if (!items || !items.length) {
+    items = [
+      { id:"d1", address:"123 Demo St", suburb:"JLT",    state:"Dubai", price:750000 },
+      { id:"d2", address:"45 Market St", suburb:"Marina",state:"Dubai", price:1250000 },
+      { id:"d3", address:"77 Sample Rd", suburb:"JVC",   state:"Dubai", price:990000 },
+    ];
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
   }
-})();
+}
+function loadLocal(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; } }
+
+function renderList(){
+  const el = document.getElementById("content"); if(!el) return;
+  seedIfEmpty(); const list = loadLocal();
+  if (!list.length) { el.textContent = "No items yet."; return; }
+  el.innerHTML = "<ul>" + list.map(p=>{
+    const price = (p.price!=null) ? " — $" + (Number(p.price)||0).toLocaleString() : "";
+    const line  = `${p.address || "Untitled"}${p.suburb ? ", "+p.suburb : ""}${p.state ? ", "+p.state : ""}${price}`;
+    return `<li><span>${line}</span><span><a class="btn" href="/agent.html?id=${encodeURIComponent(p.id)}">View</a></span></li>`;
+  }).join("") + "</ul>";
+}
+document.addEventListener("DOMContentLoaded", renderList);
 </script>
