@@ -1,4 +1,3 @@
-// lib/language.ts
 export type AnalyzeKind = 'sentiment' | 'keyphrases' | 'pii' | 'summarize';
 
 export async function analyzeText(kind: AnalyzeKind, text: string) {
@@ -14,10 +13,8 @@ export async function analyzeText(kind: AnalyzeKind, text: string) {
   return res.json();
 }
 
-// convenience extractors
 export function pickSentimentScore(json: any) {
-  const doc = json?.results?.documents?.[0];
-  return doc?.confidenceScores ?? null; // { positive, neutral, negative }
+  return json?.results?.documents?.[0]?.confidenceScores ?? null;
 }
 export function pickKeyPhrases(json: any) {
   return json?.results?.documents?.[0]?.keyPhrases ?? [];
