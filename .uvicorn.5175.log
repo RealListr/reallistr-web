@@ -1,0 +1,14 @@
+nohup: ignoring input
+INFO:     Started server process [123220]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:5175 (Press CTRL+C to quit)
+INFO:     20.227.141.208:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     20.227.141.208:0 - "POST /translate HTTP/1.1" 200 OK
+INFO:     20.227.141.208:0 - "GET /health HTTP/1.1" 200 OK
+INFO:     20.227.141.208:0 - "POST /translate HTTP/1.1" 200 OK
+INFO:     1.145.182.12:0 - "OPTIONS /translate HTTP/1.1" 200 OK
+INFO:     1.145.182.12:0 - "POST /translate HTTP/1.1" 200 OK
+INFO:     1.145.182.12:0 - "POST /translate HTTP/1.1" 200 OK
+INFO:     1.145.182.12:0 - "POST /translate HTTP/1.1" 200 OK
+INFO:     1.145.182.12:0 - "POST /translate HTTP/1.1" 200 OK
